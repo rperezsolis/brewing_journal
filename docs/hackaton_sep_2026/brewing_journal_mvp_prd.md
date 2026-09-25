@@ -54,8 +54,8 @@ BrewSync is a collaborative brewing journal application designed to help users t
 ### Feature 5: Share a Recipe
 **Description:** Let the user share a recipe from the device. Social network developer APIs are outside this Serverpod stack.
 **Requirements:**
-*   Generate a shareable graphic in the Flutter app (a summary card of the recipe parameters, flavor map, and extra instructions when the recipe has them). When there are no extra instructions, that block is omitted. When the list does not fit on the card, the card shows the leading instructions and notes that more exist.
-*   Open the platform share sheet with that image and a link, so the user can send it to whichever apps are installed (for example Instagram, X, Pinterest, or Messages).
+*   Generate a shareable graphic in the Flutter app (a summary card of the recipe parameters, flavor map, and extra instructions when the recipe has them). When there are no extra instructions, that block is omitted. When the list does not fit on the card, the card shows the leading instructions and notes that more exist. Every card ends with a "Made with BrewSync" line, so people who see a shared post know where it came from.
+*   Open the platform share sheet with that image only, so the user can send it to whichever apps are installed (for example Instagram, X, Pinterest, or Messages). No link to the recipe is attached: recipes are private to their owner and team, so a link would not open for most recipients. Where the browser cannot share files, the user can download the image instead. Anyone who can read a recipe, including a team viewer, can share its image.
 
 ---
 
@@ -99,5 +99,5 @@ BrewSync is a collaborative brewing journal application designed to help users t
 
 ### Social Sharing
 *   **US-5.1:** As a coffee influencer, I want to generate a summary image of my V60 recipe and send it through the device share sheet so I can post it from whichever app I choose.
-*   **US-5.2:** As a creator, I want to share a link and image of my matcha recipe through the device share sheet so I can pass it to X, Pinterest, or another installed app.
+*   **US-5.2:** As a creator, I want to share an image of my matcha recipe through the device share sheet so I can pass it to X, Pinterest, or another installed app.
 *   **US-5.3:** As a creator, I want the summary card to include extra instructions when the recipe has them, to leave that block off when it has none, and to show the leading instructions plus a note when the list does not fit, so the shared image matches the recipe and still fits on one card.
