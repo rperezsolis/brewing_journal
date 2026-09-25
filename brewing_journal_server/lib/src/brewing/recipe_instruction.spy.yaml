@@ -1,0 +1,12 @@
+class: RecipeInstruction
+table: recipe_instruction
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  recipe: Recipe?, relation(name=recipe_instructions, onDelete=Cascade)
+  sortOrder: int
+  text: String
+
+indexes:
+  recipe_instruction_order_idx:
+    fields: recipeId, sortOrder
+    unique: true

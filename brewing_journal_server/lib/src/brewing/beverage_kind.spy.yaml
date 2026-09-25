@@ -1,0 +1,6 @@
+enum: BeverageKind
+serialized: byName
+values:
+  - coffee
+  - tea
+  - matcha

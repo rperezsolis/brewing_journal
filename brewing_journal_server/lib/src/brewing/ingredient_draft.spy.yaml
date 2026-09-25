@@ -1,0 +1,8 @@
+class: IngredientDraft
+fields:
+  kind: BeverageKind
+  name: String
+  origin: String?
+  roaster: String?
+  roastLevel: RoastLevel?
+  processing: String?

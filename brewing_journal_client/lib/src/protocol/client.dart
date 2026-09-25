@@ -11,6 +11,24 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _ida;
+import 'package:brewing_journal_client/src/protocol/brewing/beverage_kind.dart'
+    as _i4erj0ra;
+import 'package:brewing_journal_client/src/protocol/brewing/ingredient.dart'
+    as _ifm45unr;
+import 'package:brewing_journal_client/src/protocol/brewing/ingredient_draft.dart'
+    as _i1d0oxbl;
+import 'package:brewing_journal_client/src/protocol/brewing/recipe.dart'
+    as _i261jxz0;
+import 'package:brewing_journal_client/src/protocol/brewing/recipe_access.dart'
+    as _i6vleds3;
+import 'package:brewing_journal_client/src/protocol/brewing/recipe_detail.dart'
+    as _io43huzj;
+import 'package:brewing_journal_client/src/protocol/brewing/recipe_draft.dart'
+    as _ii9ba79p;
+import 'package:brewing_journal_client/src/protocol/brewing/recipe_photo.dart'
+    as _ijse9n9l;
+import 'package:brewing_journal_client/src/protocol/brewing/upload_ticket.dart'
+    as _i1wqbnj3;
 import 'package:http/http.dart' as _i85jenna;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _iacc;
@@ -244,6 +262,134 @@ class EndpointJwtRefresh extends _iacc.EndpointRefreshJwtTokens {
       );
 }
 
+/// The caller's own coffee beans, tea leaves, and matcha grades.
+/// {@category Endpoint}
+class EndpointIngredient extends EndpointAuthenticated {
+  EndpointIngredient(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'ingredient';
+
+  /// The caller's ingredients of [kind] whose name starts with [query]
+  /// (case-insensitive), ordered by name.
+  _ida.Future<List<_ifm45unr.Ingredient>> search(
+    _i4erj0ra.BeverageKind kind,
+    String query,
+    int limit,
+  ) => caller.callServerEndpoint<List<_ifm45unr.Ingredient>>(
+    'ingredient',
+    'search',
+    {
+      'kind': kind,
+      'query': query,
+      'limit': limit,
+    },
+  );
+
+  /// Returns the caller's existing ingredient with the same kind and name
+  /// (case-insensitive), or inserts a new one.
+  _ida.Future<_ifm45unr.Ingredient> register(_i1d0oxbl.IngredientDraft draft) =>
+      caller.callServerEndpoint<_ifm45unr.Ingredient>(
+        'ingredient',
+        'register',
+        {'draft': draft},
+      );
+}
+
+/// {@category Endpoint}
+class EndpointRecipe extends EndpointAuthenticated {
+  EndpointRecipe(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'recipe';
+
+  /// Inserts (`draft.id == null`) or updates a recipe. Instructions and flavor
+  /// tags are replaced in full, in the same transaction as the recipe row.
+  _ida.Future<_io43huzj.RecipeDetail> save(_ii9ba79p.RecipeDraft draft) =>
+      caller.callServerEndpoint<_io43huzj.RecipeDetail>(
+        'recipe',
+        'save',
+        {'draft': draft},
+      );
+
+  /// The recipe with its ingredient, ordered instructions, tags, photos (with
+  /// `publicUrl`), and the caller's access.
+  _ida.Future<_io43huzj.RecipeDetail> get(_isc.UuidValue id) =>
+      caller.callServerEndpoint<_io43huzj.RecipeDetail>(
+        'recipe',
+        'get',
+        {'id': id},
+      );
+
+  /// The caller's own recipes, most recently updated first.
+  _ida.Future<List<_i261jxz0.Recipe>> listMine(
+    int limit,
+    int offset,
+  ) => caller.callServerEndpoint<List<_i261jxz0.Recipe>>(
+    'recipe',
+    'listMine',
+    {
+      'limit': limit,
+      'offset': offset,
+    },
+  );
+
+  _ida.Future<_i6vleds3.RecipeAccess> getAccess(_isc.UuidValue id) =>
+      caller.callServerEndpoint<_i6vleds3.RecipeAccess>(
+        'recipe',
+        'getAccess',
+        {'id': id},
+      );
+
+  /// Deletes the recipe and its child rows; photo files are removed
+  /// best-effort after the delete commits.
+  _ida.Future<void> delete(_isc.UuidValue id) =>
+      caller.callServerEndpoint<void>(
+        'recipe',
+        'delete',
+        {'id': id},
+      );
+}
+
+/// Photo uploads: the server picks the storage path, the client uploads to
+/// it, and a row is written only after the upload is verified.
+/// {@category Endpoint}
+class EndpointRecipeMedia extends EndpointAuthenticated {
+  EndpointRecipeMedia(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'recipeMedia';
+
+  _ida.Future<_i1wqbnj3.UploadTicket> createUploadDescription(
+    _isc.UuidValue recipeId,
+  ) => caller.callServerEndpoint<_i1wqbnj3.UploadTicket>(
+    'recipeMedia',
+    'createUploadDescription',
+    {'recipeId': recipeId},
+  );
+
+  /// Verifies the upload at [path] and attaches it to the recipe. Calling it
+  /// again for the same path returns the same row.
+  _ida.Future<_ijse9n9l.RecipePhoto> confirmUpload(
+    _isc.UuidValue recipeId,
+    String path,
+  ) => caller.callServerEndpoint<_ijse9n9l.RecipePhoto>(
+    'recipeMedia',
+    'confirmUpload',
+    {
+      'recipeId': recipeId,
+      'path': path,
+    },
+  );
+
+  _ida.Future<void> remove(_isc.UuidValue photoId) =>
+      caller.callServerEndpoint<void>(
+        'recipeMedia',
+        'remove',
+        {'photoId': photoId},
+      );
+}
+
 /// Base class for every domain endpoint: all methods require a signed-in user.
 /// {@category Endpoint}
 abstract class EndpointAuthenticated extends _isc.EndpointRef {
@@ -290,6 +436,9 @@ class Client extends _isc.ServerpodClientShared {
        ) {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
+    ingredient = EndpointIngredient(this);
+    recipe = EndpointRecipe(this);
+    recipeMedia = EndpointRecipeMedia(this);
     modules = Modules(this);
   }
 
@@ -297,12 +446,21 @@ class Client extends _isc.ServerpodClientShared {
 
   late final EndpointJwtRefresh jwtRefresh;
 
+  late final EndpointIngredient ingredient;
+
+  late final EndpointRecipe recipe;
+
+  late final EndpointRecipeMedia recipeMedia;
+
   late final Modules modules;
 
   @override
   Map<String, _isc.EndpointRef> get endpointRefLookup => {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
+    'ingredient': ingredient,
+    'recipe': recipe,
+    'recipeMedia': recipeMedia,
   };
 
   @override

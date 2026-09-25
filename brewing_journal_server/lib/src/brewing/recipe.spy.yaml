@@ -1,0 +1,29 @@
+class: Recipe
+table: recipe
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  owner: module:serverpod_auth_core:AuthUser?, relation(onDelete=Cascade)
+  ingredient: Ingredient?, relation(onDelete=NoAction)
+  title: String
+  waterTempC: double
+  doseGrams: double
+  grindSize: String
+  grinderModel: String
+  extractionMethod: ExtractionMethod
+  extractionMethodNote: String?
+  extractionDuration: Duration?
+  acidity: int
+  sweetness: int
+  body: int
+  bitterness: int
+  createdAt: DateTime, default=now
+  updatedAt: DateTime, default=now
+  instructions: List<RecipeInstruction>?, relation(name=recipe_instructions)
+  photos: List<RecipePhoto>?, relation(name=recipe_photos)
+  flavorTags: List<RecipeFlavorTag>?, relation(name=recipe_flavor_tags)
+
+indexes:
+  recipe_owner_updated_idx:
+    fields: ownerId, updatedAt
+  recipe_ingredient_idx:
+    fields: ingredientId

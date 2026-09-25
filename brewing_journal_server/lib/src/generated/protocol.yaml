@@ -9,3 +9,16 @@ emailIdp:
   - hasAccount:
 jwtRefresh:
   - refreshAccessToken:
+ingredient:
+  - search:
+  - register:
+recipe:
+  - save:
+  - get:
+  - listMine:
+  - getAccess:
+  - delete:
+recipeMedia:
+  - createUploadDescription:
+  - confirmUpload:
+  - remove:

@@ -1,0 +1,8 @@
+class: RecipeDetail
+fields:
+  recipe: Recipe
+  ingredient: Ingredient
+  instructions: List<RecipeInstruction>
+  flavorTags: List<RecipeFlavorTag>
+  photos: List<RecipePhoto>
+  access: RecipeAccess

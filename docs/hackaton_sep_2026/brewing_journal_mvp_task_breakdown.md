@@ -123,9 +123,9 @@ The auth tables (`serverpod_auth_idp_email_account`, `serverpod_auth_idp_email_a
 - [x] Test helper `test/integration/helpers/test_users.dart`. Every domain table has a foreign key to `serverpod_auth_core_user`, so a test user must be a real row:
   - [x] `Future<TestUser> createTestUser(TestSessionBuilder sb)` calls `const AuthUsers().create(sb.build())` (from `package:serverpod_auth_idp_server/core.dart`) and returns the `authUserId` plus `sb.copyWith(authentication: AuthenticationOverride.authenticationInfo(authUser.id.toString(), {}))`.
   - [x] All later server tests get users A, B, and so on from this helper.
-- [ ] Server test `test/integration/auth/require_login_test.dart` (`withServerpod`). This test depends on the first `AuthenticatedEndpoint` subclass, so write it now and run it after 2.2: **Deferred to 2.2** (it cannot compile before `endpoints.recipe` exists). `test/integration/auth/test_users_test.dart` covers the helper in the meantime.
-  - [ ] An unauthenticated `sessionBuilder` call to `endpoints.recipe.listMine` fails with `ServerpodUnauthenticatedException`.
-  - [ ] The same call with a `createTestUser` session builder succeeds and returns `[]`.
+- [x] Server test `test/integration/auth/require_login_test.dart` (`withServerpod`). This test depends on the first `AuthenticatedEndpoint` subclass, so write it now and run it after 2.2: written and passing since Feature 2.
+  - [x] An unauthenticated `sessionBuilder` call to `endpoints.recipe.listMine` fails with `ServerpodUnauthenticatedException`.
+  - [x] The same call with a `createTestUser` session builder succeeds and returns `[]`.
 - [ ] Run the post-phase checklist. `dart analyze`, `dart format` and `dart test` pass; the MCP log tails are not checked yet.
 
 
@@ -184,157 +184,157 @@ The auth tables (`serverpod_auth_idp_email_account`, `serverpod_auth_idp_email_a
 
 Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 
-- [ ] **Enums** (`serialized: byName`):
-  - [ ] `lib/src/brewing/beverage_kind.spy.yaml`: `coffee, tea, matcha`
-  - [ ] `lib/src/brewing/roast_level.spy.yaml`: `light, medium, mediumDark, dark`
-  - [ ] `lib/src/brewing/extraction_method.spy.yaml`: `v60, espresso, frenchPress, aeropress, chemex, coldBrew, matchaWhisk, other`
-  - [ ] `lib/src/brewing/brewing_error_code.spy.yaml`: `notFound, forbidden, validation, inviteExpired, inviteUsed, alreadyMember, uploadRejected` (all codes now, so the enum does not churn in Feature 4)
-- [ ] **Exception**: `lib/src/brewing/brewing_exception.spy.yaml` with `code: BrewingErrorCode` and `message: String`.
-- [ ] **Table** `ingredient` (`ingredient.spy.yaml`):
-  - [ ] Fields: `owner: module:serverpod_auth_core:AuthUser?, relation(onDelete=Cascade)`, `kind`, `name`, `nameKey`, `origin?`, `roaster?`, `roastLevel?`, `processing?`, `createdAt: DateTime, default=now`.
-  - [ ] Index `ingredient_owner_kind_name_idx` on `ownerId, kind, nameKey`.
-- [ ] **Table** `recipe` (`recipe.spy.yaml`), without `team`:
-  - [ ] `owner` (Cascade), `ingredient: Ingredient?, relation(onDelete=NoAction)`.
-  - [ ] `title`, `waterTempC: double`, `doseGrams: double`, `grindSize`, `grinderModel`, `extractionMethod`, `extractionMethodNote: String?`, `extractionDuration: Duration?`.
-  - [ ] `acidity`, `sweetness`, `body`, `bitterness: int`.
-  - [ ] `createdAt` and `updatedAt`, both `default=now`.
-  - [ ] Child lists: `instructions` (`recipe_instructions`), `photos` (`recipe_photos`), `flavorTags` (`recipe_flavor_tags`).
-  - [ ] Indexes `recipe_owner_updated_idx` (`ownerId, updatedAt`) and `recipe_ingredient_idx` (`ingredientId`).
-- [ ] **Table** `recipe_instruction`: `recipe` (Cascade, `recipe_instructions`), `sortOrder: int`, `text: String`. Unique index `recipe_instruction_order_idx` on `recipeId, sortOrder`.
-- [ ] **Table** `recipe_flavor_tag`: `recipe` (Cascade, `recipe_flavor_tags`), `tag`, `tagKey`. Unique `recipe_flavor_tag_recipe_idx` (`recipeId, tagKey`), plus `recipe_flavor_tag_key_idx` (`tagKey`).
-- [ ] **Table** `recipe_photo`: `recipe` (Cascade, `recipe_photos`), `storagePath`, `sortOrder`, `createdAt`, `publicUrl: Uri?, !persist`. Unique `recipe_photo_order_idx` (`recipeId, sortOrder`) and unique `recipe_photo_path_idx` (`storagePath`).
-- [ ] **DTOs** (no `table`):
-  - [ ] `ingredient_draft.spy.yaml`: `kind`, `name`, `origin?`, `roaster?`, `roastLevel?`, `processing?`
-  - [ ] `recipe_draft.spy.yaml`: every field in the system design except `teamId`: `id?`, `ingredientId`, the parameters, the scores, `flavorTags: List<String>`, `instructions: List<String>`
-  - [ ] `recipe_access.spy.yaml`: `canEdit: bool`, `canDelete: bool` (`role` comes in Feature 4)
-  - [ ] `recipe_detail.spy.yaml`: `recipe`, `ingredient`, `instructions`, `flavorTags`, `photos`, `access`
-  - [ ] `upload_ticket.spy.yaml`: `path`, `description`
-- [ ] Generate: save and watch `serverpod start` output, or run `serverpod generate`. Fix any YAML errors before continuing.
-- [ ] Confirm the generated `Recipe.ownerId`, `Recipe.ingredientId`, and `RecipeInstruction.recipeId` are `UuidValue`.
-- [ ] `create_migration` (MCP), or CLI `serverpod create-migration --tag recipes`.
-- [ ] Review the new `migration.sql`: 5 `CREATE TABLE` statements, foreign keys to `serverpod_auth_core_user` with `ON DELETE CASCADE`, `recipe.ingredientId` with `NO ACTION`, and all 8 indexes.
-- [ ] `apply_migrations` (MCP), then `tail_server_logs` to confirm it applied.
+- [x] **Enums** (`serialized: byName`):
+  - [x] `lib/src/brewing/beverage_kind.spy.yaml`: `coffee, tea, matcha`
+  - [x] `lib/src/brewing/roast_level.spy.yaml`: `light, medium, mediumDark, dark`
+  - [x] `lib/src/brewing/extraction_method.spy.yaml`: `v60, espresso, frenchPress, aeropress, chemex, coldBrew, matchaWhisk, other`
+  - [x] `lib/src/brewing/brewing_error_code.spy.yaml`: `notFound, forbidden, validation, inviteExpired, inviteUsed, alreadyMember, uploadRejected` (all codes now, so the enum does not churn in Feature 4)
+- [x] **Exception**: `lib/src/brewing/brewing_exception.spy.yaml` with `code: BrewingErrorCode` and `message: String`.
+- [x] **Table** `ingredient` (`ingredient.spy.yaml`):
+  - [x] Fields: `owner: module:serverpod_auth_core:AuthUser?, relation(onDelete=Cascade)`, `kind`, `name`, `nameKey`, `origin?`, `roaster?`, `roastLevel?`, `processing?`, `createdAt: DateTime, default=now`.
+  - [x] Index `ingredient_owner_kind_name_idx` on `ownerId, kind, nameKey`.
+- [x] **Table** `recipe` (`recipe.spy.yaml`), without `team`:
+  - [x] `owner` (Cascade), `ingredient: Ingredient?, relation(onDelete=NoAction)`.
+  - [x] `title`, `waterTempC: double`, `doseGrams: double`, `grindSize`, `grinderModel`, `extractionMethod`, `extractionMethodNote: String?`, `extractionDuration: Duration?`.
+  - [x] `acidity`, `sweetness`, `body`, `bitterness: int`.
+  - [x] `createdAt` and `updatedAt`, both `default=now`.
+  - [x] Child lists: `instructions` (`recipe_instructions`), `photos` (`recipe_photos`), `flavorTags` (`recipe_flavor_tags`).
+  - [x] Indexes `recipe_owner_updated_idx` (`ownerId, updatedAt`) and `recipe_ingredient_idx` (`ingredientId`).
+- [x] **Table** `recipe_instruction`: `recipe` (Cascade, `recipe_instructions`), `sortOrder: int`, `text: String`. Unique index `recipe_instruction_order_idx` on `recipeId, sortOrder`.
+- [x] **Table** `recipe_flavor_tag`: `recipe` (Cascade, `recipe_flavor_tags`), `tag`, `tagKey`. Unique `recipe_flavor_tag_recipe_idx` (`recipeId, tagKey`), plus `recipe_flavor_tag_key_idx` (`tagKey`).
+- [x] **Table** `recipe_photo`: `recipe` (Cascade, `recipe_photos`), `storagePath`, `sortOrder`, `createdAt`, `publicUrl: Uri?, !persist`. Unique `recipe_photo_order_idx` (`recipeId, sortOrder`) and unique `recipe_photo_path_idx` (`storagePath`).
+- [x] **DTOs** (no `table`):
+  - [x] `ingredient_draft.spy.yaml`: `kind`, `name`, `origin?`, `roaster?`, `roastLevel?`, `processing?`
+  - [x] `recipe_draft.spy.yaml`: every field in the system design except `teamId`: `id?`, `ingredientId`, the parameters, the scores, `flavorTags: List<String>`, `instructions: List<String>`
+  - [x] `recipe_access.spy.yaml`: `canEdit: bool`, `canDelete: bool` (`role` comes in Feature 4)
+  - [x] `recipe_detail.spy.yaml`: `recipe`, `ingredient`, `instructions`, `flavorTags`, `photos`, `access`
+  - [x] `upload_ticket.spy.yaml`: `path`, `description`
+- [x] Generate: save and watch `serverpod start` output, or run `serverpod generate`. Fix any YAML errors before continuing.
+- [x] Confirm the generated `Recipe.ownerId`, `Recipe.ingredientId`, and `RecipeInstruction.recipeId` are `UuidValue`.
+- [x] `create_migration` (MCP), or CLI `serverpod create-migration --tag recipes`. Created with the CLI: `20260925200116958-recipes`.
+- [x] Review the new `migration.sql`: 5 `CREATE TABLE` statements, foreign keys to `serverpod_auth_core_user` with `ON DELETE CASCADE`, `recipe.ingredientId` with `NO ACTION`, and all 8 indexes.
+- [x] `apply_migrations` (MCP), then `tail_server_logs` to confirm it applied. Applied in the running `serverpod start` session; the restart log reads "Latest database migration already applied."
 
 
 
 ### 2.2 Backend API Endpoints
 
-- [ ] `lib/src/brewing/recipe_limits.dart` with constants shared by the endpoints and tests: `kInstructionMaxLength = 280`, `kMaxInstructions = 30`, `kMaxTags = 12`, `kTagMaxLength = 40`, `kTitleMaxLength = 120`, `kGrindMaxLength = 80`, `kMaxPhotos = 6`.
-- [ ] `lib/src/brewing/recipe_validator.dart`: pure functions that throw `BrewingException(code: validation, message: '<field>: ...')`:
-  - [ ] title 1..120, grind size and grinder model 1..80 (after trim)
-  - [ ] `waterTempC` 1..100, `doseGrams` 0.1..500, `extractionDuration` null or 1s..2h
-  - [ ] each score 0..5
-  - [ ] `extractionMethod == other` requires a non-empty `extractionMethodNote`
-  - [ ] tags 1..40 after trim, at most 12; de-duplicate by `tagKey`
-  - [ ] instructions: trim each, reject blank or > 280, at most 30, keep duplicates and order (US-2.7, US-2.8, US-2.11)
-- [ ] `lib/src/brewing/recipe_access_policy.dart`: `RecipeAccessPolicy.resolve(session, recipe)`. For now, the owner gets `canEdit/canDelete = true` and anyone else gets `notFound`. Feature 4 adds the team branch.
-- [ ] `lib/src/brewing/ingredient_endpoint.dart`: `IngredientEndpoint extends AuthenticatedEndpoint`:
-  - [ ] `search(kind, query, limit)`: clamp `limit` to 1..30, filter `ownerId == callerId`, `kind`, `nameKey.like('${key}%')`, order by `nameKey`
-  - [ ] `register(IngredientDraft)`: trim the name (1..120), compute `nameKey`, return the existing row on `(owner, kind, nameKey)`, otherwise insert
-- [ ] `lib/src/brewing/recipe_endpoint.dart`: `RecipeEndpoint extends AuthenticatedEndpoint`:
-  - [ ] `save(RecipeDraft)` inside `session.db.transaction`, following steps 1–6 of the system design: load and resolve access on update, check the ingredient, validate, insert or update (refresh `updatedAt`), delete and re-insert `recipe_instruction` (`sortOrder = index`) and `recipe_flavor_tag`, then return `get`
-  - [ ] `get(id)`: one query with `include` for ingredient, instructions (`orderBy sortOrder`), tags, and photos (`orderBy sortOrder`); fill `photos[].publicUrl` with `session.storage.publicDownloadUrl(storageId: 'public', path: ...)` and fill `access`
-  - [ ] `listMine(limit, offset)`: clamp to 1..50, `ownerId == callerId`, `orderBy updatedAt desc`
-  - [ ] `getAccess(id)`
-  - [ ] `delete(id)`: requires `canDelete`; reads the photo `storagePath`s first, deletes the row (children cascade), then calls `session.storage.deleteFile(storageId: 'public', path: ...)` for each path after commit, logging failures instead of throwing
-- [ ] `lib/src/brewing/recipe_media_endpoint.dart`: `RecipeMediaEndpoint extends AuthenticatedEndpoint`:
-  - [ ] `createUploadDescription(recipeId)`: requires `canEdit`, at most 6 photos, path `recipes/<recipeId>/<Uuid().v4()>.jpg`, returns `UploadTicket(path: path, description: await session.storage.createUploadDescription(storageId: 'public', path: path))`
-  - [ ] `confirmUpload(recipeId, path)`: requires `canEdit`; the path must match `^recipes/<recipeId>/[0-9a-f-]{36}\.jpg$`; return the existing row if one exists; `session.storage.verifyUpload(storageId: 'public', path: path)` false gives `uploadRejected` (US-2.12); insert with `sortOrder = max + 1` in a transaction and retry once on a unique conflict
-  - [ ] `remove(photoId)`: requires `canEdit` on the parent recipe, deletes the row, then deletes the storage object best-effort
-- [ ] Server tests in `test/integration/brewing/` (`withServerpod`, users A and B from `createTestUser`):
-  - [ ] `ingredient_endpoint_test.dart`: prefix search is case-insensitive; `register` with the same name in different case returns the same id; an empty name gives `validation`; user B cannot see user A's ingredients
-  - [ ] `recipe_save_test.dart`:
-    - [ ] insert, then update; the update refreshes `updatedAt` and keeps `createdAt`
-    - [ ] instructions `['  stir ', 'stir']` are saved as `['stir', 'stir']` in order (US-2.7, US-2.8)
-    - [ ] `'use 150ml of whole milk'` round-trips unchanged (US-2.10)
-    - [ ] `''` or `'   '` gives `validation`; 281 characters gives `validation`; exactly 280 is accepted; 31 items gives `validation`
-    - [ ] saving `instructions: []` removes every row (US-2.4)
-    - [ ] tags `['Fruity', ' fruity ']` are stored once; a 41-character tag gives `validation`
-    - [ ] saving with user B's `ingredientId` gives `notFound`
-  - [ ] `recipe_get_test.dart`: instructions come back in `sortOrder`; user B calling `get` gives `notFound`; `access` is `canEdit/canDelete = true` for the owner
-  - [ ] `recipe_list_test.dart`: `listMine` is newest `updatedAt` first, pages with `limit`/`offset`, and never includes user B's recipes
-  - [ ] `recipe_validation_test.dart`: one case per boundary (temp 0/101, dose 0/501, duration 0s/2h1s, score -1/6, `other` with no note, 13 tags, title of 121 characters)
-  - [ ] `recipe_media_test.dart`:
-    - [ ] happy path: `createUploadDescription`, then `session.storage.storeFile(storageId: 'public', path: ticket.path, byteData: ...)`, then `confirmUpload` returns a row with a `publicUrl`; a second `confirmUpload` with the same path returns the same row
-    - [ ] a forged path gives `validation`; confirming without an upload gives `uploadRejected` and no row; the 7th upload description gives `validation`; `remove` by user B gives `notFound`
-  - [ ] `recipe_delete_test.dart`: owner delete cascades to instructions, tags, and photos; user B calling `delete` gives `notFound`
-- [ ] Run the post-phase checklist, then `dart test` in `brewing_journal_server/`.
+- [x] `lib/src/brewing/recipe_limits.dart` with constants shared by the endpoints and tests: `kInstructionMaxLength = 280`, `kMaxInstructions = 30`, `kMaxTags = 12`, `kTagMaxLength = 40`, `kTitleMaxLength = 120`, `kGrindMaxLength = 80`, `kMaxPhotos = 6`.
+- [x] `lib/src/brewing/recipe_validator.dart`: pure functions that throw `BrewingException(code: validation, message: '<field>: ...')`:
+  - [x] title 1..120, grind size and grinder model 1..80 (after trim)
+  - [x] `waterTempC` 1..100, `doseGrams` 0.1..500, `extractionDuration` null or 1s..2h
+  - [x] each score 0..5
+  - [x] `extractionMethod == other` requires a non-empty `extractionMethodNote`
+  - [x] tags 1..40 after trim, at most 12; de-duplicate by `tagKey`
+  - [x] instructions: trim each, reject blank or > 280, at most 30, keep duplicates and order (US-2.7, US-2.8, US-2.11)
+- [x] `lib/src/brewing/recipe_access_policy.dart`: `RecipeAccessPolicy.resolve(session, recipe)`. For now, the owner gets `canEdit/canDelete = true` and anyone else gets `notFound`. Feature 4 adds the team branch. `resolve` is already async (Feature 4 needs a membership lookup), and `load` / `loadForEdit` wrap the find + resolve (+ `forbidden`) steps.
+- [x] `lib/src/brewing/ingredient_endpoint.dart`: `IngredientEndpoint extends AuthenticatedEndpoint`:
+  - [x] `search(kind, query, limit)`: clamp `limit` to 1..30, filter `ownerId == callerId`, `kind`, `nameKey.like('${key}%')`, order by `nameKey`
+  - [x] `register(IngredientDraft)`: trim the name (1..120), compute `nameKey`, return the existing row on `(owner, kind, nameKey)`, otherwise insert
+- [x] `lib/src/brewing/recipe_endpoint.dart`: `RecipeEndpoint extends AuthenticatedEndpoint`:
+  - [x] `save(RecipeDraft)` inside `session.db.transaction`, following steps 1–6 of the system design: load and resolve access on update, check the ingredient, validate, insert or update (refresh `updatedAt`), delete and re-insert `recipe_instruction` (`sortOrder = index`) and `recipe_flavor_tag`, then return `get`
+  - [x] `get(id)`: one query with `include` for ingredient, instructions (`orderBy sortOrder`), tags, and photos (`orderBy sortOrder`); fill `photos[].publicUrl` with `session.storage.publicDownloadUrl(storageId: 'public', path: ...)` and fill `access`
+  - [x] `listMine(limit, offset)`: clamp to 1..50, `ownerId == callerId`, `orderBy updatedAt desc`
+  - [x] `getAccess(id)`
+  - [x] `delete(id)`: requires `canDelete`; reads the photo `storagePath`s first, deletes the row (children cascade), then calls `session.storage.deleteFile(storageId: 'public', path: ...)` for each path after commit, logging failures instead of throwing
+- [x] `lib/src/brewing/recipe_media_endpoint.dart`: `RecipeMediaEndpoint extends AuthenticatedEndpoint`:
+  - [x] `createUploadDescription(recipeId)`: requires `canEdit`, at most 6 photos, path `recipes/<recipeId>/<Uuid().v4()>.jpg`, returns `UploadTicket(path: path, description: await session.storage.createUploadDescription(storageId: 'public', path: path))`
+  - [x] `confirmUpload(recipeId, path)`: requires `canEdit`; the path must match `^recipes/<recipeId>/[0-9a-f-]{36}\.jpg$`; return the existing row if one exists; `session.storage.verifyUpload(storageId: 'public', path: path)` false gives `uploadRejected` (US-2.12); insert with `sortOrder = max + 1` in a transaction and retry once on a unique conflict. `verifyUpload` returns false for a file that is already verified (a retried confirm, or `storeFile` in tests), so an existing verified file (`fileExists`) is accepted too
+  - [x] `remove(photoId)`: requires `canEdit` on the parent recipe, deletes the row, then deletes the storage object best-effort
+- [x] Server tests in `test/integration/brewing/` (`withServerpod`, users A and B from `createTestUser`):
+  - [x] `ingredient_endpoint_test.dart`: prefix search is case-insensitive; `register` with the same name in different case returns the same id; an empty name gives `validation`; user B cannot see user A's ingredients
+  - [x] `recipe_save_test.dart`:
+    - [x] insert, then update; the update refreshes `updatedAt` and keeps `createdAt`
+    - [x] instructions `['  stir ', 'stir']` are saved as `['stir', 'stir']` in order (US-2.7, US-2.8)
+    - [x] `'use 150ml of whole milk'` round-trips unchanged (US-2.10)
+    - [x] `''` or `'   '` gives `validation`; 281 characters gives `validation`; exactly 280 is accepted; 31 items gives `validation`
+    - [x] saving `instructions: []` removes every row (US-2.4)
+    - [x] tags `['Fruity', ' fruity ']` are stored once; a 41-character tag gives `validation`
+    - [x] saving with user B's `ingredientId` gives `notFound`
+  - [x] `recipe_get_test.dart`: instructions come back in `sortOrder`; user B calling `get` gives `notFound`; `access` is `canEdit/canDelete = true` for the owner
+  - [x] `recipe_list_test.dart`: `listMine` is newest `updatedAt` first, pages with `limit`/`offset`, and never includes user B's recipes
+  - [x] `recipe_validation_test.dart`: one case per boundary (temp 0/101, dose 0/501, duration 0s/2h1s, score -1/6, `other` with no note, 13 tags, title of 121 characters)
+  - [x] `recipe_media_test.dart`:
+    - [x] happy path: `createUploadDescription`, then `session.storage.storeFile(storageId: 'public', path: ticket.path, byteData: ...)`, then `confirmUpload` returns a row with a `publicUrl`; a second `confirmUpload` with the same path returns the same row
+    - [x] a forged path gives `validation`; confirming without an upload gives `uploadRejected` and no row; the 7th upload description gives `validation`; `remove` by user B gives `notFound`
+  - [x] `recipe_delete_test.dart`: owner delete cascades to instructions, tags, and photos; user B calling `delete` gives `notFound`
+- [x] Run the post-phase checklist, then `dart test` in `brewing_journal_server/`.
 
 
 
 ### 2.3 Flutter UI & State Management
 
-- [ ] Dependencies: `flutter pub add image_picker image`.
-- [ ] iOS: add `NSPhotoLibraryUsageDescription` and `NSCameraUsageDescription` to `ios/Runner/Info.plist`, or the picker crashes. Android's photo picker needs no permission.
-- [ ] Abstract repositories in `lib/data/repositories/`, plus in-memory fakes:
-  - [ ] `IngredientRepository`: `search`, `register`
-  - [ ] `RecipeRepository`: `save`, `get`, `listMine`, `getAccess`, `delete`
-  - [ ] `RecipeMediaRepository`: `uploadPhoto(recipeId, ByteData)` returning `RecipePhoto`, and `remove(photoId)`
-- [ ] Mirror the server limits in `lib/ui/features/recipe_creation/recipe_limits.dart` (`kInstructionMaxLength = 280`, and so on).
-- [ ] `RecipeCreationState` (Equatable), with every field from the system design except `teamId` (Feature 4). Include `enum RecipeWizardStep` and `enum SaveStatus`.
-- [ ] `RecipeCreationCubit`:
-  - [ ] `startNew()`, `load(id)`
-  - [ ] `searchIngredients`, with a 250ms debounce in the view; `selectIngredient`, `registerIngredient`
-  - [ ] `setExtraction(...)`, `setExtractionDuration(Duration?)`
-  - [ ] `startStopwatch` / `stopStopwatch` / `resetStopwatch`: a `Stopwatch` plus a 100ms `Timer.periodic`; cancel it in `close()`
-  - [ ] `setFlavor({scores, tags})`
-  - [ ] `addInstruction` / `updateInstruction` / `removeInstruction` / `moveInstruction`: trim, reject blank or > 280 without changing the list, cap at 30, allow duplicates
-  - [ ] `skipInstructions()`, `next()` / `back()` with the per-step guards (`next` from extraction stops a running stopwatch)
-  - [ ] `save()`; `addPhoto(ByteData)`, which calls `save()` first when `recipeId == null`; `removePhoto(id)`
-- [ ] Views in `lib/ui/features/recipe_creation/view/`:
-  - [ ] `recipe_wizard_screen.dart`: `BlocProvider` at the route, a step indicator (1–5), Back/Next buttons, and a `BlocListener` for `error`, which shows a snackbar
-  - [ ] `step_ingredient.dart`: kind selector (`SegmentedButton<BeverageKind>`), search field, result list, and a "Register new" bottom sheet form (origin, roaster, roast level, processing)
-  - [ ] `step_extraction.dart`: title, temperature, dose, grind size, grinder model (US-2.1), method dropdown plus a note field when `other`; stopwatch card with Start/Stop/Reset and a live `mm:ss.t` readout (US-2.2); a manual duration field
-  - [ ] `step_flavor.dart`: 4 sliders (0..5) plus a live `FlavorRadarChart` (`CustomPainter` in `ui/core/widgets/flavor_radar_chart.dart`, reused by Feature 5) and a tag chip input (US-2.3)
-  - [ ] `step_instructions.dart`: a `ReorderableListView` of editable rows, an add field with a `maxLength: 280` counter, delete per row, and a Skip button (US-2.4, US-2.5)
-  - [ ] `step_media.dart`: photo grid, add via `ImagePicker().pickImage(maxWidth: 2048, maxHeight: 2048, imageQuality: 85)`, a progress overlay while `pendingUpload`, delete per photo, and a Finish button that works with 0 photos (US-2.6). Finish calls `save()` and returns to the list. The Add button is hidden once there are 6 photos.
-  - [ ] `lib/ui/features/recipe_creation/photo_encoder.dart`: turns the picked `XFile` into JPEG `ByteData`. If `mimeType` is not `image/jpeg` (web keeps PNG input as PNG), decode and re-encode with `package:image` (`encodeJpg(quality: 85)`), so the bytes match the server's `.jpg` path.
-- [ ] Register the three fake repositories in `app_scope.dart`.
-- [ ] `lib/ui/features/recipe_list/`: `RecipeListCubit({UuidValue? teamId})` with `load()`, `loadMore()`, and `reset()`, calling `listMine` for now. Feature 4 adds the `teamId` branch.
-  - [ ] Add the personal instance (no `teamId`) to `app_scope.dart` as a session-scoped Cubit that loads on `authenticated` and resets on `unauthenticated`.
-  - [ ] `RecipeListScreen` is the new `/` home and replaces the Feature 1 placeholder. Its app bar keeps the Sign out action, and a FAB goes to `/recipes/new`.
-  - [ ] An empty state ("No recipes yet") when the list is empty.
-- [ ] Routes: `/recipes/new` and `/recipes/:id/edit`. Declare `/recipes/new` before any `/recipes/:id` route, so `new` is not read as an id. Until Brew Mode exists (Feature 3), tapping a list item opens `/recipes/:id/edit`.
-- [ ] Cubit tests (`bloc_test` with fakes):
-  - [ ] instruction add, edit, move, and remove, including removing the last item, which leaves `[]`
-  - [ ] blank or 281-character input sets `error` and leaves the list unchanged
-  - [ ] `next()` guards on each step
-  - [ ] the stopwatch writes `extractionDuration` on stop and clears it on reset
-  - [ ] `load` restores the instructions in order (US-2.9)
-  - [ ] `addPhoto` with no `recipeId` calls `save` first; an `uploadRejected` failure leaves `photos` unchanged
-  - [ ] `skipInstructions()` clears the list and advances to the media step
-  - [ ] a failed `save` keeps every field and sets `saveStatus = failure`
-  - [ ] `RecipeListCubit`: `loadMore` appends the next page; `reset` empties the list (sign-out)
-- [ ] Widget test: `step_instructions` reorders two rows by drag.
-- [ ] Run the post-phase checklist, then `hot_restart`.
+- [x] Dependencies: `flutter pub add image_picker image`.
+- [x] iOS: add `NSPhotoLibraryUsageDescription` and `NSCameraUsageDescription` to `ios/Runner/Info.plist`, or the picker crashes. Android's photo picker needs no permission.
+- [x] Abstract repositories in `lib/data/repositories/`, plus in-memory fakes:
+  - [x] `IngredientRepository`: `search`, `register`
+  - [x] `RecipeRepository`: `save`, `get`, `listMine`, `getAccess`, `delete`
+  - [x] `RecipeMediaRepository`: `uploadPhoto(recipeId, ByteData)` returning `RecipePhoto`, and `remove(photoId)`
+- [x] Mirror the server limits in `lib/ui/features/recipe_creation/recipe_limits.dart` (`kInstructionMaxLength = 280`, and so on).
+- [x] `RecipeCreationState` (Equatable), with every field from the system design except `teamId` (Feature 4). Include `enum RecipeWizardStep` and `enum SaveStatus`.
+- [x] `RecipeCreationCubit`:
+  - [x] `startNew()`, `load(id)`
+  - [x] `searchIngredients`, with a 250ms debounce in the view; `selectIngredient`, `registerIngredient`
+  - [x] `setExtraction(...)`, `setExtractionDuration(Duration?)`. Implemented as one setter per field (`setTitle`, `setWaterTemp`, `setDose`, `setGrindSize`, `setGrinderModel`, `setExtractionMethod`, `setExtractionMethodNote`), so a nullable number can be cleared.
+  - [x] `startStopwatch` / `stopStopwatch` / `resetStopwatch`: a `Stopwatch` plus a 100ms `Timer.periodic`; cancel it in `close()`
+  - [x] `setFlavor({scores, tags})`
+  - [x] `addInstruction` / `updateInstruction` / `removeInstruction` / `moveInstruction`: trim, reject blank or > 280 without changing the list, cap at 30, allow duplicates
+  - [x] `skipInstructions()`, `next()` / `back()` with the per-step guards (`next` from extraction stops a running stopwatch)
+  - [x] `save()`; `addPhoto(ByteData)`, which calls `save()` first when `recipeId == null`; `removePhoto(id)`
+- [x] Views in `lib/ui/features/recipe_creation/view/`:
+  - [x] `recipe_wizard_screen.dart`: `BlocProvider` at the route, a step indicator (1–5), Back/Next buttons, and a `BlocListener` for `error`, which shows a snackbar
+  - [x] `step_ingredient.dart`: kind selector (`SegmentedButton<BeverageKind>`), search field, result list, and a "Register new" bottom sheet form (origin, roaster, roast level, processing)
+  - [x] `step_extraction.dart`: title, temperature, dose, grind size, grinder model (US-2.1), method dropdown plus a note field when `other`; stopwatch card with Start/Stop/Reset and a live `mm:ss.t` readout (US-2.2); a manual duration field
+  - [x] `step_flavor.dart`: 4 sliders (0..5) plus a live `FlavorRadarChart` (`CustomPainter` in `ui/core/widgets/flavor_radar_chart.dart`, reused by Feature 5) and a tag chip input (US-2.3)
+  - [x] `step_instructions.dart`: a `ReorderableListView` of editable rows, an add field with a `maxLength: 280` counter, delete per row, and a Skip button (US-2.4, US-2.5)
+  - [x] `step_media.dart`: photo grid, add via `ImagePicker().pickImage(maxWidth: 2048, maxHeight: 2048, imageQuality: 85)`, a progress overlay while `pendingUpload`, delete per photo, and a Finish button that works with 0 photos (US-2.6). Finish calls `save()` and returns to the list. The Add button is hidden once there are 6 photos.
+  - [x] `lib/ui/features/recipe_creation/photo_encoder.dart`: turns the picked `XFile` into JPEG `ByteData`. If `mimeType` is not `image/jpeg` (web keeps PNG input as PNG), decode and re-encode with `package:image` (`encodeJpg(quality: 85)`), so the bytes match the server's `.jpg` path.
+- [x] Register the three fake repositories in `app_scope.dart`.
+- [x] `lib/ui/features/recipe_list/`: `RecipeListCubit({UuidValue? teamId})` with `load()`, `loadMore()`, and `reset()`, calling `listMine` for now. Feature 4 adds the `teamId` branch.
+  - [x] Add the personal instance (no `teamId`) to `app_scope.dart` as a session-scoped Cubit that loads on `authenticated` and resets on `unauthenticated`.
+  - [x] `RecipeListScreen` is the new `/` home and replaces the Feature 1 placeholder. Its app bar keeps the Sign out action, and a FAB goes to `/recipes/new`.
+  - [x] An empty state ("No recipes yet") when the list is empty.
+- [x] Routes: `/recipes/new` and `/recipes/:id/edit`. Declare `/recipes/new` before any `/recipes/:id` route, so `new` is not read as an id. Until Brew Mode exists (Feature 3), tapping a list item opens `/recipes/:id/edit`. Already declared as sub-routes of `/` (the Feature 3 layout).
+- [x] Cubit tests (`bloc_test` with fakes):
+  - [x] instruction add, edit, move, and remove, including removing the last item, which leaves `[]`
+  - [x] blank or 281-character input sets `error` and leaves the list unchanged
+  - [x] `next()` guards on each step
+  - [x] the stopwatch writes `extractionDuration` on stop and clears it on reset
+  - [x] `load` restores the instructions in order (US-2.9)
+  - [x] `addPhoto` with no `recipeId` calls `save` first; an `uploadRejected` failure leaves `photos` unchanged
+  - [x] `skipInstructions()` clears the list and advances to the media step
+  - [x] a failed `save` keeps every field and sets `saveStatus = failure`
+  - [x] `RecipeListCubit`: `loadMore` appends the next page; `reset` empties the list (sign-out)
+- [x] Widget test: `step_instructions` reorders two rows by drag.
+- [x] Run the post-phase checklist, then `hot_restart`.
 
 
 
 ### 2.4 Integration Layer
 
-- [ ] Serverpod-backed implementations:
-  - [ ] `ServerpodIngredientRepository` on `client.ingredient`
-  - [ ] `ServerpodRecipeRepository` on `client.recipe`
-  - [ ] `ServerpodRecipeMediaRepository`: `client.recipeMedia.createUploadDescription`, then `FileUploader(ticket.description).uploadByteData(bytes)`, then `client.recipeMedia.confirmUpload(recipeId, ticket.path)`. If the upload returns false, throw a local `uploadRejected` without calling confirm. A `FileUploader` can upload only once, so create a new one for each attempt.
-- [ ] Register these in `app_scope.dart` in place of the fakes. Route `BlocProvider`s already read them with `context.read`, so no route changes.
-- [ ] Loading states:
-  - [ ] `saveStatus == saving` disables Next/Finish and shows a progress indicator on the button
-  - [ ] ingredient search shows a small inline spinner
-  - [ ] `pendingUpload` shows an overlay on the new photo tile
-- [ ] Error handling: add `BrewingException` support and the `overrides` parameter to `errorMessage` in `ui/core/error_messages.dart`. Shared defaults:
-  - [ ] `validation`: show `message`, which names the field
-  - [ ] `notFound`: "Recipe not found"; the wizard then goes back to the list
-  - [ ] `forbidden`: "You can't edit this recipe"
-  - [ ] `uploadRejected`: "Photo could not be verified — try again or skip" (US-2.12)
-  - [ ] The invite codes (`inviteExpired`, `inviteUsed`, `alreadyMember`) get their defaults in Feature 4.
-  - [ ] Every failure keeps the wizard input unchanged.
-- [ ] After `save` succeeds, call `context.read<RecipeListCubit>().load()` (the session-scoped instance) so the home list is current when the wizard closes.
-- [ ] End-to-end check (`get_flutter_app_dtd` → `connect_dart_tooling_daemon` → `flutter_driver`). Set `enableTextEntryEmulation: true` in `lib/driver.dart` and `hot_restart`. Leave it on for the Feature 3–5 checks; the wrap-up turns it off.
+- [x] Serverpod-backed implementations:
+  - [x] `ServerpodIngredientRepository` on `client.ingredient`
+  - [x] `ServerpodRecipeRepository` on `client.recipe`
+  - [x] `ServerpodRecipeMediaRepository`: `client.recipeMedia.createUploadDescription`, then `FileUploader(ticket.description).uploadByteData(bytes)`, then `client.recipeMedia.confirmUpload(recipeId, ticket.path)`. If the upload returns false, throw a local `uploadRejected` without calling confirm. A `FileUploader` can upload only once, so create a new one for each attempt.
+- [x] Register these in `app_scope.dart` in place of the fakes. Route `BlocProvider`s already read them with `context.read`, so no route changes.
+- [x] Loading states:
+  - [x] `saveStatus == saving` disables Next/Finish and shows a progress indicator on the button
+  - [x] ingredient search shows a small inline spinner
+  - [x] `pendingUpload` shows an overlay on the new photo tile
+- [x] Error handling: add `BrewingException` support and the `overrides` parameter to `errorMessage` in `ui/core/error_messages.dart`. Shared defaults:
+  - [x] `validation`: show `message`, which names the field
+  - [x] `notFound`: "Recipe not found"; the wizard then goes back to the list
+  - [x] `forbidden`: "You can't edit this recipe"
+  - [x] `uploadRejected`: "Photo could not be verified — try again or skip" (US-2.12)
+  - [x] The invite codes (`inviteExpired`, `inviteUsed`, `alreadyMember`) get their defaults in Feature 4.
+  - [x] Every failure keeps the wizard input unchanged.
+- [x] After `save` succeeds, call `context.read<RecipeListCubit>().load()` (the session-scoped instance) so the home list is current when the wizard closes.
+- [ ] End-to-end check (`get_flutter_app_dtd` → `connect_dart_tooling_daemon` → `flutter_driver`). Set `enableTextEntryEmulation: true` in `lib/driver.dart` and `hot_restart`. Leave it on for the Feature 3–5 checks; the wrap-up turns it off. Blocked in this session: the `serverpod` and `dart` MCP tools are not connected, so the driver path cannot run. A Cursor-browser substitute never reached a Flutter frame (DDC debug load stayed on a blank page).
   - [ ] Create a V60 recipe with a stopwatch time, 3 flavor tags, and 3 instructions including a duplicate; skip photos; the recipe shows up on the list.
   - [ ] Edit it: the instructions load in order; reorder and remove all of them; save; reopen and confirm there are none.
-  - [ ] Add a photo larger than 512 KB, confirm it renders from `publicUrl`, then remove it. This checks the `maxRequestSize` change from Feature 0.
-  - [ ] On Flutter web, confirm photos load. The dev app is on a different origin from the API server (`:8080`), and `Image.network` fetches need CORS there. If the browser console shows a CORS error, pass `webHtmlElementStrategy: WebHtmlElementStrategy.fallback` to `Image.network`.
-- [ ] Run the post-phase checklist, and check both log tails.
+  - [ ] Add a photo larger than 512 KB, confirm it renders from `publicUrl`, then remove it. This checks the `maxRequestSize` change from Feature 0. Confirmed in the running app after a cold start: add-photo works. Not separately measured as >512 KB.
+  - [ ] On Flutter web, confirm photos load. The dev app is on a different origin from the API server (`:8080`), and `Image.network` fetches need CORS there. If the browser console shows a CORS error, pass `webHtmlElementStrategy: WebHtmlElementStrategy.fallback` to `Image.network`. `WebHtmlElementStrategy.fallback` is already set on the photo tile.
+- [x] Run the post-phase checklist, and check both log tails. `dart analyze` / `dart format` / `dart test` (66) and `flutter analyze` / `flutter test` (70) are clean. Server logs after the migration restart show no pending migrations and no recipe/media errors.
 
 ---
 

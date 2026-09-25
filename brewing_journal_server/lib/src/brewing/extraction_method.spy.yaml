@@ -1,0 +1,11 @@
+enum: ExtractionMethod
+serialized: byName
+values:
+  - v60
+  - espresso
+  - frenchPress
+  - aeropress
+  - chemex
+  - coldBrew
+  - matchaWhisk
+  - other

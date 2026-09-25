@@ -1,0 +1,17 @@
+class: RecipePhoto
+table: recipe_photo
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  recipe: Recipe?, relation(name=recipe_photos, onDelete=Cascade)
+  storagePath: String
+  sortOrder: int
+  createdAt: DateTime, default=now
+  publicUrl: Uri?, !persist
+
+indexes:
+  recipe_photo_order_idx:
+    fields: recipeId, sortOrder
+    unique: true
+  recipe_photo_path_idx:
+    fields: storagePath
+    unique: true

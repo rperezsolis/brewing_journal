@@ -1,0 +1,4 @@
+class: UploadTicket
+fields:
+  path: String
+  description: String

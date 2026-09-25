@@ -1,0 +1,10 @@
+enum: BrewingErrorCode
+serialized: byName
+values:
+  - notFound
+  - forbidden
+  - validation
+  - inviteExpired
+  - inviteUsed
+  - alreadyMember
+  - uploadRejected

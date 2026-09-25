@@ -10,6 +10,12 @@
 // ignore_for_file: invalid_use_of_internal_member
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:brewing_journal_server/src/generated/brewing/beverage_kind.dart'
+    as _i32g9f9h;
+import 'package:brewing_journal_server/src/generated/brewing/ingredient_draft.dart'
+    as _ia1mb7ic;
+import 'package:brewing_journal_server/src/generated/brewing/recipe_draft.dart'
+    as _ig3znlm5;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _iacs;
@@ -17,6 +23,9 @@ import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _iais;
 import '../auth/email_idp_endpoint.dart' as _iuc1hd5t;
 import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
+import '../brewing/ingredient_endpoint.dart' as _iow895b6;
+import '../brewing/recipe_endpoint.dart' as _i34apttk;
+import '../brewing/recipe_media_endpoint.dart' as _i76lspal;
 
 class Endpoints extends _is.EndpointDispatch {
   @override
@@ -32,6 +41,24 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'jwtRefresh',
+          null,
+        ),
+      'ingredient': _iow895b6.IngredientEndpoint()
+        ..initialize(
+          server,
+          'ingredient',
+          null,
+        ),
+      'recipe': _i34apttk.RecipeEndpoint()
+        ..initialize(
+          server,
+          'recipe',
+          null,
+        ),
+      'recipeMedia': _i76lspal.RecipeMediaEndpoint()
+        ..initialize(
+          server,
+          'recipeMedia',
           null,
         ),
     };
@@ -237,6 +264,241 @@ class Endpoints extends _is.EndpointDispatch {
                       .refreshAccessToken(
                         session,
                         refreshToken: params['refreshToken'],
+                      ),
+        ),
+      },
+    );
+    connectors['ingredient'] = _is.EndpointConnector(
+      name: 'ingredient',
+      endpoint: endpoints['ingredient']!,
+      methodConnectors: {
+        'search': _is.MethodConnector(
+          name: 'search',
+          params: {
+            'kind': _is.ParameterDescription(
+              name: 'kind',
+              type: _is.getType<_i32g9f9h.BeverageKind>(),
+              nullable: false,
+            ),
+            'query': _is.ParameterDescription(
+              name: 'query',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'limit': _is.ParameterDescription(
+              name: 'limit',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['ingredient'] as _iow895b6.IngredientEndpoint)
+                      .search(
+                        session,
+                        params['kind'],
+                        params['query'],
+                        params['limit'],
+                      ),
+        ),
+        'register': _is.MethodConnector(
+          name: 'register',
+          params: {
+            'draft': _is.ParameterDescription(
+              name: 'draft',
+              type: _is.getType<_ia1mb7ic.IngredientDraft>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['ingredient'] as _iow895b6.IngredientEndpoint)
+                      .register(
+                        session,
+                        params['draft'],
+                      ),
+        ),
+      },
+    );
+    connectors['recipe'] = _is.EndpointConnector(
+      name: 'recipe',
+      endpoint: endpoints['recipe']!,
+      methodConnectors: {
+        'save': _is.MethodConnector(
+          name: 'save',
+          params: {
+            'draft': _is.ParameterDescription(
+              name: 'draft',
+              type: _is.getType<_ig3znlm5.RecipeDraft>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint).save(
+                session,
+                params['draft'],
+              ),
+        ),
+        'get': _is.MethodConnector(
+          name: 'get',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint).get(
+                session,
+                params['id'],
+              ),
+        ),
+        'listMine': _is.MethodConnector(
+          name: 'listMine',
+          params: {
+            'limit': _is.ParameterDescription(
+              name: 'limit',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'offset': _is.ParameterDescription(
+              name: 'offset',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['recipe'] as _i34apttk.RecipeEndpoint).listMine(
+                    session,
+                    params['limit'],
+                    params['offset'],
+                  ),
+        ),
+        'getAccess': _is.MethodConnector(
+          name: 'getAccess',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['recipe'] as _i34apttk.RecipeEndpoint).getAccess(
+                    session,
+                    params['id'],
+                  ),
+        ),
+        'delete': _is.MethodConnector(
+          name: 'delete',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['recipe'] as _i34apttk.RecipeEndpoint).delete(
+                    session,
+                    params['id'],
+                  ),
+        ),
+      },
+    );
+    connectors['recipeMedia'] = _is.EndpointConnector(
+      name: 'recipeMedia',
+      endpoint: endpoints['recipeMedia']!,
+      methodConnectors: {
+        'createUploadDescription': _is.MethodConnector(
+          name: 'createUploadDescription',
+          params: {
+            'recipeId': _is.ParameterDescription(
+              name: 'recipeId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['recipeMedia'] as _i76lspal.RecipeMediaEndpoint)
+                      .createUploadDescription(
+                        session,
+                        params['recipeId'],
+                      ),
+        ),
+        'confirmUpload': _is.MethodConnector(
+          name: 'confirmUpload',
+          params: {
+            'recipeId': _is.ParameterDescription(
+              name: 'recipeId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+            'path': _is.ParameterDescription(
+              name: 'path',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['recipeMedia'] as _i76lspal.RecipeMediaEndpoint)
+                      .confirmUpload(
+                        session,
+                        params['recipeId'],
+                        params['path'],
+                      ),
+        ),
+        'remove': _is.MethodConnector(
+          name: 'remove',
+          params: {
+            'photoId': _is.ParameterDescription(
+              name: 'photoId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['recipeMedia'] as _i76lspal.RecipeMediaEndpoint)
+                      .remove(
+                        session,
+                        params['photoId'],
                       ),
         ),
       },

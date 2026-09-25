@@ -1,0 +1,4 @@
+class: RecipeAccess
+fields:
+  canEdit: bool
+  canDelete: bool

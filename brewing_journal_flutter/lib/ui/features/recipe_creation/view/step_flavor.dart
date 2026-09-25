@@ -1,0 +1,159 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../core/widgets/flavor_radar_chart.dart';
+import '../cubit/recipe_creation_cubit.dart';
+import '../cubit/recipe_creation_state.dart';
+import '../recipe_limits.dart';
+
+/// Step 3: the four flavor scores, a live radar chart, and flavor tags.
+class StepFlavor extends StatefulWidget {
+  const StepFlavor({super.key});
+
+  @override
+  State<StepFlavor> createState() => _StepFlavorState();
+}
+
+class _StepFlavorState extends State<StepFlavor> {
+  final _tag = TextEditingController();
+
+  @override
+  void dispose() {
+    _tag.dispose();
+    super.dispose();
+  }
+
+  void _addTag() {
+    final cubit = context.read<RecipeCreationCubit>();
+    final before = cubit.state.flavorTags;
+    cubit.setFlavor(tags: [...before, _tag.text]);
+    if (cubit.state.error == null) _tag.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cubit = context.read<RecipeCreationCubit>();
+    return BlocBuilder<RecipeCreationCubit, RecipeCreationState>(
+      builder: (context, state) {
+        final sliders = Column(
+          children: [
+            _ScoreSlider(
+              label: 'Acidity',
+              value: state.acidity,
+              onChanged: (v) => cubit.setFlavor(acidity: v),
+            ),
+            _ScoreSlider(
+              label: 'Sweetness',
+              value: state.sweetness,
+              onChanged: (v) => cubit.setFlavor(sweetness: v),
+            ),
+            _ScoreSlider(
+              label: 'Body',
+              value: state.body,
+              onChanged: (v) => cubit.setFlavor(body: v),
+            ),
+            _ScoreSlider(
+              label: 'Bitterness',
+              value: state.bitterness,
+              onChanged: (v) => cubit.setFlavor(bitterness: v),
+            ),
+          ],
+        );
+        final chart = FlavorRadarChart(
+          acidity: state.acidity,
+          sweetness: state.sweetness,
+          body: state.body,
+          bitterness: state.bitterness,
+        );
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text('Flavor map', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 16),
+            LayoutBuilder(
+              builder: (context, constraints) => constraints.maxWidth >= 560
+                  ? Row(
+                      children: [
+                        Expanded(child: sliders),
+                        const SizedBox(width: 16),
+                        chart,
+                      ],
+                    )
+                  : Column(children: [chart, sliders]),
+            ),
+            const SizedBox(height: 24),
+            Text('Flavor tags', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final tag in state.flavorTags)
+                  InputChip(
+                    label: Text(tag),
+                    onDeleted: () => cubit.setFlavor(
+                      tags: [...state.flavorTags]..remove(tag),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('flavor-tag'),
+              controller: _tag,
+              maxLength: kTagMaxLength,
+              enabled: state.flavorTags.length < kMaxTags,
+              onSubmitted: (_) => _addTag(),
+              decoration: InputDecoration(
+                labelText: state.flavorTags.length < kMaxTags
+                    ? 'Add a tag (fruity, chocolate, floral…)'
+                    : 'At most $kMaxTags tags',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  tooltip: 'Add tag',
+                  icon: const Icon(Icons.add),
+                  onPressed: state.flavorTags.length < kMaxTags
+                      ? _addTag
+                      : null,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ScoreSlider extends StatelessWidget {
+  const _ScoreSlider({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(width: 88, child: Text(label)),
+        Expanded(
+          child: Slider(
+            value: value.toDouble(),
+            max: kMaxScore.toDouble(),
+            divisions: kMaxScore,
+            label: '$value',
+            semanticFormatterCallback: (v) => '$label ${v.round()}',
+            onChanged: (v) => onChanged(v.round()),
+          ),
+        ),
+        SizedBox(width: 20, child: Text('$value', textAlign: TextAlign.end)),
+      ],
+    );
+  }
+}

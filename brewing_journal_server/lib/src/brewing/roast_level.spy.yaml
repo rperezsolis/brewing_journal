@@ -1,0 +1,7 @@
+enum: RoastLevel
+serialized: byName
+values:
+  - light
+  - medium
+  - mediumDark
+  - dark

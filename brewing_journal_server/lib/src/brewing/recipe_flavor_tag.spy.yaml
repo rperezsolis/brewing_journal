@@ -1,0 +1,14 @@
+class: RecipeFlavorTag
+table: recipe_flavor_tag
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  recipe: Recipe?, relation(name=recipe_flavor_tags, onDelete=Cascade)
+  tag: String
+  tagKey: String
+
+indexes:
+  recipe_flavor_tag_recipe_idx:
+    fields: recipeId, tagKey
+    unique: true
+  recipe_flavor_tag_key_idx:
+    fields: tagKey

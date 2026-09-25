@@ -1,11 +1,11 @@
+import 'package:brewing_journal_flutter/app_scope.dart';
 import 'package:brewing_journal_flutter/data/repositories/fake_auth_repository.dart';
 import 'package:brewing_journal_flutter/router.dart';
 import 'package:brewing_journal_flutter/ui/features/auth/cubit/auth_cubit.dart';
 import 'package:brewing_journal_flutter/ui/features/auth/cubit/auth_state.dart';
 import 'package:brewing_journal_flutter/ui/features/auth/view/splash_screen.dart';
-import 'package:brewing_journal_flutter/ui/features/home/view/home_screen.dart';
+import 'package:brewing_journal_flutter/ui/features/recipe_list/view/recipe_list_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -83,8 +83,9 @@ void main() {
 
     Future<void> pumpApp(WidgetTester tester) async {
       await tester.pumpWidget(
-        BlocProvider.value(
-          value: cubit,
+        AppScope(
+          repositories: AppRepositories.fake(auth: repository),
+          authCubit: cubit,
           child: MaterialApp.router(routerConfig: createRouter(cubit)),
         ),
       );
@@ -108,7 +109,7 @@ void main() {
 
       await cubit.start();
       await tester.pumpAndSettle();
-      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.byType(RecipeListScreen), findsOneWidget);
     });
 
     testWidgets('tapping Sign out on home signs the user out', (tester) async {

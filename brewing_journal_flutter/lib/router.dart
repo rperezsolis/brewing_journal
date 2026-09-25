@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,12 +8,15 @@ import 'ui/features/auth/cubit/auth_cubit.dart';
 import 'ui/features/auth/cubit/auth_state.dart';
 import 'ui/features/auth/view/sign_in_screen.dart';
 import 'ui/features/auth/view/splash_screen.dart';
-import 'ui/features/home/view/home_screen.dart';
+import 'ui/features/recipe_creation/view/recipe_wizard_screen.dart';
+import 'ui/features/recipe_list/view/recipe_list_screen.dart';
 
 abstract final class Routes {
   static const splash = '/splash';
   static const signIn = '/sign-in';
   static const home = '/';
+  static const newRecipe = '/recipes/new';
+  static String editRecipe(UuidValue id) => '/recipes/${id.uuid}/edit';
 }
 
 GoRouter createRouter(AuthCubit auth) {
@@ -31,11 +35,35 @@ GoRouter createRouter(AuthCubit auth) {
       ),
       GoRoute(
         path: Routes.home,
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) => const RecipeListScreen(),
+        routes: [
+          // Declared before `recipes/:id/...`, so `new` is never read as an id.
+          GoRoute(
+            path: 'recipes/new',
+            builder: (context, state) => const RecipeWizardScreen(),
+          ),
+          GoRoute(
+            path: 'recipes/:id/edit',
+            builder: (context, state) {
+              final id = _parseId(state.pathParameters['id']);
+              if (id == null) return const _NotFoundScreen();
+              return RecipeWizardScreen(key: ValueKey(id), recipeId: id);
+            },
+          ),
+        ],
       ),
     ],
     errorBuilder: (context, state) => const _NotFoundScreen(),
   );
+}
+
+UuidValue? _parseId(String? value) {
+  if (value == null) return null;
+  try {
+    return UuidValue.withValidation(value);
+  } on FormatException {
+    return null;
+  }
 }
 
 /// Sends the user to `/splash` or `/sign-in` until they are signed in, and

@@ -1,0 +1,18 @@
+class: RecipeDraft
+fields:
+  id: UuidValue?
+  ingredientId: UuidValue
+  title: String
+  waterTempC: double
+  doseGrams: double
+  grindSize: String
+  grinderModel: String
+  extractionMethod: ExtractionMethod
+  extractionMethodNote: String?
+  extractionDuration: Duration?
+  acidity: int
+  sweetness: int
+  body: int
+  bitterness: int
+  flavorTags: List<String>
+  instructions: List<String>

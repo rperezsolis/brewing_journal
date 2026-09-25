@@ -1,0 +1,17 @@
+class: Ingredient
+table: ingredient
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  owner: module:serverpod_auth_core:AuthUser?, relation(onDelete=Cascade)
+  kind: BeverageKind
+  name: String
+  nameKey: String
+  origin: String?
+  roaster: String?
+  roastLevel: RoastLevel?
+  processing: String?
+  createdAt: DateTime, default=now
+
+indexes:
+  ingredient_owner_kind_name_idx:
+    fields: ownerId, kind, nameKey
