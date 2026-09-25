@@ -244,6 +244,12 @@ class EndpointJwtRefresh extends _iacc.EndpointRefreshJwtTokens {
       );
 }
 
+/// Base class for every domain endpoint: all methods require a signed-in user.
+/// {@category Endpoint}
+abstract class EndpointAuthenticated extends _isc.EndpointRef {
+  EndpointAuthenticated(_isc.EndpointCaller caller) : super(caller);
+}
+
 class Modules {
   Modules(Client client) {
     serverpod_auth_idp = _iaic.Caller(client);

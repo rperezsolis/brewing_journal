@@ -1,6 +1,6 @@
 # BrewSync MVP — Task Breakdown and Execution Plan
 
-**Sources:** [`brewing_journal_mvp_prd.md`](./brewing_journal_mvp_prd.md) (requirements, user stories) and [`brewing_journal_mvp_system_design.md`](./brewing_journal_mvp_system_design.md) (schemas, endpoint contracts, Cubits).
+**Sources:** `[brewing_journal_mvp_prd.md](./brewing_journal_mvp_prd.md)` (requirements, user stories) and `[brewing_journal_mvp_system_design.md](./brewing_journal_mvp_system_design.md)` (schemas, endpoint contracts, Cubits).
 
 **Packages:** `brewing_journal_server` (Serverpod 4.0.2), `brewing_journal_client` (generated — never edit), `brewing_journal_flutter` (Flutter app).
 
@@ -23,15 +23,17 @@ The one exception to phase isolation is the Feature 1 `requireLogin` test: it ne
 
 The dev loop runs under `serverpod start`, which watches files, regenerates code, and hot reloads the server and the app. Use the `serverpod` MCP tools while it is running. Use the CLI only when the server cannot start at all.
 
-| Action | While `serverpod start` is running (MCP) | Fallback (CLI, in `brewing_journal_server/`) |
-| --- | --- | --- |
-| Regenerate code | automatic on save | `serverpod generate` |
-| Create migration | `create_migration` | `serverpod create-migration --tag <name>` (add `--force` for destructive changes) |
-| Apply migrations | `apply_migrations` | applied automatically on the next `serverpod start` |
-| Repair drifted DB | `create_repair_migration` | `serverpod create-repair-migration` |
-| Restart | `hot_restart` | restart `serverpod start` |
-| Logs | `tail_server_logs`, `tail_flutter_logs` | terminal output |
-| Build the web app into `web/app` | — | `serverpod run flutter_build` (script in the server `pubspec.yaml`) |
+
+| Action                           | While `serverpod start` is running (MCP) | Fallback (CLI, in `brewing_journal_server/`)                                      |
+| -------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------- |
+| Regenerate code                  | automatic on save                        | `serverpod generate`                                                              |
+| Create migration                 | `create_migration`                       | `serverpod create-migration --tag <name>` (add `--force` for destructive changes) |
+| Apply migrations                 | `apply_migrations`                       | applied automatically on the next `serverpod start`                               |
+| Repair drifted DB                | `create_repair_migration`                | `serverpod create-repair-migration`                                               |
+| Restart                          | `hot_restart`                            | restart `serverpod start`                                                         |
+| Logs                             | `tail_server_logs`, `tail_flutter_logs`  | terminal output                                                                   |
+| Build the web app into `web/app` | —                                        | `serverpod run flutter_build` (script in the server `pubspec.yaml`)               |
+
 
 **Checklist after each phase, in order** (from `AGENTS.md`):
 
@@ -42,6 +44,8 @@ The dev loop runs under `serverpod start`, which watches files, regenerates code
 - [ ] `dart test` in `brewing_journal_server/` (embedded Postgres from `config/test.yaml`, no Docker) after backend phases
 - [ ] `flutter test` in `brewing_journal_flutter/` after Flutter phases
 - [ ] `tail_server_logs` and `tail_flutter_logs` (MCP) show no errors
+
+
 
 ### Folder conventions
 
@@ -70,6 +74,8 @@ brewing_journal_flutter/lib/
 
 ---
 
+
+
 ## Feature 0 — Project Foundation (one-time)
 
 This is setup, not a product feature. It is here so the Feature 1 tasks do not mix in dependency installs.
@@ -89,6 +95,8 @@ This is setup, not a product feature. It is here so the Feature 1 tasks do not m
 
 ---
 
+
+
 ## Feature 1 — Authentication
 
 **Stories:** US-1.1 sign up, US-1.2 persistent session, US-1.3 failed sign-in stays signed out, US-1.4 bad verification code rejected.
@@ -97,68 +105,76 @@ This is setup, not a product feature. It is here so the Feature 1 tasks do not m
 
 The auth tables (`serverpod_auth_idp_email_account`, `serverpod_auth_idp_email_account_request`, `serverpod_auth_core_jwt_refresh_token`, and the rest) are already in migration `20260925162018290`.
 
-- [ ] Confirm `migrations/migration_registry.txt` lists `20260925162018290` and that `definition.sql` contains `serverpod_auth_idp_email_account` and `serverpod_auth_core_jwt_refresh_token`.
+- [x] Confirm `migrations/migration_registry.txt` lists `20260925162018290` and that `definition.sql` contains `serverpod_auth_idp_email_account` and `serverpod_auth_core_jwt_refresh_token`.
 - [ ] Run `apply_migrations` (MCP) and confirm in `tail_server_logs` that there are no pending migrations.
-- [ ] Confirm `config/generator.yaml` sets no module nickname, so later models can reference `module:serverpod_auth_core:AuthUser`.
-- [ ] No new `.spy.yaml` files in this feature.
+- [x] Confirm `config/generator.yaml` sets no module nickname, so later models can reference `module:serverpod_auth_core:AuthUser`.
+- [x] No new `.spy.yaml` files in this feature.
+
+
 
 ### 1.2 Backend API Endpoints
 
-- [ ] Review `lib/src/auth/email_idp_endpoint.dart` (`EmailIdpEndpoint extends EmailIdpBaseEndpoint`) and `jwt_refresh_endpoint.dart` (`JwtRefreshEndpoint extends RefreshJwtTokensEndpoint`). No changes expected.
-- [ ] Confirm `pod.initializeAuthServices` in `lib/server.dart` uses `JwtConfigFromPasswords()` and `ServerpodCloudEmailIdpConfig`, and that `config/passwords.yaml` has the JWT secrets for `development` and `test`.
-- [ ] Create `lib/src/common/session_auth.dart` with an extension on `Session`:
-  - [ ] `UuidValue get callerId => authenticated!.authUserId;`, used only inside endpoints that set `requireLogin => true`. `authUserId` is an extension from `package:serverpod_auth_idp_server/core.dart`, so import it there.
-- [ ] Create `lib/src/common/authenticated_endpoint.dart`: `abstract class AuthenticatedEndpoint extends Endpoint { @override bool get requireLogin => true; }`. Every domain endpoint in later features extends it.
+- [x] Review `lib/src/auth/email_idp_endpoint.dart` (`EmailIdpEndpoint extends EmailIdpBaseEndpoint`) and `jwt_refresh_endpoint.dart` (`JwtRefreshEndpoint extends RefreshJwtTokensEndpoint`). No changes expected.
+- [x] Confirm `pod.initializeAuthServices` in `lib/server.dart` uses `JwtConfigFromPasswords()` and `ServerpodCloudEmailIdpConfig`, and that `config/passwords.yaml` has the JWT secrets for `development` and `test`.
+- [x] Create `lib/src/common/session_auth.dart` with an extension on `Session`:
+  - [x] `UuidValue get callerId => authenticated!.authUserId;`, used only inside endpoints that set `requireLogin => true`. `authUserId` is an extension from `package:serverpod_auth_idp_server/core.dart`, so import it there.
+- [x] Create `lib/src/common/authenticated_endpoint.dart`: `abstract class AuthenticatedEndpoint extends Endpoint { @override bool get requireLogin => true; }`. Every domain endpoint in later features extends it.
 - [ ] Development check: register an email through the app and confirm the verification code shows up in `tail_server_logs`.
-- [ ] Test helper `test/integration/helpers/test_users.dart`. Every domain table has a foreign key to `serverpod_auth_core_user`, so a test user must be a real row:
-  - [ ] `Future<TestUser> createTestUser(TestSessionBuilder sb)` calls `const AuthUsers().create(sb.build())` (from `package:serverpod_auth_idp_server/core.dart`) and returns the `authUserId` plus `sb.copyWith(authentication: AuthenticationOverride.authenticationInfo(authUser.id.toString(), {}))`.
-  - [ ] All later server tests get users A, B, and so on from this helper.
-- [ ] Server test `test/integration/auth/require_login_test.dart` (`withServerpod`). This test depends on the first `AuthenticatedEndpoint` subclass, so write it now and run it after 2.2:
+- [x] Test helper `test/integration/helpers/test_users.dart`. Every domain table has a foreign key to `serverpod_auth_core_user`, so a test user must be a real row:
+  - [x] `Future<TestUser> createTestUser(TestSessionBuilder sb)` calls `const AuthUsers().create(sb.build())` (from `package:serverpod_auth_idp_server/core.dart`) and returns the `authUserId` plus `sb.copyWith(authentication: AuthenticationOverride.authenticationInfo(authUser.id.toString(), {}))`.
+  - [x] All later server tests get users A, B, and so on from this helper.
+- [ ] Server test `test/integration/auth/require_login_test.dart` (`withServerpod`). This test depends on the first `AuthenticatedEndpoint` subclass, so write it now and run it after 2.2: **Deferred to 2.2** (it cannot compile before `endpoints.recipe` exists). `test/integration/auth/test_users_test.dart` covers the helper in the meantime.
   - [ ] An unauthenticated `sessionBuilder` call to `endpoints.recipe.listMine` fails with `ServerpodUnauthenticatedException`.
   - [ ] The same call with a `createTestUser` session builder succeeds and returns `[]`.
-- [ ] Run the post-phase checklist.
+- [ ] Run the post-phase checklist. `dart analyze`, `dart format` and `dart test` pass; the MCP log tails are not checked yet.
+
+
 
 ### 1.3 Flutter UI & State Management
 
-- [ ] `lib/data/repositories/auth_repository.dart`: abstract `AuthRepository` with `Stream<bool> authStateChanges`, `bool get isAuthenticated`, `Future<void> restore()`, and `Future<void> signOut()`. Add `FakeAuthRepository` for tests and previews.
-- [ ] `lib/ui/features/auth/cubit/auth_state.dart`: `enum AuthStatus { unknown, authenticated, unauthenticated }`, and an `AuthState` (Equatable) holding `status`.
-- [ ] `lib/ui/features/auth/cubit/auth_cubit.dart`: `AuthCubit(AuthRepository)` that subscribes to `authStateChanges` in its constructor, plus `signOut()`. Cancel the subscription in `close()`.
-  - [ ] `start()` awaits `restore()` and then emits from `isAuthenticated`. The listenable only fires on changes, so without this a restored session would stay `unknown`.
-- [ ] `lib/ui/features/auth/view/splash_screen.dart`: a spinner shown while `status == unknown`, so a restored session does not flash the sign-in screen (US-1.2).
-- [ ] `lib/ui/features/auth/view/sign_in_screen.dart`: move the existing `lib/screens/sign_in_screen.dart` here. Keep `SignInWidget(client: ...)`, which already handles the email, verification-code, and password steps. `onError` shows a snackbar with an error message (US-1.3, US-1.4). Remove the `child` wrapper, since routing replaces it.
-- [ ] `lib/router.dart` (`go_router`):
-  - [ ] Routes: `/splash`, `/sign-in`, `/` (home placeholder for now).
-  - [ ] `redirect`, carrying the original location as `from` on every hop:
-    - [ ] `unknown` goes to `/splash?from=<location>`. Without `from` here, a cold start on `/invite/<token>` (Feature 4) would be lost while the session is being restored.
-    - [ ] `unauthenticated` goes to `/sign-in?from=<location>` (keeping an existing `from` when coming from `/splash`).
-    - [ ] `authenticated` on `/splash` or `/sign-in` goes to `from`, or `/` if there is none.
-  - [ ] `refreshListenable`: a small `ChangeNotifier` adapter (`GoRouterRefreshStream`) that calls `notifyListeners` on each `AuthCubit.stream` event. `go_router` has no stream adapter built in.
-  - [ ] `GoRouter createRouter(AuthCubit auth)`, so the router and the widget tree share one `AuthCubit` instance.
-- [ ] `app_scope.dart`: `AppScope` widget with a `MultiRepositoryProvider` (`AuthRepository` for now) and a `MultiBlocProvider` (`BlocProvider.value` of the `AuthCubit`). Later features add their repositories and session-scoped Cubits here.
-- [ ] `main.dart`: create the `AuthCubit` and call `start()`, build the router with `createRouter(authCubit)`, and run `AppScope(child: MaterialApp.router(...))`. Remove `MyHomePage` and the Feature 0 placeholder.
-- [ ] `/` home placeholder with a Sign out action that calls `AuthCubit.signOut()`.
-- [ ] `ui/core/error_messages.dart`: `String errorMessage(Object error, {Map<BrewingErrorCode, String> overrides = const {}})`. It returns `overrides[code]` first, then the shared default for that code, then the connection message (see 1.4). Screens that need different wording for the same code pass `overrides` instead of changing the shared defaults. `BrewingErrorCode` does not exist until Feature 2, so in this feature the function only handles connection errors, and the `overrides` parameter is added in 2.4.
-- [ ] Cubit tests (`bloc_test`, fake repository): the initial state is `unknown`; `start()` with a restored session emits `authenticated`, and with none emits `unauthenticated`; a stream value of `true` emits `authenticated`; a later `false` emits `unauthenticated`.
+- [x] `lib/data/repositories/auth_repository.dart`: abstract `AuthRepository` with `Stream<bool> authStateChanges`, `bool get isAuthenticated`, `Future<void> restore()`, and `Future<void> signOut()`. Add `FakeAuthRepository` for tests and previews.
+- [x] `lib/ui/features/auth/cubit/auth_state.dart`: `enum AuthStatus { unknown, authenticated, unauthenticated }`, and an `AuthState` (Equatable) holding `status`.
+- [x] `lib/ui/features/auth/cubit/auth_cubit.dart`: `AuthCubit(AuthRepository)` that subscribes to `authStateChanges` in its constructor, plus `signOut()`. Cancel the subscription in `close()`.
+  - [x] `start()` awaits `restore()` and then emits from `isAuthenticated`. The listenable only fires on changes, so without this a restored session would stay `unknown`.
+- [x] `lib/ui/features/auth/view/splash_screen.dart`: a spinner shown while `status == unknown`, so a restored session does not flash the sign-in screen (US-1.2).
+- [x] `lib/ui/features/auth/view/sign_in_screen.dart`: move the existing `lib/screens/sign_in_screen.dart` here. Keep `SignInWidget(client: ...)`, which already handles the email, verification-code, and password steps. `onError` shows a snackbar with an error message (US-1.3, US-1.4). Remove the `child` wrapper, since routing replaces it.
+- [x] `lib/router.dart` (`go_router`):
+  - [x] Routes: `/splash`, `/sign-in`, `/` (home placeholder for now).
+  - [x] `redirect`, carrying the original location as `from` on every hop:
+    - [x] `unknown` goes to `/splash?from=<location>`. Without `from` here, a cold start on `/invite/<token>` (Feature 4) would be lost while the session is being restored.
+    - [x] `unauthenticated` goes to `/sign-in?from=<location>` (keeping an existing `from` when coming from `/splash`).
+    - [x] `authenticated` on `/splash` or `/sign-in` goes to `from`, or `/` if there is none.
+  - [x] `refreshListenable`: a small `ChangeNotifier` adapter (`GoRouterRefreshStream`) that calls `notifyListeners` on each `AuthCubit.stream` event. `go_router` has no stream adapter built in.
+  - [x] `GoRouter createRouter(AuthCubit auth)`, so the router and the widget tree share one `AuthCubit` instance.
+- [x] `app_scope.dart`: `AppScope` widget with a `MultiRepositoryProvider` (`AuthRepository` for now) and a `MultiBlocProvider` (`BlocProvider.value` of the `AuthCubit`). Later features add their repositories and session-scoped Cubits here.
+- [x] `main.dart`: create the `AuthCubit` and call `start()`, build the router with `createRouter(authCubit)`, and run `AppScope(child: MaterialApp.router(...))`. Remove `MyHomePage` and the Feature 0 placeholder.
+- [x] `/` home placeholder with a Sign out action that calls `AuthCubit.signOut()`.
+- [x] `ui/core/error_messages.dart`: `String errorMessage(Object error, {Map<BrewingErrorCode, String> overrides = const {}})`. It returns `overrides[code]` first, then the shared default for that code, then the connection message (see 1.4). Screens that need different wording for the same code pass `overrides` instead of changing the shared defaults. `BrewingErrorCode` does not exist until Feature 2, so in this feature the function only handles connection errors, and the `overrides` parameter is added in 2.4.
+- [x] Cubit tests (`bloc_test`, fake repository): the initial state is `unknown`; `start()` with a restored session emits `authenticated`, and with none emits `unauthenticated`; a stream value of `true` emits `authenticated`; a later `false` emits `unauthenticated`.
 - [ ] Run the post-phase checklist, then `hot_restart` (the router change needs it).
+
+
 
 ### 1.4 Integration Layer
 
-- [ ] `ServerpodAuthRepository implements AuthRepository` on the global `client`:
-  - [ ] `authStateChanges` bridges `client.auth.authInfoListenable` to a stream that emits `client.auth.isAuthenticated`.
-  - [ ] `restore()` awaits `client.auth.initialize()`. Remove the `unawaited(client.auth.initialize())` call from `initializeClient()` in `client.dart`, so initialization happens once, through `AuthCubit.start()`.
-  - [ ] `signOut()` calls `client.auth.signOutDevice()`.
-- [ ] Register `ServerpodAuthRepository` in `app_scope.dart` in place of `FakeAuthRepository`.
+- [x] `ServerpodAuthRepository implements AuthRepository` on the global `client`:
+  - [x] `authStateChanges` bridges `client.auth.authInfoListenable` to a stream that emits `client.auth.isAuthenticated`.
+  - [x] `restore()` awaits `client.auth.initialize()`. Remove the `unawaited(client.auth.initialize())` call from `initializeClient()` in `client.dart`, so initialization happens once, through `AuthCubit.start()`.
+  - [x] `signOut()` calls `client.auth.signOutDevice()`.
+- [x] Register `ServerpodAuthRepository` in `app_scope.dart` in place of `FakeAuthRepository`.
 - [ ] Manual checks against the dev server:
-  - [ ] Register a new email, read the code from `tail_server_logs`, finish registration, and land on `/` (US-1.1).
-  - [ ] Enter a wrong or expired code: registration does not complete and an error is shown (US-1.4).
-  - [ ] Enter a wrong password or unknown email: the user stays on `/sign-in` with an error (US-1.3).
-  - [ ] `hot_restart`: the user goes from `/splash` straight to `/` without signing in again (US-1.2).
-  - [ ] Sign out, and confirm the user goes to `/sign-in` and that protected routes redirect there.
-  - [ ] Signed out, open `/some/deep/path` directly, sign in, and confirm the user lands on `/some/deep/path` (checks that `from` survives `/splash` and `/sign-in`).
-- [ ] Error handling: in `errorMessage`, map `ServerpodClientNetworkException` (and any other `ServerpodClientException`) to "Can't reach the server". Do not catch `SocketException`: `dart:io` is not available on web.
+  - [x] Register a new email, read the code from `tail_server_logs`, finish registration, and land on `/` (US-1.1).
+  - [x] Enter a wrong or expired code: registration does not complete and an error is shown (US-1.4).
+  - [x] Enter a wrong password or unknown email: the user stays on `/sign-in` with an error (US-1.3).
+  - [x] `hot_restart`: the user goes from `/splash` straight to `/` without signing in again (US-1.2).
+  - [x] Sign out, and confirm the user goes to `/sign-in` and that protected routes redirect there.
+  - [x] Signed out, open `/some/deep/path` directly, sign in, and confirm the user lands on `/some/deep/path` (checks that `from` survives `/splash` and `/sign-in`). The app uses hash URLs, so open `/#/some/deep/path`. The first half is verified: it lands on `/#/sign-in?from=/some/deep/path`; signing in is not checked yet.
+- [x] Error handling: in `errorMessage`, map `ServerpodClientNetworkException` (and any other `ServerpodClientException`) to "Can't reach the server". Do not catch `SocketException`: `dart:io` is not available on web.
 - [ ] Run the post-phase checklist, and check both log tails.
 
 ---
+
+
 
 ## Feature 2 — 5-Step Recipe Creation (with File Uploads)
 
@@ -174,19 +190,19 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
   - [ ] `lib/src/brewing/extraction_method.spy.yaml`: `v60, espresso, frenchPress, aeropress, chemex, coldBrew, matchaWhisk, other`
   - [ ] `lib/src/brewing/brewing_error_code.spy.yaml`: `notFound, forbidden, validation, inviteExpired, inviteUsed, alreadyMember, uploadRejected` (all codes now, so the enum does not churn in Feature 4)
 - [ ] **Exception**: `lib/src/brewing/brewing_exception.spy.yaml` with `code: BrewingErrorCode` and `message: String`.
-- [ ] **Table `ingredient`** (`ingredient.spy.yaml`):
+- [ ] **Table** `ingredient` (`ingredient.spy.yaml`):
   - [ ] Fields: `owner: module:serverpod_auth_core:AuthUser?, relation(onDelete=Cascade)`, `kind`, `name`, `nameKey`, `origin?`, `roaster?`, `roastLevel?`, `processing?`, `createdAt: DateTime, default=now`.
   - [ ] Index `ingredient_owner_kind_name_idx` on `ownerId, kind, nameKey`.
-- [ ] **Table `recipe`** (`recipe.spy.yaml`), without `team`:
+- [ ] **Table** `recipe` (`recipe.spy.yaml`), without `team`:
   - [ ] `owner` (Cascade), `ingredient: Ingredient?, relation(onDelete=NoAction)`.
   - [ ] `title`, `waterTempC: double`, `doseGrams: double`, `grindSize`, `grinderModel`, `extractionMethod`, `extractionMethodNote: String?`, `extractionDuration: Duration?`.
   - [ ] `acidity`, `sweetness`, `body`, `bitterness: int`.
   - [ ] `createdAt` and `updatedAt`, both `default=now`.
   - [ ] Child lists: `instructions` (`recipe_instructions`), `photos` (`recipe_photos`), `flavorTags` (`recipe_flavor_tags`).
   - [ ] Indexes `recipe_owner_updated_idx` (`ownerId, updatedAt`) and `recipe_ingredient_idx` (`ingredientId`).
-- [ ] **Table `recipe_instruction`**: `recipe` (Cascade, `recipe_instructions`), `sortOrder: int`, `text: String`. Unique index `recipe_instruction_order_idx` on `recipeId, sortOrder`.
-- [ ] **Table `recipe_flavor_tag`**: `recipe` (Cascade, `recipe_flavor_tags`), `tag`, `tagKey`. Unique `recipe_flavor_tag_recipe_idx` (`recipeId, tagKey`), plus `recipe_flavor_tag_key_idx` (`tagKey`).
-- [ ] **Table `recipe_photo`**: `recipe` (Cascade, `recipe_photos`), `storagePath`, `sortOrder`, `createdAt`, `publicUrl: Uri?, !persist`. Unique `recipe_photo_order_idx` (`recipeId, sortOrder`) and unique `recipe_photo_path_idx` (`storagePath`).
+- [ ] **Table** `recipe_instruction`: `recipe` (Cascade, `recipe_instructions`), `sortOrder: int`, `text: String`. Unique index `recipe_instruction_order_idx` on `recipeId, sortOrder`.
+- [ ] **Table** `recipe_flavor_tag`: `recipe` (Cascade, `recipe_flavor_tags`), `tag`, `tagKey`. Unique `recipe_flavor_tag_recipe_idx` (`recipeId, tagKey`), plus `recipe_flavor_tag_key_idx` (`tagKey`).
+- [ ] **Table** `recipe_photo`: `recipe` (Cascade, `recipe_photos`), `storagePath`, `sortOrder`, `createdAt`, `publicUrl: Uri?, !persist`. Unique `recipe_photo_order_idx` (`recipeId, sortOrder`) and unique `recipe_photo_path_idx` (`storagePath`).
 - [ ] **DTOs** (no `table`):
   - [ ] `ingredient_draft.spy.yaml`: `kind`, `name`, `origin?`, `roaster?`, `roastLevel?`, `processing?`
   - [ ] `recipe_draft.spy.yaml`: every field in the system design except `teamId`: `id?`, `ingredientId`, the parameters, the scores, `flavorTags: List<String>`, `instructions: List<String>`
@@ -198,6 +214,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 - [ ] `create_migration` (MCP), or CLI `serverpod create-migration --tag recipes`.
 - [ ] Review the new `migration.sql`: 5 `CREATE TABLE` statements, foreign keys to `serverpod_auth_core_user` with `ON DELETE CASCADE`, `recipe.ingredientId` with `NO ACTION`, and all 8 indexes.
 - [ ] `apply_migrations` (MCP), then `tail_server_logs` to confirm it applied.
+
+
 
 ### 2.2 Backend API Endpoints
 
@@ -241,6 +259,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
     - [ ] a forged path gives `validation`; confirming without an upload gives `uploadRejected` and no row; the 7th upload description gives `validation`; `remove` by user B gives `notFound`
   - [ ] `recipe_delete_test.dart`: owner delete cascades to instructions, tags, and photos; user B calling `delete` gives `notFound`
 - [ ] Run the post-phase checklist, then `dart test` in `brewing_journal_server/`.
+
+
 
 ### 2.3 Flutter UI & State Management
 
@@ -288,6 +308,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 - [ ] Widget test: `step_instructions` reorders two rows by drag.
 - [ ] Run the post-phase checklist, then `hot_restart`.
 
+
+
 ### 2.4 Integration Layer
 
 - [ ] Serverpod-backed implementations:
@@ -316,6 +338,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 
 ---
 
+
+
 ## Feature 3 — Recipe Replay & Timer (Brew Mode)
 
 **Stories:** US-3.1 through US-3.6. The timer and alarm run only in Flutter. The server already stores `extractionDuration` (Feature 2).
@@ -324,6 +348,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 
 - [ ] No schema changes. Confirm `recipe.extractionDuration` (`Duration?`) exists in `definition.sql` as a nullable `bigint`.
 - [ ] No migration needed. Run `create_migration` (MCP) once and confirm it reports no changes.
+
+
 
 ### 3.2 Backend API Endpoints
 
@@ -334,6 +360,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
   - [ ] A recipe with no photos returns `photos: []` (US-3.6).
   - [ ] Every photo has a non-null `publicUrl`.
 - [ ] Run `dart test`.
+
+
 
 ### 3.3 Flutter UI & State Management
 
@@ -370,6 +398,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 - [ ] Widget tests: the instructions section is absent for `[]`, the photos section is absent for `[]`, and the timer panel is absent for a null target.
 - [ ] Run the post-phase checklist, then `hot_restart` (new asset).
 
+
+
 ### 3.4 Integration Layer
 
 - [ ] Register `AudioAlarmPlayer` in `app_scope.dart` in place of the fake. `RecipeDetailCubit` already gets `ServerpodRecipeRepository` from Feature 2's registration.
@@ -385,6 +415,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 
 ---
 
+
+
 ## Feature 4 — Collaborative Teams & RBAC
 
 **Stories:** US-4.1 through US-4.6. Roles are rows in `team_membership`, checked inside endpoint methods. Serverpod scopes are not used.
@@ -392,10 +424,10 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 ### 4.1 Backend Schemas & Database
 
 - [ ] **Enum** `lib/src/teams/team_role.spy.yaml`: `viewer, editor` (`serialized: byName`).
-- [ ] **Table `team`** (`team.spy.yaml`): `owner` (Cascade), `name`, `createdAt`, `memberships` (`team_memberships`), `invites` (`team_invites`), `recipes` (`team_recipes`). Index `team_owner_idx` on `ownerId`.
-- [ ] **Table `team_membership`**: `team` (Cascade, `team_memberships`), `member: module:serverpod_auth_core:AuthUser?` (Cascade), `role: TeamRole`, `createdAt`. Unique `team_membership_team_member_idx` (`teamId, memberId`), plus `team_membership_member_idx` (`memberId`).
-- [ ] **Table `team_invite`**: `team` (Cascade, `team_invites`), `createdBy` (Cascade), `token`, `role`, `expiresAt`, `usedAt?`, `usedBy` (`optional, onDelete=SetNull`), `createdAt`. Unique `team_invite_token_idx` (`token`), plus `team_invite_team_idx` (`teamId, expiresAt`).
-- [ ] **Extend `recipe.spy.yaml`**: add `team: Team?, relation(name=team_recipes, optional, onDelete=SetNull)` and the index `recipe_team_updated_idx` (`teamId, updatedAt`).
+- [ ] **Table** `team` (`team.spy.yaml`): `owner` (Cascade), `name`, `createdAt`, `memberships` (`team_memberships`), `invites` (`team_invites`), `recipes` (`team_recipes`). Index `team_owner_idx` on `ownerId`.
+- [ ] **Table** `team_membership`: `team` (Cascade, `team_memberships`), `member: module:serverpod_auth_core:AuthUser?` (Cascade), `role: TeamRole`, `createdAt`. Unique `team_membership_team_member_idx` (`teamId, memberId`), plus `team_membership_member_idx` (`memberId`).
+- [ ] **Table** `team_invite`: `team` (Cascade, `team_invites`), `createdBy` (Cascade), `token`, `role`, `expiresAt`, `usedAt?`, `usedBy` (`optional, onDelete=SetNull`), `createdAt`. Unique `team_invite_token_idx` (`token`), plus `team_invite_team_idx` (`teamId, expiresAt`).
+- [ ] **Extend** `recipe.spy.yaml`: add `team: Team?, relation(name=team_recipes, optional, onDelete=SetNull)` and the index `recipe_team_updated_idx` (`teamId, updatedAt`).
 - [ ] **Extend DTOs**:
   - [ ] `recipe_draft.spy.yaml`: add `teamId: UuidValue?`
   - [ ] `recipe_access.spy.yaml`: add `role: TeamRole?`
@@ -405,6 +437,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 - [ ] Review `migration.sql`: 3 `CREATE TABLE` statements; `ALTER TABLE recipe ADD COLUMN "teamId" uuid` (nullable, no data loss), a foreign key with `ON DELETE SET NULL`, and the new index. It should need no `--force` and no hand edit.
 - [ ] Diff the migration's `definition.sql` against the system design section 1: every table and index should match.
 - [ ] `apply_migrations` (MCP), then `tail_server_logs`.
+
+
 
 ### 4.2 Backend API Endpoints
 
@@ -452,6 +486,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
     - [ ] a viewer calling `recipeMedia.remove` gets `forbidden`
 - [ ] Run the post-phase checklist, then `dart test`.
 
+
+
 ### 4.3 Flutter UI & State Management
 
 - [ ] `TeamRepository` (abstract plus fake): `create`, `listMine`, `createInvite`, `acceptInvite`. Extend `RecipeRepository` with `listForTeam`, `assignToTeam`, `removeFromTeam`.
@@ -468,7 +504,7 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
   - [ ] `team_detail_screen.dart` (`/teams/:id`): the team's recipes; a FAB that pushes `/recipes/new?teamId=` for editors only; an Invite button for the owner only. The caller's role comes from `TeamsCubit.state.teams`, and ownership from `team.ownerId == context.read<AuthRepository>().currentUserId`. Any push from this screen (wizard, Brew Mode) reloads the team list on return.
   - [ ] `/recipes/new` reads `teamId` from the query string and calls `startNew(teamId: ...)`.
   - [ ] `invite_sheet.dart`: role picker (Viewer/Editor), expiry picker (1h / 24h / 7d), Create, then the URL with a Copy button (`Clipboard.setData`) and a "Single use" note
-  - [ ] `invite_accept_screen.dart` (`/invite/:token`): a spinner while accepting; on success, "You joined <team> as <role>" with an Open team button; on failure, a message by code
+  - [ ] `invite_accept_screen.dart` (`/invite/:token`): a spinner while accepting; on success, "You joined  as " with an Open team button; on failure, a message by code
   - [ ] Brew Mode app bar: "Add to team" (owner only, for a personal recipe, choosing from teams where they are an editor) and "Remove from team" (owner or team editor, for a team recipe)
   - [ ] Hide Edit and every editing control in Brew Mode when `access.canEdit == false` (US-4.4)
   - [ ] A bottom `NavigationBar` with My recipes and Teams
@@ -483,6 +519,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
   - [ ] `TeamsCubit.create` appends the team with role `editor`
   - [ ] `RecipeCreationCubit.save` sends `teamId` on insert and not on update
 - [ ] Run the post-phase checklist, then `hot_restart`.
+
+
 
 ### 4.4 Integration Layer
 
@@ -512,6 +550,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 
 ---
 
+
+
 ## Feature 5 — Social Sharing (Image generation & `share_plus`)
 
 **Stories:** US-5.1 through US-5.3. No server calls: the card is rendered from the `RecipeDetail` already loaded in Brew Mode.
@@ -521,11 +561,15 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 - [ ] No schema changes. The share card reads only `RecipeDetail` fields that already exist.
 - [ ] No migration. Run `create_migration` (MCP) once and confirm it reports no changes.
 
+
+
 ### 5.2 Backend API Endpoints
 
 - [ ] No new endpoints. Sharing writes nothing to the server and attaches no recipe link.
 - [ ] Add a server test to `team_recipe_access_test.dart` confirming a team viewer's `recipe.get` returns the full `RecipeDetail` (instructions, tags, scores), which is everything the card needs.
 - [ ] Run `dart test`.
+
+
 
 ### 5.3 Flutter UI & State Management
 
@@ -555,6 +599,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
   - [ ] Cubit: `beginRender` goes to `rendering`; `dismissed` goes to `idle`; `unavailable` goes to `unavailable`; an exception goes to `unavailable`; a failed `download` goes to `failure`
 - [ ] Run the post-phase checklist, then `hot_restart`.
 
+
+
 ### 5.4 Integration Layer
 
 - [ ] `SharePlusShareService implements ShareService`:
@@ -572,6 +618,8 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 - [ ] Run the post-phase checklist, and check both log tails.
 
 ---
+
+
 
 ## Wrap-up
 

@@ -1,11 +1,28 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'app_scope.dart';
 import 'client.dart';
+import 'router.dart';
+import 'ui/features/auth/cubit/auth_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeClient();
-  runApp(const MyApp());
+
+  final repositories = AppRepositories();
+  final authCubit = AuthCubit(repositories.auth);
+  unawaited(authCubit.start());
+
+  runApp(
+    AppScope(
+      repositories: repositories,
+      authCubit: authCubit,
+      child: BrewSyncApp(router: createRouter(authCubit)),
+    ),
+  );
 }
 
 /// Builds a theme for the given [brightness].
@@ -18,31 +35,19 @@ ThemeData _buildTheme(Brightness brightness) {
   );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class BrewSyncApp extends StatelessWidget {
+  const BrewSyncApp({super.key, required this.router});
+
+  final GoRouter router;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'BrewSync',
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.dark),
       themeMode: ThemeMode.system,
-      home: const MyHomePage(title: 'BrewSync'),
-    );
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: const Center(child: Text('BrewSync')),
+      routerConfig: router,
     );
   }
 }
