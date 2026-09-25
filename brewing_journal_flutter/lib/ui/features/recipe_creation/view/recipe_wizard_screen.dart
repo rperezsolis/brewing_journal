@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../router.dart';
 import '../../../core/error_messages.dart';
 import '../../recipe_list/cubit/recipe_list_cubit.dart';
 import '../cubit/recipe_creation_cubit.dart';
@@ -35,13 +36,17 @@ class RecipeWizardScreen extends StatelessWidget {
         id == null ? cubit.startNew() : unawaited(cubit.load(id));
         return cubit;
       },
-      child: const RecipeWizardView(),
+      child: RecipeWizardView(openedAsEdit: recipeId != null),
     );
   }
 }
 
 class RecipeWizardView extends StatelessWidget {
-  const RecipeWizardView({super.key});
+  const RecipeWizardView({super.key, this.openedAsEdit = false});
+
+  /// True when the route was `/recipes/:id/edit`. A new recipe may get an id
+  /// after the first photo save, but Finish should still open Brew Mode.
+  final bool openedAsEdit;
 
   static const stepLabels = {
     RecipeWizardStep.ingredient: 'Bean',
@@ -110,7 +115,7 @@ class RecipeWizardView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const _BottomBar(),
+                    _BottomBar(openedAsEdit: openedAsEdit),
                   ],
                 ),
               ),
@@ -139,14 +144,15 @@ class RecipeWizardView extends StatelessWidget {
 
 /// Leaves the wizard. Refreshes the home list when a recipe exists, since
 /// adding a photo saves a new recipe before Finish.
-void _close(BuildContext context) {
-  if (context.read<RecipeCreationCubit>().state.recipeId != null) {
+void _close(BuildContext context, {bool refreshList = true}) {
+  if (refreshList &&
+      context.read<RecipeCreationCubit>().state.recipeId != null) {
     unawaited(context.read<RecipeListCubit>().load());
   }
   if (context.canPop()) {
     context.pop();
   } else {
-    context.go('/');
+    context.go(Routes.home);
   }
 }
 
@@ -231,7 +237,9 @@ class _StepIndicator extends StatelessWidget {
 }
 
 class _BottomBar extends StatelessWidget {
-  const _BottomBar();
+  const _BottomBar({required this.openedAsEdit});
+
+  final bool openedAsEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -257,7 +265,9 @@ class _BottomBar extends StatelessWidget {
                 if (state.isLastStep)
                   FilledButton.icon(
                     key: const Key('wizard-finish'),
-                    onPressed: busy ? null : () => _finish(context),
+                    onPressed: busy
+                        ? null
+                        : () => _finish(context, openedAsEdit),
                     icon: state.isSaving
                         ? const SizedBox.square(
                             dimension: 18,
@@ -280,8 +290,18 @@ class _BottomBar extends StatelessWidget {
     );
   }
 
-  Future<void> _finish(BuildContext context) async {
-    final saved = await context.read<RecipeCreationCubit>().save();
-    if (saved && context.mounted) _close(context);
+  Future<void> _finish(BuildContext context, bool openedAsEdit) async {
+    final cubit = context.read<RecipeCreationCubit>();
+    final saved = await cubit.save();
+    if (!saved || !context.mounted) return;
+    unawaited(context.read<RecipeListCubit>().load());
+    final id = cubit.state.recipeId;
+    if (openedAsEdit) {
+      _close(context, refreshList: false);
+    } else if (id != null) {
+      context.pushReplacement(Routes.recipe(id));
+    } else {
+      _close(context, refreshList: false);
+    }
   }
 }

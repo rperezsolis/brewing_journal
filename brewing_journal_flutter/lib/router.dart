@@ -8,6 +8,7 @@ import 'ui/features/auth/cubit/auth_cubit.dart';
 import 'ui/features/auth/cubit/auth_state.dart';
 import 'ui/features/auth/view/sign_in_screen.dart';
 import 'ui/features/auth/view/splash_screen.dart';
+import 'ui/features/brew_mode/view/brew_mode_screen.dart';
 import 'ui/features/recipe_creation/view/recipe_wizard_screen.dart';
 import 'ui/features/recipe_list/view/recipe_list_screen.dart';
 
@@ -16,6 +17,7 @@ abstract final class Routes {
   static const signIn = '/sign-in';
   static const home = '/';
   static const newRecipe = '/recipes/new';
+  static String recipe(UuidValue id) => '/recipes/${id.uuid}';
   static String editRecipe(UuidValue id) => '/recipes/${id.uuid}/edit';
 }
 
@@ -48,6 +50,14 @@ GoRouter createRouter(AuthCubit auth) {
               final id = _parseId(state.pathParameters['id']);
               if (id == null) return const _NotFoundScreen();
               return RecipeWizardScreen(key: ValueKey(id), recipeId: id);
+            },
+          ),
+          GoRoute(
+            path: 'recipes/:id',
+            builder: (context, state) {
+              final id = _parseId(state.pathParameters['id']);
+              if (id == null) return const _NotFoundScreen();
+              return BrewModeScreen(key: ValueKey(id), recipeId: id);
             },
           ),
         ],

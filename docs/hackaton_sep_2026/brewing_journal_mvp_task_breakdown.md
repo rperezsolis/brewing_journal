@@ -346,72 +346,73 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 
 ### 3.1 Backend Schemas & Database
 
-- [ ] No schema changes. Confirm `recipe.extractionDuration` (`Duration?`) exists in `definition.sql` as a nullable `bigint`.
-- [ ] No migration needed. Run `create_migration` (MCP) once and confirm it reports no changes.
+- [x] No schema changes. Confirm `recipe.extractionDuration` (`Duration?`) exists in `definition.sql` as a nullable `bigint`.
+- [x] No migration needed. Run `create_migration` (MCP) once and confirm it reports no changes. CLI `serverpod create-migration` reported "Server migration skipped. No changes detected."
 
 
 
 ### 3.2 Backend API Endpoints
 
-- [ ] No new endpoints. Brew Mode reads `client.recipe.get` from Feature 2.
-- [ ] Add server tests to `recipe_get_test.dart` covering the Brew Mode contracts:
-  - [ ] A recipe saved with `extractionDuration: null` returns `null`, not zero (US-3.4).
-  - [ ] A recipe with no instructions returns `instructions: []` (US-3.2).
-  - [ ] A recipe with no photos returns `photos: []` (US-3.6).
-  - [ ] Every photo has a non-null `publicUrl`.
-- [ ] Run `dart test`.
+- [x] No new endpoints. Brew Mode reads `client.recipe.get` from Feature 2.
+- [x] Add server tests to `recipe_get_test.dart` covering the Brew Mode contracts:
+  - [x] A recipe saved with `extractionDuration: null` returns `null`, not zero (US-3.4).
+  - [x] A recipe with no instructions returns `instructions: []` (US-3.2).
+  - [x] A recipe with no photos returns `photos: []` (US-3.6).
+  - [x] Every photo has a non-null `publicUrl`.
+- [x] Run `dart test`. Server suite: 70 passed.
 
 
 
 ### 3.3 Flutter UI & State Management
 
-- [ ] Dependencies: `flutter pub add audioplayers`. Add `assets/sounds/brew_alarm.mp3` and list it under `flutter: assets:` in `pubspec.yaml`, next to the existing `assets/config.json` entry (do not replace it: the app reads its server URL from that file).
-- [ ] `lib/data/services/alarm_player.dart`: abstract `AlarmPlayer` with `prepare()`, `play()`, and `stop()`; `AudioAlarmPlayer` on `audioplayers` (`AssetSource`, loop until `stop`); `FakeAlarmPlayer` that counts calls. Register the fake in `app_scope.dart`.
-- [ ] `lib/ui/features/recipe_detail/cubit/`: `RecipeDetailCubit(RecipeRepository)` with `load(id)`, `delete()` (only when `access.canDelete`), and a status of `initial/loading/success/failure`.
-- [ ] `lib/ui/features/brew_mode/cubit/`:
-  - [ ] `BrewTimerState` with `mode`, `phase`, `target`, `elapsed`, `remaining`
-  - [ ] `BrewTimerCubit(AlarmPlayer)`: `configure(Duration?)`, `setMode`, `start`, `pause`, `resume`, `stop`, `tick`
-  - [ ] `tick` reads `stopwatch.elapsed`; at `elapsed >= target` it sets `phase = finished`, cancels the ticker, and calls `AlarmPlayer.play()` exactly once
-  - [ ] `close()` cancels the ticker and calls `AlarmPlayer.stop()` (US-3.5)
-- [ ] `lib/ui/features/brew_mode/view/brew_mode_screen.dart`:
-  - [ ] `MultiBlocProvider` (`RecipeDetailCubit`, `BrewTimerCubit`); on detail success, call `configure(recipe.extractionDuration)`
-  - [ ] Parameter block: ingredient, method, dose, temperature, grind, grinder, and a small `FlavorRadarChart` (US-3.1)
-  - [ ] "Prep & extra steps" numbered list in `sortOrder`, left out entirely when empty (US-3.2)
-  - [ ] Photo carousel from `publicUrl`, left out when empty; `errorBuilder` shows a neutral tile, never a broken-image icon (US-3.6)
-  - [ ] Timer panel: large readout, a Count down / Count up toggle (only while idle), and Start/Pause/Resume/Stop. When `target == null`, hide the whole panel and show "No extraction time recorded" (US-3.4)
-  - [ ] Finished state: a highlighted readout and a "Stop alarm" button (US-3.3)
-  - [ ] `AppLifecycleListener(onHide: ...)`: call `pause()` while running, and `stop()` when `phase == finished`, so a ringing alarm does not keep playing in the background (US-3.5). The system design only calls `pause()` here; `stop()` closes the gap for an alarm that is already ringing.
-  - [ ] `WakelockPlus` is optional; skip it for the MVP
-  - [ ] App-bar actions: Edit (when `access.canEdit`), Share (Feature 5 placeholder), Delete (when `access.canDelete`, with a confirm dialog)
-- [ ] Routes: `/recipes/:id` goes to Brew Mode. Tapping a recipe on the list now opens Brew Mode instead of the editor, and the Edit action pushes `/recipes/:id/edit`.
-  - [ ] Declare the recipe routes as sub-routes of `/` (`recipes/new`, `recipes/:id`, `recipes/:id/edit`, and later `recipes/:id/share`), so a deep link opens on top of the home list and Back works.
-  - [ ] Wizard Finish: for a new recipe, `context.pushReplacement('/recipes/$id')`; when editing, `context.pop()`. Brew Mode awaits its Edit push and calls `RecipeDetailCubit.load()` on return, so the edited values show without two Brew Mode pages on the stack.
-- [ ] Cubit tests using `fake_async`:
-  - [ ] `configure(null)` gives `mode idle`, `start()` does nothing, and the alarm is never prepared or played
-  - [ ] `start()` with a target calls `prepare()` once
-  - [ ] count-down to 3s: the alarm plays once at 3s, `remaining` is clamped at zero, and further ticks do not replay it
-  - [ ] count-up to 3s also alarms at 3s
-  - [ ] `pause` freezes `elapsed`; `resume` continues from it
-  - [ ] `stop` resets to `idle` with `elapsed = 0` and `remaining = target`, and stops the alarm
-  - [ ] `setMode` works only while `phase == idle` and does nothing while running
-  - [ ] closing the cubit mid-run calls `stop()`, and advancing time afterwards never calls `play()`
-- [ ] Widget tests: the instructions section is absent for `[]`, the photos section is absent for `[]`, and the timer panel is absent for a null target.
-- [ ] Run the post-phase checklist, then `hot_restart` (new asset).
+- [x] Dependencies: `flutter pub add audioplayers`. Add `assets/sounds/brew_alarm.mp3` and list it under `flutter: assets:` in `pubspec.yaml`, next to the existing `assets/config.json` entry (do not replace it: the app reads its server URL from that file).
+- [x] `lib/data/services/alarm_player.dart`: abstract `AlarmPlayer` with `prepare()`, `play()`, and `stop()`; `AudioAlarmPlayer` on `audioplayers` (`AssetSource`, loop until `stop`); `FakeAlarmPlayer` that counts calls. Register the fake in `app_scope.dart`.
+- [x] `lib/ui/features/recipe_detail/cubit/`: `RecipeDetailCubit(RecipeRepository)` with `load(id)`, `delete()` (only when `access.canDelete`), and a status of `initial/loading/success/failure`.
+- [x] `lib/ui/features/brew_mode/cubit/`:
+  - [x] `BrewTimerState` with `mode`, `phase`, `target`, `elapsed`, `remaining`
+  - [x] `BrewTimerCubit(AlarmPlayer)`: `configure(Duration?)`, `setMode`, `start`, `pause`, `resume`, `stop`, `tick`
+  - [x] `tick` reads `stopwatch.elapsed`; at `elapsed >= target` it sets `phase = finished`, cancels the ticker, and calls `AlarmPlayer.play()` exactly once
+  - [x] `close()` cancels the ticker and calls `AlarmPlayer.stop()` (US-3.5)
+- [x] `lib/ui/features/brew_mode/view/brew_mode_screen.dart`:
+  - [x] `MultiBlocProvider` (`RecipeDetailCubit`, `BrewTimerCubit`); on detail success, call `configure(recipe.extractionDuration)`
+  - [x] Parameter block: ingredient, method, dose, temperature, grind, grinder, and a small `FlavorRadarChart` (US-3.1)
+  - [x] "Prep & extra steps" numbered list in `sortOrder`, left out entirely when empty (US-3.2)
+  - [x] Photo carousel from `publicUrl`, left out when empty; `errorBuilder` shows a neutral tile, never a broken-image icon (US-3.6)
+  - [x] Timer panel: large readout, a Count down / Count up toggle (only while idle), and Start/Pause/Resume/Stop. When `target == null`, hide the whole panel and show "No extraction time recorded" (US-3.4)
+  - [x] Finished state: a highlighted readout and a "Stop alarm" button (US-3.3)
+  - [x] `AppLifecycleListener(onHide: ...)`: call `pause()` while running, and `stop()` when `phase == finished`, so a ringing alarm does not keep playing in the background (US-3.5). The system design only calls `pause()` here; `stop()` closes the gap for an alarm that is already ringing.
+  - [x] `WakelockPlus` is optional; skip it for the MVP
+  - [x] App-bar actions: Edit (when `access.canEdit`), Share (Feature 5 placeholder), Delete (when `access.canDelete`, with a confirm dialog)
+- [x] Routes: `/recipes/:id` goes to Brew Mode. Tapping a recipe on the list now opens Brew Mode instead of the editor, and the Edit action pushes `/recipes/:id/edit`.
+  - [x] Declare the recipe routes as sub-routes of `/` (`recipes/new`, `recipes/:id`, `recipes/:id/edit`, and later `recipes/:id/share`), so a deep link opens on top of the home list and Back works.
+  - [x] Wizard Finish: for a new recipe, `context.pushReplacement('/recipes/$id')`; when editing, `context.pop()`. Brew Mode awaits its Edit push and calls `RecipeDetailCubit.load()` on return, so the edited values show without two Brew Mode pages on the stack.
+- [x] Cubit tests using `fake_async`:
+  - [x] `configure(null)` gives `mode idle`, `start()` does nothing, and the alarm is never prepared or played
+  - [x] `start()` with a target calls `prepare()` once
+  - [x] count-down to 3s: the alarm plays once at 3s, `remaining` is clamped at zero, and further ticks do not replay it
+  - [x] count-up to 3s also alarms at 3s
+  - [x] `pause` freezes `elapsed`; `resume` continues from it
+  - [x] `stop` resets to `idle` with `elapsed = 0` and `remaining = target`, and stops the alarm
+  - [x] `setMode` works only while `phase == idle` and does nothing while running
+  - [x] closing the cubit mid-run calls `stop()`, and advancing time afterwards never calls `play()`
+- [x] Widget tests: the instructions section is absent for `[]`, the photos section is absent for `[]`, and the timer panel is absent for a null target.
+- [x] Run the post-phase checklist, then `hot_restart` (new asset). `dart analyze` / `dart format` / `dart test` (70) and `flutter analyze` / `flutter test` (86) are clean. Hot restart applied; server log reads "Latest database migration already applied."
 
 
 
 ### 3.4 Integration Layer
 
-- [ ] Register `AudioAlarmPlayer` in `app_scope.dart` in place of the fake. `RecipeDetailCubit` already gets `ServerpodRecipeRepository` from Feature 2's registration.
-- [ ] Loading: a full-screen spinner while `RecipeDetailCubit` is loading; pull-to-refresh calls `load` again.
-- [ ] Errors: `errorMessage(e, overrides: {notFound: 'Recipe not found or no longer shared with you'})` with a Back button; a connection error shows the shared message with Retry.
-- [ ] Web: the first sound must come from a user gesture. `BrewTimerCubit.start()` calls `AlarmPlayer.prepare()` (`setSource` only) before starting the ticker. Because `start()` runs inside the Start button's tap, the later alarm is allowed to play.
-- [ ] After `delete()` succeeds, call `context.read<RecipeListCubit>().load()` and pop to the list.
+- [x] Register `AudioAlarmPlayer` in `app_scope.dart` in place of the fake. `RecipeDetailCubit` already gets `ServerpodRecipeRepository` from Feature 2's registration.
+- [x] Loading: a full-screen spinner while `RecipeDetailCubit` is loading; pull-to-refresh calls `load` again.
+- [x] Errors: `errorMessage(e, overrides: {notFound: 'Recipe not found or no longer shared with you'})` with a Back button; a connection error shows the shared message with Retry.
+- [x] Web: the first sound must come from a user gesture. `BrewTimerCubit.start()` calls `AlarmPlayer.prepare()` (`setSource` only) before starting the ticker. Because `start()` runs inside the Start button's tap, the later alarm is allowed to play.
+- [x] After `delete()` succeeds, call `context.read<RecipeListCubit>().load()` and pop to the list.
 - [ ] End-to-end check (`flutter_driver`):
   - [ ] Open a recipe with a 5s duration, start the count-down, and confirm the finished state after 5s (check `tail_flutter_logs` for audio errors).
   - [ ] Open a recipe with no duration: there are no timer controls and parameters still render.
   - [ ] Start a timer, navigate back before it finishes, wait past the target, and confirm there is no sound or log output.
-- [ ] Run the post-phase checklist, and check both log tails.
+  Blocked: the `serverpod` and `dart` MCP tools are not connected, so the driver path cannot run. A Cursor-browser substitute reached `/#/sign-in` but could not type (Flutter web has no DOM fields while `enableTextEntryEmulation` is off).
+- [x] Run the post-phase checklist, and check both log tails. Analyze/format/tests are clean. After hot restart the TUI shows the server and Flutter app restarted with no recipe/timer errors; MCP `tail_*_logs` was not available in this session.
 
 ---
 

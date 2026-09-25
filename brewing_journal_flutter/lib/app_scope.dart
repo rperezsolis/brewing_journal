@@ -17,6 +17,7 @@ import 'data/repositories/serverpod_auth_repository.dart';
 import 'data/repositories/serverpod_ingredient_repository.dart';
 import 'data/repositories/serverpod_recipe_media_repository.dart';
 import 'data/repositories/serverpod_recipe_repository.dart';
+import 'data/services/alarm_player.dart';
 import 'ui/features/auth/cubit/auth_cubit.dart';
 import 'ui/features/auth/cubit/auth_state.dart';
 import 'ui/features/recipe_list/cubit/recipe_list_cubit.dart';
@@ -27,23 +28,26 @@ class AppRepositories {
     : auth = ServerpodAuthRepository(client.auth),
       ingredients = ServerpodIngredientRepository(client.ingredient),
       recipes = ServerpodRecipeRepository(client.recipe),
-      recipeMedia = ServerpodRecipeMediaRepository(client.recipeMedia);
+      recipeMedia = ServerpodRecipeMediaRepository(client.recipeMedia),
+      alarm = AudioAlarmPlayer();
 
   AppRepositories.custom({
     required this.auth,
     required this.ingredients,
     required this.recipes,
     required this.recipeMedia,
+    required this.alarm,
   });
 
   /// In-memory repositories, for tests and previews.
-  factory AppRepositories.fake({AuthRepository? auth}) {
+  factory AppRepositories.fake({AuthRepository? auth, AlarmPlayer? alarm}) {
     final ingredients = FakeIngredientRepository();
     return AppRepositories.custom(
       auth: auth ?? FakeAuthRepository(),
       ingredients: ingredients,
       recipes: FakeRecipeRepository(ingredients),
       recipeMedia: FakeRecipeMediaRepository(),
+      alarm: alarm ?? FakeAlarmPlayer(),
     );
   }
 
@@ -51,6 +55,7 @@ class AppRepositories {
   final IngredientRepository ingredients;
   final RecipeRepository recipes;
   final RecipeMediaRepository recipeMedia;
+  final AlarmPlayer alarm;
 }
 
 /// Provides the app-level repositories and session-scoped Cubits to every
@@ -122,6 +127,7 @@ class _AppScopeState extends State<AppScope> {
         RepositoryProvider<RecipeMediaRepository>.value(
           value: repositories.recipeMedia,
         ),
+        RepositoryProvider<AlarmPlayer>.value(value: repositories.alarm),
       ],
       child: MultiBlocProvider(
         providers: [

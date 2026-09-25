@@ -76,7 +76,7 @@ class RecipeListScreen extends StatelessWidget {
                   final recipe = state.recipes[index];
                   return _RecipeTile(
                     recipe: recipe,
-                    onTap: () => context.push(Routes.editRecipe(recipe.id!)),
+                    onTap: () => context.push(Routes.recipe(recipe.id!)),
                   );
                 },
               ),

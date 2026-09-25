@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:brewing_journal_server/src/generated/protocol.dart';
 import 'package:test/test.dart';
 
@@ -65,6 +67,77 @@ void main() {
         endpoints.recipe.getAccess(b.sessionBuilder, saved.recipe.id!),
         throwsBrewing(BrewingErrorCode.notFound),
       );
+    });
+
+    test(
+      'when extractionDuration was not recorded then get returns null, not zero',
+      () async {
+        final ingredient = await registerIngredient(endpoints, a);
+        final saved = await endpoints.recipe.save(
+          a.sessionBuilder,
+          sampleDraft(ingredient.id!).copyWith(extractionDuration: null),
+        );
+
+        expect(saved.recipe.extractionDuration, isNull);
+
+        final detail = await endpoints.recipe.get(
+          a.sessionBuilder,
+          saved.recipe.id!,
+        );
+        expect(detail.recipe.extractionDuration, isNull);
+      },
+    );
+
+    test(
+      'when there are no instructions then get returns an empty list',
+      () async {
+        final saved = await createRecipe(endpoints, a);
+
+        final detail = await endpoints.recipe.get(
+          a.sessionBuilder,
+          saved.recipe.id!,
+        );
+        expect(detail.instructions, isEmpty);
+      },
+    );
+
+    test('when there are no photos then get returns an empty list', () async {
+      final saved = await createRecipe(endpoints, a);
+
+      final detail = await endpoints.recipe.get(
+        a.sessionBuilder,
+        saved.recipe.id!,
+      );
+      expect(detail.photos, isEmpty);
+    });
+
+    test('when photos exist then every photo has a publicUrl', () async {
+      final saved = await createRecipe(endpoints, a);
+      final recipeId = saved.recipe.id!;
+      final session = a.sessionBuilder.build();
+
+      for (var i = 0; i < 2; i++) {
+        final ticket = await endpoints.recipeMedia.createUploadDescription(
+          a.sessionBuilder,
+          recipeId,
+        );
+        await session.storage.storeFile(
+          storageId: 'public',
+          path: ticket.path,
+          byteData: ByteData.sublistView(Uint8List.fromList([0xFF, 0xD8, 1])),
+        );
+        await endpoints.recipeMedia.confirmUpload(
+          a.sessionBuilder,
+          recipeId,
+          ticket.path,
+        );
+      }
+
+      final detail = await endpoints.recipe.get(a.sessionBuilder, recipeId);
+      expect(detail.photos, hasLength(2));
+      for (final photo in detail.photos) {
+        expect(photo.publicUrl, isNotNull);
+      }
     });
   });
 }
