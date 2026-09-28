@@ -9,20 +9,32 @@ import 'ui/features/auth/cubit/auth_state.dart';
 import 'ui/features/auth/view/sign_in_screen.dart';
 import 'ui/features/auth/view/splash_screen.dart';
 import 'ui/features/brew_mode/view/brew_mode_screen.dart';
+import 'ui/features/home/view/home_shell.dart';
+import 'ui/features/invite/view/invite_accept_screen.dart';
 import 'ui/features/recipe_creation/view/recipe_wizard_screen.dart';
 import 'ui/features/recipe_list/view/recipe_list_screen.dart';
+import 'ui/features/teams/view/team_detail_screen.dart';
+import 'ui/features/teams/view/teams_screen.dart';
 
 abstract final class Routes {
   static const splash = '/splash';
   static const signIn = '/sign-in';
   static const home = '/';
+  static const teams = '/teams';
   static const newRecipe = '/recipes/new';
   static String recipe(UuidValue id) => '/recipes/${id.uuid}';
   static String editRecipe(UuidValue id) => '/recipes/${id.uuid}/edit';
+  static String team(UuidValue id) => '/teams/${id.uuid}';
+  static String invite(String token) => '/invite/$token';
+  static String newTeamRecipe(UuidValue teamId) =>
+      '/recipes/new?teamId=${teamId.uuid}';
 }
+
+final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 GoRouter createRouter(AuthCubit auth) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: Routes.home,
     refreshListenable: GoRouterRefreshStream(auth.stream),
     redirect: (context, state) => authRedirect(auth.state.status, state.uri),
@@ -36,29 +48,70 @@ GoRouter createRouter(AuthCubit auth) {
         builder: (context, state) => const SignInScreen(),
       ),
       GoRoute(
-        path: Routes.home,
-        builder: (context, state) => const RecipeListScreen(),
-        routes: [
-          // Declared before `recipes/:id/...`, so `new` is never read as an id.
-          GoRoute(
-            path: 'recipes/new',
-            builder: (context, state) => const RecipeWizardScreen(),
+        path: '/invite/:token',
+        builder: (context, state) => InviteAcceptScreen(
+          token: state.pathParameters['token'] ?? '',
+        ),
+      ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            HomeShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.home,
+                builder: (context, state) => const RecipeListScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'recipes/new',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) => RecipeWizardScreen(
+                      teamId: _parseId(state.uri.queryParameters['teamId']),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'recipes/:id/edit',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = _parseId(state.pathParameters['id']);
+                      if (id == null) return const _NotFoundScreen();
+                      return RecipeWizardScreen(
+                        key: ValueKey(id),
+                        recipeId: id,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'recipes/:id',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = _parseId(state.pathParameters['id']);
+                      if (id == null) return const _NotFoundScreen();
+                      return BrewModeScreen(key: ValueKey(id), recipeId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
-          GoRoute(
-            path: 'recipes/:id/edit',
-            builder: (context, state) {
-              final id = _parseId(state.pathParameters['id']);
-              if (id == null) return const _NotFoundScreen();
-              return RecipeWizardScreen(key: ValueKey(id), recipeId: id);
-            },
-          ),
-          GoRoute(
-            path: 'recipes/:id',
-            builder: (context, state) {
-              final id = _parseId(state.pathParameters['id']);
-              if (id == null) return const _NotFoundScreen();
-              return BrewModeScreen(key: ValueKey(id), recipeId: id);
-            },
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.teams,
+                builder: (context, state) => const TeamsScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) {
+                      final id = _parseId(state.pathParameters['id']);
+                      if (id == null) return const _NotFoundScreen();
+                      return TeamDetailScreen(key: ValueKey(id), teamId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),

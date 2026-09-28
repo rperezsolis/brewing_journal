@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../router.dart';
 import '../../../core/error_messages.dart';
 import '../../recipe_list/cubit/recipe_list_cubit.dart';
+import '../../teams/cubit/teams_cubit.dart';
 import '../cubit/recipe_creation_cubit.dart';
 import '../cubit/recipe_creation_state.dart';
 import 'step_extraction.dart';
@@ -19,9 +20,10 @@ import 'step_media.dart';
 /// The 5-step recipe wizard: a new recipe when [recipeId] is null, otherwise
 /// an edit of that recipe.
 class RecipeWizardScreen extends StatelessWidget {
-  const RecipeWizardScreen({super.key, this.recipeId});
+  const RecipeWizardScreen({super.key, this.recipeId, this.teamId});
 
   final UuidValue? recipeId;
+  final UuidValue? teamId;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,7 @@ class RecipeWizardScreen extends StatelessWidget {
           media: context.read(),
         );
         final id = recipeId;
-        id == null ? cubit.startNew() : unawaited(cubit.load(id));
+        id == null ? cubit.startNew(teamId: teamId) : unawaited(cubit.load(id));
         return cubit;
       },
       child: RecipeWizardView(openedAsEdit: recipeId != null),
@@ -60,10 +62,25 @@ class RecipeWizardView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<RecipeCreationCubit, RecipeCreationState>(
       listenWhen: (previous, current) =>
-          current.error != null && previous.error != current.error,
+          (current.error != null && previous.error != current.error) ||
+          (current.loadStatus == LoadStatus.ready &&
+              !current.canEdit &&
+              current.recipeId != null),
       listener: (context, state) {
-        final error = state.error!;
-        _showError(context, error);
+        if (state.loadStatus == LoadStatus.ready &&
+            !state.canEdit &&
+            state.recipeId != null) {
+          context.pushReplacement(Routes.recipe(state.recipeId!));
+          return;
+        }
+        final error = state.error;
+        if (error == null) return;
+        _showError(context, error, teamId: state.teamId);
+        if (error is BrewingException &&
+            error.code == BrewingErrorCode.forbidden &&
+            state.teamId != null) {
+          unawaited(context.read<RecipeCreationCubit>().refreshAccess());
+        }
         if (error is BrewingException &&
             error.code == BrewingErrorCode.notFound &&
             state.loadStatus == LoadStatus.failure) {
@@ -126,14 +143,25 @@ class RecipeWizardView extends StatelessWidget {
     );
   }
 
-  static void _showError(BuildContext context, Object error) {
+  static void _showError(
+    BuildContext context,
+    Object error, {
+    UuidValue? teamId,
+  }) {
     final colors = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           content: Text(
-            errorMessage(error),
+            errorMessage(
+              error,
+              overrides: {
+                if (teamId != null)
+                  BrewingErrorCode.forbidden:
+                      "Viewers can't change team recipes.",
+              },
+            ),
             style: TextStyle(color: colors.onErrorContainer),
           ),
           backgroundColor: colors.errorContainer,
@@ -142,12 +170,19 @@ class RecipeWizardView extends StatelessWidget {
   }
 }
 
+void _refreshRecipeLists(BuildContext context) {
+  unawaited(context.read<RecipeListCubit>().load());
+  if (context.read<RecipeCreationCubit>().state.teamId != null) {
+    context.read<TeamsCubit>().recipesChanged();
+  }
+}
+
 /// Leaves the wizard. Refreshes the home list when a recipe exists, since
 /// adding a photo saves a new recipe before Finish.
 void _close(BuildContext context, {bool refreshList = true}) {
   if (refreshList &&
       context.read<RecipeCreationCubit>().state.recipeId != null) {
-    unawaited(context.read<RecipeListCubit>().load());
+    _refreshRecipeLists(context);
   }
   if (context.canPop()) {
     context.pop();
@@ -294,7 +329,7 @@ class _BottomBar extends StatelessWidget {
     final cubit = context.read<RecipeCreationCubit>();
     final saved = await cubit.save();
     if (!saved || !context.mounted) return;
-    unawaited(context.read<RecipeListCubit>().load());
+    _refreshRecipeLists(context);
     final id = cubit.state.recipeId;
     if (openedAsEdit) {
       _close(context, refreshList: false);

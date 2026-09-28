@@ -15,6 +15,8 @@ import 'package:brewing_journal_server/src/generated/brewing/ingredient.dart'
     as _ijmrhoj0;
 import 'package:brewing_journal_server/src/generated/brewing/recipe.dart'
     as _iazv39l2;
+import 'package:brewing_journal_server/src/generated/teams/team_summary.dart'
+    as _id1eflpk;
 import 'package:serverpod/protocol.dart' as _isp;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
@@ -36,6 +38,12 @@ import 'brewing/recipe_instruction.dart' as _id0mij74;
 import 'brewing/recipe_photo.dart' as _i9xtdqqg;
 import 'brewing/roast_level.dart' as _ilmoykyi;
 import 'brewing/upload_ticket.dart' as _ivpdymeq;
+import 'teams/invite_link.dart' as _ih3460lx;
+import 'teams/team.dart' as _im6wd3ml;
+import 'teams/team_invite.dart' as _ixubbi3v;
+import 'teams/team_membership.dart' as _it1ysroj;
+import 'teams/team_role.dart' as _i8uq5mqx;
+import 'teams/team_summary.dart' as _i5r78mbx;
 export 'brewing/beverage_kind.dart';
 export 'brewing/brewing_error_code.dart';
 export 'brewing/brewing_exception.dart';
@@ -51,6 +59,12 @@ export 'brewing/recipe_instruction.dart';
 export 'brewing/recipe_photo.dart';
 export 'brewing/roast_level.dart';
 export 'brewing/upload_ticket.dart';
+export 'teams/invite_link.dart';
+export 'teams/team.dart';
+export 'teams/team_invite.dart';
+export 'teams/team_membership.dart';
+export 'teams/team_role.dart';
+export 'teams/team_summary.dart';
 
 class Protocol extends _is.DatabaseSerializationManager {
   Protocol._();
@@ -186,6 +200,12 @@ class Protocol extends _is.DatabaseSerializationManager {
           dartType: 'UuidValue',
         ),
         _isp.ColumnDefinition(
+          name: 'teamId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: true,
+          dartType: 'UuidValue?',
+        ),
+        _isp.ColumnDefinition(
           name: 'ingredientId',
           columnType: _isp.ColumnType.uuid,
           isNullable: false,
@@ -291,6 +311,16 @@ class Protocol extends _is.DatabaseSerializationManager {
         ),
         _isp.ForeignKeyDefinition(
           constraintName: 'recipe_fk_1',
+          columns: ['teamId'],
+          referenceTable: 'team',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.setNull,
+          matchType: null,
+        ),
+        _isp.ForeignKeyDefinition(
+          constraintName: 'recipe_fk_2',
           columns: ['ingredientId'],
           referenceTable: 'ingredient',
           referenceTableSchema: 'public',
@@ -308,6 +338,23 @@ class Protocol extends _is.DatabaseSerializationManager {
             _isp.IndexElementDefinition(
               type: _isp.IndexElementDefinitionType.column,
               definition: 'ownerId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'updatedAt',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
+        _isp.IndexDefinition(
+          indexName: 'recipe_team_updated_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'teamId',
             ),
             _isp.IndexElementDefinition(
               type: _isp.IndexElementDefinitionType.column,
@@ -562,6 +609,292 @@ class Protocol extends _is.DatabaseSerializationManager {
       ],
       managed: true,
     ),
+    _isp.TableDefinition(
+      name: 'team',
+      dartName: 'Team',
+      schema: 'public',
+      module: 'brewing_journal',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'ownerId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'name',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'team_fk_0',
+          columns: ['ownerId'],
+          referenceTable: 'serverpod_auth_core_user',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'team_owner_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'ownerId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'team_invite',
+      dartName: 'TeamInvite',
+      schema: 'public',
+      module: 'brewing_journal',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'teamId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdById',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'token',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'role',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'protocol:TeamRole',
+        ),
+        _isp.ColumnDefinition(
+          name: 'expiresAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'usedAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'usedById',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: true,
+          dartType: 'UuidValue?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'team_invite_fk_0',
+          columns: ['teamId'],
+          referenceTable: 'team',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+        _isp.ForeignKeyDefinition(
+          constraintName: 'team_invite_fk_1',
+          columns: ['createdById'],
+          referenceTable: 'serverpod_auth_core_user',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+        _isp.ForeignKeyDefinition(
+          constraintName: 'team_invite_fk_2',
+          columns: ['usedById'],
+          referenceTable: 'serverpod_auth_core_user',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.setNull,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'team_invite_token_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'token',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+        _isp.IndexDefinition(
+          indexName: 'team_invite_team_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'teamId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'expiresAt',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'team_membership',
+      dartName: 'TeamMembership',
+      schema: 'public',
+      module: 'brewing_journal',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'teamId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'memberId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'role',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'protocol:TeamRole',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'team_membership_fk_0',
+          columns: ['teamId'],
+          referenceTable: 'team',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+        _isp.ForeignKeyDefinition(
+          constraintName: 'team_membership_fk_1',
+          columns: ['memberId'],
+          referenceTable: 'serverpod_auth_core_user',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'team_membership_team_member_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'teamId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'memberId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+        _isp.IndexDefinition(
+          indexName: 'team_membership_member_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'memberId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
     ..._iais.Protocol.targetTableDefinitions,
     ..._iacs.Protocol.targetTableDefinitions,
     ..._isp.Protocol.targetTableDefinitions,
@@ -639,6 +972,24 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _ivpdymeq.UploadTicket) {
       return _ivpdymeq.UploadTicket.fromJson(data) as T;
     }
+    if (t == _ih3460lx.InviteLink) {
+      return _ih3460lx.InviteLink.fromJson(data) as T;
+    }
+    if (t == _im6wd3ml.Team) {
+      return _im6wd3ml.Team.fromJson(data) as T;
+    }
+    if (t == _ixubbi3v.TeamInvite) {
+      return _ixubbi3v.TeamInvite.fromJson(data) as T;
+    }
+    if (t == _it1ysroj.TeamMembership) {
+      return _it1ysroj.TeamMembership.fromJson(data) as T;
+    }
+    if (t == _i8uq5mqx.TeamRole) {
+      return _i8uq5mqx.TeamRole.fromJson(data) as T;
+    }
+    if (t == _i5r78mbx.TeamSummary) {
+      return _i5r78mbx.TeamSummary.fromJson(data) as T;
+    }
     if (t == _is.getType<_ino7p0mu.BeverageKind?>()) {
       return (data != null ? _ino7p0mu.BeverageKind.fromJson(data) : null) as T;
     }
@@ -690,6 +1041,25 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _is.getType<_ivpdymeq.UploadTicket?>()) {
       return (data != null ? _ivpdymeq.UploadTicket.fromJson(data) : null) as T;
     }
+    if (t == _is.getType<_ih3460lx.InviteLink?>()) {
+      return (data != null ? _ih3460lx.InviteLink.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_im6wd3ml.Team?>()) {
+      return (data != null ? _im6wd3ml.Team.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_ixubbi3v.TeamInvite?>()) {
+      return (data != null ? _ixubbi3v.TeamInvite.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_it1ysroj.TeamMembership?>()) {
+      return (data != null ? _it1ysroj.TeamMembership.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_i8uq5mqx.TeamRole?>()) {
+      return (data != null ? _i8uq5mqx.TeamRole.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_i5r78mbx.TeamSummary?>()) {
+      return (data != null ? _i5r78mbx.TeamSummary.fromJson(data) : null) as T;
+    }
     if (t == List<_id0mij74.RecipeInstruction>) {
       return (data as List)
               .map((e) => deserialize<_id0mij74.RecipeInstruction>(e))
@@ -735,6 +1105,48 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == List<String>) {
       return (data as List).map((e) => deserialize<String>(e)).toList() as T;
     }
+    if (t == List<_it1ysroj.TeamMembership>) {
+      return (data as List)
+              .map((e) => deserialize<_it1ysroj.TeamMembership>(e))
+              .toList()
+          as T;
+    }
+    if (t == _is.getType<List<_it1ysroj.TeamMembership>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_it1ysroj.TeamMembership>(e))
+                    .toList()
+              : null)
+          as T;
+    }
+    if (t == List<_ixubbi3v.TeamInvite>) {
+      return (data as List)
+              .map((e) => deserialize<_ixubbi3v.TeamInvite>(e))
+              .toList()
+          as T;
+    }
+    if (t == _is.getType<List<_ixubbi3v.TeamInvite>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_ixubbi3v.TeamInvite>(e))
+                    .toList()
+              : null)
+          as T;
+    }
+    if (t == List<_izkawori.Recipe>) {
+      return (data as List)
+              .map((e) => deserialize<_izkawori.Recipe>(e))
+              .toList()
+          as T;
+    }
+    if (t == _is.getType<List<_izkawori.Recipe>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_izkawori.Recipe>(e))
+                    .toList()
+              : null)
+          as T;
+    }
     if (t == List<_ijmrhoj0.Ingredient>) {
       return (data as List)
               .map((e) => deserialize<_ijmrhoj0.Ingredient>(e))
@@ -744,6 +1156,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == List<_iazv39l2.Recipe>) {
       return (data as List)
               .map((e) => deserialize<_iazv39l2.Recipe>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_id1eflpk.TeamSummary>) {
+      return (data as List)
+              .map((e) => deserialize<_id1eflpk.TeamSummary>(e))
               .toList()
           as T;
     }
@@ -776,6 +1194,12 @@ class Protocol extends _is.DatabaseSerializationManager {
       _i9xtdqqg.RecipePhoto => 'RecipePhoto',
       _ilmoykyi.RoastLevel => 'RoastLevel',
       _ivpdymeq.UploadTicket => 'UploadTicket',
+      _ih3460lx.InviteLink => 'InviteLink',
+      _im6wd3ml.Team => 'Team',
+      _ixubbi3v.TeamInvite => 'TeamInvite',
+      _it1ysroj.TeamMembership => 'TeamMembership',
+      _i8uq5mqx.TeamRole => 'TeamRole',
+      _i5r78mbx.TeamSummary => 'TeamSummary',
       _ => null,
     };
   }
@@ -823,6 +1247,18 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'RoastLevel';
       case _ivpdymeq.UploadTicket():
         return 'UploadTicket';
+      case _ih3460lx.InviteLink():
+        return 'InviteLink';
+      case _im6wd3ml.Team():
+        return 'Team';
+      case _ixubbi3v.TeamInvite():
+        return 'TeamInvite';
+      case _it1ysroj.TeamMembership():
+        return 'TeamMembership';
+      case _i8uq5mqx.TeamRole():
+        return 'TeamRole';
+      case _i5r78mbx.TeamSummary():
+        return 'TeamSummary';
     }
     className = _iais.Protocol().getClassNameForObject(data);
     if (className != null) {
@@ -894,6 +1330,24 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName == 'UploadTicket') {
       return deserialize<_ivpdymeq.UploadTicket>(data['data']);
     }
+    if (dataClassName == 'InviteLink') {
+      return deserialize<_ih3460lx.InviteLink>(data['data']);
+    }
+    if (dataClassName == 'Team') {
+      return deserialize<_im6wd3ml.Team>(data['data']);
+    }
+    if (dataClassName == 'TeamInvite') {
+      return deserialize<_ixubbi3v.TeamInvite>(data['data']);
+    }
+    if (dataClassName == 'TeamMembership') {
+      return deserialize<_it1ysroj.TeamMembership>(data['data']);
+    }
+    if (dataClassName == 'TeamRole') {
+      return deserialize<_i8uq5mqx.TeamRole>(data['data']);
+    }
+    if (dataClassName == 'TeamSummary') {
+      return deserialize<_i5r78mbx.TeamSummary>(data['data']);
+    }
     if (dataClassName.startsWith('serverpod_auth_idp.')) {
       data['className'] = dataClassName.substring(19);
       return _iais.Protocol().deserializeByClassName(data);
@@ -945,6 +1399,12 @@ class Protocol extends _is.DatabaseSerializationManager {
         return _id0mij74.RecipeInstruction.t;
       case _i9xtdqqg.RecipePhoto:
         return _i9xtdqqg.RecipePhoto.t;
+      case _im6wd3ml.Team:
+        return _im6wd3ml.Team.t;
+      case _ixubbi3v.TeamInvite:
+        return _ixubbi3v.TeamInvite.t;
+      case _it1ysroj.TeamMembership:
+        return _it1ysroj.TeamMembership.t;
     }
     return null;
   }

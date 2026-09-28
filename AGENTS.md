@@ -3,6 +3,10 @@
 This project is a Flutter app (frontend) backed by a Serverpod server (backend). Always build the app's backend with Serverpod.
 Build for multiple users, use Serverpod's built-in authentication, which is already set up in `lib/server.dart`.
 
+BrewSync is a multi-user brewing journal (coffee, tea, matcha). Viewer vs editor is a `team_membership` row checked in `RecipeAccessPolicy`, not a Serverpod scope.
+
+Team invite URLs are `<webBaseUrl>/invite/<token>` on the Serverpod web server (port 8082 in development). Native App Links and Universal Links are out of scope: the HTTPS link opens the web app, or the recipient pastes the URL or token into Teams → Join with invite.
+
 The user starts the server and Flutter app with `serverpod start`. There is no need to check if the server is running: make the changes and call the `serverpod` MCP tools as needed. If the server is not running, an informative error message will be received from the MCP server. Then STOP and ask the user to start it. NEVER start the server yourself. The Flutter app is started along with it, or can be launched from the MCP tool `spawn_flutter_app`.
 
 While running, `serverpod start` watches for file changes to run incremental code generation and hot reload both the server and the Flutter app.

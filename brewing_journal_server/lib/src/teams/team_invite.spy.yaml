@@ -1,0 +1,19 @@
+class: TeamInvite
+table: team_invite
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  team: Team?, relation(name=team_invites, onDelete=Cascade)
+  createdBy: module:serverpod_auth_core:AuthUser?, relation(onDelete=Cascade)
+  token: String
+  role: TeamRole
+  expiresAt: DateTime
+  usedAt: DateTime?
+  usedBy: module:serverpod_auth_core:AuthUser?, relation(optional, onDelete=SetNull)
+  createdAt: DateTime, default=now
+
+indexes:
+  team_invite_token_idx:
+    fields: token
+    unique: true
+  team_invite_team_idx:
+    fields: teamId, expiresAt

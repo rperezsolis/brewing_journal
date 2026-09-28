@@ -18,6 +18,7 @@ abstract class RecipeDraft
     implements _isc.SerializableModel, _isc.ProtocolSerialization {
   RecipeDraft._({
     this.id,
+    this.teamId,
     required this.ingredientId,
     required this.title,
     required this.waterTempC,
@@ -37,6 +38,7 @@ abstract class RecipeDraft
 
   factory RecipeDraft({
     _isc.UuidValue? id,
+    _isc.UuidValue? teamId,
     required _isc.UuidValue ingredientId,
     required String title,
     required double waterTempC,
@@ -59,6 +61,9 @@ abstract class RecipeDraft
       id: jsonSerialization['id'] == null
           ? null
           : _isc.UuidValueJsonExtension.fromJson(jsonSerialization['id']),
+      teamId: jsonSerialization['teamId'] == null
+          ? null
+          : _isc.UuidValueJsonExtension.fromJson(jsonSerialization['teamId']),
       ingredientId: _isc.UuidValueJsonExtension.fromJson(
         jsonSerialization['ingredientId'],
       ),
@@ -91,6 +96,8 @@ abstract class RecipeDraft
   }
 
   _isc.UuidValue? id;
+
+  _isc.UuidValue? teamId;
 
   _isc.UuidValue ingredientId;
 
@@ -127,6 +134,7 @@ abstract class RecipeDraft
   @_isc.useResult
   RecipeDraft copyWith({
     _isc.UuidValue? id,
+    _isc.UuidValue? teamId,
     _isc.UuidValue? ingredientId,
     String? title,
     double? waterTempC,
@@ -148,6 +156,7 @@ abstract class RecipeDraft
     return {
       '__className__': 'RecipeDraft',
       if (id != null) 'id': id?.toJson(),
+      if (teamId != null) 'teamId': teamId?.toJson(),
       'ingredientId': ingredientId.toJson(),
       'title': title,
       'waterTempC': waterTempC,
@@ -173,6 +182,7 @@ abstract class RecipeDraft
     return {
       '__className__': 'RecipeDraft',
       if (id != null) 'id': id?.toJson(),
+      if (teamId != null) 'teamId': teamId?.toJson(),
       'ingredientId': ingredientId.toJson(),
       'title': title,
       'waterTempC': waterTempC,
@@ -204,6 +214,7 @@ class _Undefined {}
 class _RecipeDraftImpl extends RecipeDraft {
   _RecipeDraftImpl({
     _isc.UuidValue? id,
+    _isc.UuidValue? teamId,
     required _isc.UuidValue ingredientId,
     required String title,
     required double waterTempC,
@@ -221,6 +232,7 @@ class _RecipeDraftImpl extends RecipeDraft {
     required List<String> instructions,
   }) : super._(
          id: id,
+         teamId: teamId,
          ingredientId: ingredientId,
          title: title,
          waterTempC: waterTempC,
@@ -244,6 +256,7 @@ class _RecipeDraftImpl extends RecipeDraft {
   @override
   RecipeDraft copyWith({
     Object? id = _Undefined,
+    Object? teamId = _Undefined,
     _isc.UuidValue? ingredientId,
     String? title,
     double? waterTempC,
@@ -262,6 +275,7 @@ class _RecipeDraftImpl extends RecipeDraft {
   }) {
     return RecipeDraft(
       id: id is _isc.UuidValue? ? id : this.id,
+      teamId: teamId is _isc.UuidValue? ? teamId : this.teamId,
       ingredientId: ingredientId ?? this.ingredientId,
       title: title ?? this.title,
       waterTempC: waterTempC ?? this.waterTempC,

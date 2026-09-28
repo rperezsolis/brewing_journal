@@ -9,6 +9,10 @@ const _defaults = <BrewingErrorCode, String>{
   BrewingErrorCode.forbidden: "You can't edit this recipe",
   BrewingErrorCode.uploadRejected:
       'Photo could not be verified — try again or skip',
+  BrewingErrorCode.inviteExpired:
+      'This invite has expired. Ask the team owner for a new one.',
+  BrewingErrorCode.inviteUsed: 'This invite has already been used.',
+  BrewingErrorCode.alreadyMember: "You're already in this team.",
 };
 
 /// Maps an error thrown by a repository to a message that is safe to show.

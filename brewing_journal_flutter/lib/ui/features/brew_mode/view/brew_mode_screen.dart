@@ -13,6 +13,7 @@ import '../../../core/widgets/flavor_radar_chart.dart';
 import '../../recipe_detail/cubit/recipe_detail_cubit.dart';
 import '../../recipe_detail/cubit/recipe_detail_state.dart';
 import '../../recipe_list/cubit/recipe_list_cubit.dart';
+import '../../teams/cubit/teams_cubit.dart';
 import '../cubit/brew_timer_cubit.dart';
 import '../cubit/brew_timer_state.dart';
 
@@ -84,6 +85,14 @@ class _BrewModeViewState extends State<BrewModeView> {
     }
   }
 
+  /// Personal list is session-scoped; team-detail lists listen to
+  /// [TeamsCubit.recipesChanged] because brew mode sits on the root
+  /// navigator and cannot see those cubits.
+  void _refreshRecipeLists() {
+    unawaited(context.read<RecipeListCubit>().load());
+    context.read<TeamsCubit>().recipesChanged();
+  }
+
   Future<void> _edit(UuidValue id) async {
     await context.push(Routes.editRecipe(id));
     if (!mounted) return;
@@ -115,7 +124,7 @@ class _BrewModeViewState extends State<BrewModeView> {
     final deleted = await context.read<RecipeDetailCubit>().delete();
     if (!mounted) return;
     if (deleted) {
-      unawaited(context.read<RecipeListCubit>().load());
+      _refreshRecipeLists();
       _leave();
       return;
     }
@@ -125,19 +134,87 @@ class _BrewModeViewState extends State<BrewModeView> {
     }
   }
 
-  void _showError(Object error) {
+  Map<BrewingErrorCode, String> _overrides({UuidValue? teamId}) => {
+    ..._notFoundOverride,
+    if (teamId != null)
+      BrewingErrorCode.forbidden: "Viewers can't change team recipes.",
+  };
+
+  void _showError(Object error, {UuidValue? teamId}) {
     final colors = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           content: Text(
-            errorMessage(error, overrides: _notFoundOverride),
+            errorMessage(error, overrides: _overrides(teamId: teamId)),
             style: TextStyle(color: colors.onErrorContainer),
           ),
           backgroundColor: colors.errorContainer,
         ),
       );
+  }
+
+  Future<void> _addToTeam(RecipeDetail detail) async {
+    final teams = context
+        .read<TeamsCubit>()
+        .state
+        .teams
+        .where((t) => t.role == TeamRole.editor)
+        .toList();
+    if (teams.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Create or join a team as an editor first.'),
+        ),
+      );
+      return;
+    }
+    final teamId = await showDialog<UuidValue>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Add to team'),
+        children: [
+          for (final summary in teams)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(context).pop(summary.team.id),
+              child: Text(summary.team.name),
+            ),
+        ],
+      ),
+    );
+    if (teamId == null || !mounted) return;
+    final ok = await context.read<RecipeDetailCubit>().assignToTeam(teamId);
+    if (!mounted) return;
+    if (ok) {
+      _refreshRecipeLists();
+    } else {
+      final error = context.read<RecipeDetailCubit>().state.error;
+      if (error != null) {
+        _showError(error, teamId: detail.recipe.teamId);
+        if (error is BrewingException &&
+            error.code == BrewingErrorCode.forbidden) {
+          await context.read<RecipeDetailCubit>().reload();
+        }
+      }
+    }
+  }
+
+  Future<void> _removeFromTeam(RecipeDetail detail) async {
+    final ok = await context.read<RecipeDetailCubit>().removeFromTeam();
+    if (!mounted) return;
+    if (ok) {
+      _refreshRecipeLists();
+    } else {
+      final error = context.read<RecipeDetailCubit>().state.error;
+      if (error != null) {
+        _showError(error, teamId: detail.recipe.teamId);
+        if (error is BrewingException &&
+            error.code == BrewingErrorCode.forbidden) {
+          await context.read<RecipeDetailCubit>().reload();
+        }
+      }
+    }
   }
 
   @override
@@ -159,6 +236,14 @@ class _BrewModeViewState extends State<BrewModeView> {
               title: Text(detail?.recipe.title ?? 'Brew'),
               actions: [
                 if (detail != null) ...[
+                  if (state.assigning)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
                   IconButton(
                     key: const Key('brew-share'),
                     tooltip: 'Share',
@@ -171,6 +256,26 @@ class _BrewModeViewState extends State<BrewModeView> {
                       );
                     },
                   ),
+                  if (detail.access.canDelete && detail.recipe.teamId == null)
+                    IconButton(
+                      key: const Key('brew-add-to-team'),
+                      tooltip: 'Add to team',
+                      icon: const Icon(Icons.group_add_outlined),
+                      onPressed: state.assigning
+                          ? null
+                          : () => _addToTeam(detail),
+                    ),
+                  if (detail.recipe.teamId != null &&
+                      (detail.access.canDelete ||
+                          detail.access.role == TeamRole.editor))
+                    IconButton(
+                      key: const Key('brew-remove-from-team'),
+                      tooltip: 'Remove from team',
+                      icon: const Icon(Icons.group_remove_outlined),
+                      onPressed: state.assigning
+                          ? null
+                          : () => _removeFromTeam(detail),
+                    ),
                   if (detail.access.canEdit)
                     IconButton(
                       key: const Key('brew-edit'),

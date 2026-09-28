@@ -1,6 +1,7 @@
 class: RecipeDraft
 fields:
   id: UuidValue?
+  teamId: UuidValue?
   ingredientId: UuidValue
   title: String
   waterTempC: double

@@ -1,15 +1,20 @@
 import 'dart:async';
 
+import 'package:brewing_journal_client/brewing_journal_client.dart';
+
 import 'auth_repository.dart';
 
 /// In-memory [AuthRepository] for tests and previews.
 class FakeAuthRepository implements AuthRepository {
-  FakeAuthRepository({this.hasStoredSession = false});
+  FakeAuthRepository({this.hasStoredSession = false, this.currentUserId});
 
   /// Whether [restore] finds a persisted session.
   final bool hasStoredSession;
   final _controller = StreamController<bool>.broadcast();
   bool _isAuthenticated = false;
+
+  @override
+  UuidValue? currentUserId;
 
   @override
   Stream<bool> get authStateChanges => _controller.stream;

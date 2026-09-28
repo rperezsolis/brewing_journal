@@ -21,6 +21,7 @@ import '../brewing/ingredient.dart' as _ippg9os6;
 import '../brewing/recipe_flavor_tag.dart' as _i55exiaf;
 import '../brewing/recipe_instruction.dart' as _i1t6etiy;
 import '../brewing/recipe_photo.dart' as _iir54vf2;
+import '../teams/team.dart' as _izqfkhlk;
 
 abstract class Recipe
     implements _is.TableRow<_is.UuidValue?>, _is.ProtocolSerialization {
@@ -28,6 +29,8 @@ abstract class Recipe
     this.id,
     required this.ownerId,
     this.owner,
+    this.teamId,
+    this.team,
     required this.ingredientId,
     this.ingredient,
     required this.title,
@@ -54,6 +57,8 @@ abstract class Recipe
     _is.UuidValue? id,
     required _is.UuidValue ownerId,
     _iacs.AuthUser? owner,
+    _is.UuidValue? teamId,
+    _izqfkhlk.Team? team,
     required _is.UuidValue ingredientId,
     _ippg9os6.Ingredient? ingredient,
     required String title,
@@ -87,6 +92,14 @@ abstract class Recipe
           ? null
           : _i8dlmk64.Protocol().deserialize<_iacs.AuthUser>(
               jsonSerialization['owner'],
+            ),
+      teamId: jsonSerialization['teamId'] == null
+          ? null
+          : _is.UuidValueJsonExtension.fromJson(jsonSerialization['teamId']),
+      team: jsonSerialization['team'] == null
+          ? null
+          : _i8dlmk64.Protocol().deserialize<_izqfkhlk.Team>(
+              jsonSerialization['team'],
             ),
       ingredientId: _is.UuidValueJsonExtension.fromJson(
         jsonSerialization['ingredientId'],
@@ -150,6 +163,10 @@ abstract class Recipe
 
   _iacs.AuthUser? owner;
 
+  _is.UuidValue? teamId;
+
+  _izqfkhlk.Team? team;
+
   _is.UuidValue ingredientId;
 
   _ippg9os6.Ingredient? ingredient;
@@ -198,6 +215,8 @@ abstract class Recipe
     _is.UuidValue? id,
     _is.UuidValue? ownerId,
     _iacs.AuthUser? owner,
+    _is.UuidValue? teamId,
+    _izqfkhlk.Team? team,
     _is.UuidValue? ingredientId,
     _ippg9os6.Ingredient? ingredient,
     String? title,
@@ -225,6 +244,8 @@ abstract class Recipe
       if (id != null) 'id': id?.toJson(),
       'ownerId': ownerId.toJson(),
       if (owner != null) 'owner': owner?.toJson(),
+      if (teamId != null) 'teamId': teamId?.toJson(),
+      if (team != null) 'team': team?.toJson(),
       'ingredientId': ingredientId.toJson(),
       if (ingredient != null) 'ingredient': ingredient?.toJson(),
       'title': title,
@@ -259,6 +280,8 @@ abstract class Recipe
       if (id != null) 'id': id?.toJson(),
       'ownerId': ownerId.toJson(),
       if (owner != null) 'owner': owner?.toJson(),
+      if (teamId != null) 'teamId': teamId?.toJson(),
+      if (team != null) 'team': team?.toJsonForProtocol(),
       'ingredientId': ingredientId.toJson(),
       if (ingredient != null) 'ingredient': ingredient?.toJsonForProtocol(),
       'title': title,
@@ -292,6 +315,7 @@ abstract class Recipe
 
   static RecipeInclude include({
     _iacs.AuthUserInclude? owner,
+    _izqfkhlk.TeamInclude? team,
     _ippg9os6.IngredientInclude? ingredient,
     _i1t6etiy.RecipeInstructionIncludeList? instructions,
     _iir54vf2.RecipePhotoIncludeList? photos,
@@ -299,6 +323,7 @@ abstract class Recipe
   }) {
     return RecipeInclude._(
       owner: owner,
+      team: team,
       ingredient: ingredient,
       instructions: instructions,
       photos: photos,
@@ -337,6 +362,8 @@ class _RecipeImpl extends Recipe {
     _is.UuidValue? id,
     required _is.UuidValue ownerId,
     _iacs.AuthUser? owner,
+    _is.UuidValue? teamId,
+    _izqfkhlk.Team? team,
     required _is.UuidValue ingredientId,
     _ippg9os6.Ingredient? ingredient,
     required String title,
@@ -360,6 +387,8 @@ class _RecipeImpl extends Recipe {
          id: id,
          ownerId: ownerId,
          owner: owner,
+         teamId: teamId,
+         team: team,
          ingredientId: ingredientId,
          ingredient: ingredient,
          title: title,
@@ -389,6 +418,8 @@ class _RecipeImpl extends Recipe {
     Object? id = _Undefined,
     _is.UuidValue? ownerId,
     Object? owner = _Undefined,
+    Object? teamId = _Undefined,
+    Object? team = _Undefined,
     _is.UuidValue? ingredientId,
     Object? ingredient = _Undefined,
     String? title,
@@ -413,6 +444,8 @@ class _RecipeImpl extends Recipe {
       id: id is _is.UuidValue? ? id : this.id,
       ownerId: ownerId ?? this.ownerId,
       owner: owner is _iacs.AuthUser? ? owner : this.owner?.copyWith(),
+      teamId: teamId is _is.UuidValue? ? teamId : this.teamId,
+      team: team is _izqfkhlk.Team? ? team : this.team?.copyWith(),
       ingredientId: ingredientId ?? this.ingredientId,
       ingredient: ingredient is _ippg9os6.Ingredient?
           ? ingredient
@@ -454,6 +487,12 @@ class RecipeUpdateTable extends _is.UpdateTable<RecipeTable> {
   _is.ColumnValue<_is.UuidValue, _is.UuidValue> ownerId(_is.UuidValue value) =>
       _is.ColumnValue(
         table.ownerId,
+        value,
+      );
+
+  _is.ColumnValue<_is.UuidValue, _is.UuidValue> teamId(_is.UuidValue? value) =>
+      _is.ColumnValue(
+        table.teamId,
         value,
       );
 
@@ -547,6 +586,10 @@ class RecipeTable extends _is.Table<_is.UuidValue?> {
       'ownerId',
       this,
     );
+    teamId = _is.ColumnUuid(
+      'teamId',
+      this,
+    );
     ingredientId = _is.ColumnUuid(
       'ingredientId',
       this,
@@ -618,6 +661,10 @@ class RecipeTable extends _is.Table<_is.UuidValue?> {
 
   _iacs.AuthUserTable? _owner;
 
+  late final _is.ColumnUuid teamId;
+
+  _izqfkhlk.TeamTable? _team;
+
   late final _is.ColumnUuid ingredientId;
 
   _ippg9os6.IngredientTable? _ingredient;
@@ -673,6 +720,19 @@ class RecipeTable extends _is.Table<_is.UuidValue?> {
           _iacs.AuthUserTable(tableRelation: foreignTableRelation),
     );
     return _owner!;
+  }
+
+  _izqfkhlk.TeamTable get team {
+    if (_team != null) return _team!;
+    _team = _is.createRelationTable(
+      relationFieldName: 'team',
+      field: Recipe.t.teamId,
+      foreignField: _izqfkhlk.Team.t.id,
+      tableRelation: tableRelation,
+      createTable: (foreignTableRelation) =>
+          _izqfkhlk.TeamTable(tableRelation: foreignTableRelation),
+    );
+    return _team!;
   }
 
   _ippg9os6.IngredientTable get ingredient {
@@ -788,6 +848,7 @@ class RecipeTable extends _is.Table<_is.UuidValue?> {
   List<_is.Column> get columns => [
     id,
     ownerId,
+    teamId,
     ingredientId,
     title,
     waterTempC,
@@ -810,6 +871,9 @@ class RecipeTable extends _is.Table<_is.UuidValue?> {
     if (relationField == 'owner') {
       return owner;
     }
+    if (relationField == 'team') {
+      return team;
+    }
     if (relationField == 'ingredient') {
       return ingredient;
     }
@@ -829,12 +893,14 @@ class RecipeTable extends _is.Table<_is.UuidValue?> {
 class RecipeInclude extends _is.IncludeObject {
   RecipeInclude._({
     _iacs.AuthUserInclude? owner,
+    _izqfkhlk.TeamInclude? team,
     _ippg9os6.IngredientInclude? ingredient,
     _i1t6etiy.RecipeInstructionIncludeList? instructions,
     _iir54vf2.RecipePhotoIncludeList? photos,
     _i55exiaf.RecipeFlavorTagIncludeList? flavorTags,
   }) {
     _owner = owner;
+    _team = team;
     _ingredient = ingredient;
     _instructions = instructions;
     _photos = photos;
@@ -842,6 +908,8 @@ class RecipeInclude extends _is.IncludeObject {
   }
 
   _iacs.AuthUserInclude? _owner;
+
+  _izqfkhlk.TeamInclude? _team;
 
   _ippg9os6.IngredientInclude? _ingredient;
 
@@ -854,6 +922,7 @@ class RecipeInclude extends _is.IncludeObject {
   @override
   Map<String, _is.Include?> get includes => {
     'owner': _owner,
+    'team': _team,
     'ingredient': _ingredient,
     'instructions': _instructions,
     'photos': _photos,
@@ -889,6 +958,8 @@ class RecipeRepository {
   final attach = const RecipeAttachRepository._();
 
   final attachRow = const RecipeAttachRowRepository._();
+
+  final detachRow = const RecipeDetachRowRepository._();
 
   /// Returns a list of [Recipe]s matching the given query parameters.
   ///
@@ -1393,6 +1464,29 @@ class RecipeAttachRowRepository {
     );
   }
 
+  /// Creates a relation between the given [Recipe] and [Team]
+  /// by setting the [Recipe]'s foreign key `teamId` to refer to the [Team].
+  Future<void> team(
+    _is.DatabaseSession session,
+    Recipe recipe,
+    _izqfkhlk.Team team, {
+    _is.Transaction? transaction,
+  }) async {
+    if (recipe.id == null) {
+      throw ArgumentError.notNull('recipe.id');
+    }
+    if (team.id == null) {
+      throw ArgumentError.notNull('team.id');
+    }
+
+    var $recipe = recipe.copyWith(teamId: team.id);
+    await session.db.updateRow<Recipe>(
+      $recipe,
+      columns: [Recipe.t.teamId],
+      transaction: transaction,
+    );
+  }
+
   /// Creates a relation between the given [Recipe] and [Ingredient]
   /// by setting the [Recipe]'s foreign key `ingredientId` to refer to the [Ingredient].
   Future<void> ingredient(
@@ -1481,6 +1575,32 @@ class RecipeAttachRowRepository {
     await session.db.updateRow<_i55exiaf.RecipeFlavorTag>(
       $recipeFlavorTag,
       columns: [_i55exiaf.RecipeFlavorTag.t.recipeId],
+      transaction: transaction,
+    );
+  }
+}
+
+class RecipeDetachRowRepository {
+  const RecipeDetachRowRepository._();
+
+  /// Detaches the relation between this [Recipe] and the [Team] set in `team`
+  /// by setting the [Recipe]'s foreign key `teamId` to `null`.
+  ///
+  /// This removes the association between the two models without deleting
+  /// the related record.
+  Future<void> team(
+    _is.DatabaseSession session,
+    Recipe recipe, {
+    _is.Transaction? transaction,
+  }) async {
+    if (recipe.id == null) {
+      throw ArgumentError.notNull('recipe.id');
+    }
+
+    var $recipe = recipe.copyWith(teamId: null);
+    await session.db.updateRow<Recipe>(
+      $recipe,
+      columns: [Recipe.t.teamId],
       transaction: transaction,
     );
   }

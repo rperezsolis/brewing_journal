@@ -1,4 +1,5 @@
 class: RecipeAccess
 fields:
+  role: TeamRole?
   canEdit: bool
   canDelete: bool

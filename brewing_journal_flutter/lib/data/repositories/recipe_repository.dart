@@ -10,6 +10,16 @@ abstract class RecipeRepository {
   /// The signed-in user's recipes, most recently updated first.
   Future<List<Recipe>> listMine({required int limit, required int offset});
 
+  Future<List<Recipe>> listForTeam(
+    UuidValue teamId, {
+    required int limit,
+    required int offset,
+  });
+
+  Future<Recipe> assignToTeam(UuidValue recipeId, UuidValue teamId);
+
+  Future<Recipe> removeFromTeam(UuidValue recipeId);
+
   Future<RecipeAccess> getAccess(UuidValue id);
 
   Future<void> delete(UuidValue id);

@@ -18,6 +18,21 @@ class ServerpodRecipeRepository implements RecipeRepository {
       _endpoint.listMine(limit, offset);
 
   @override
+  Future<List<Recipe>> listForTeam(
+    UuidValue teamId, {
+    required int limit,
+    required int offset,
+  }) => _endpoint.listForTeam(teamId, limit, offset);
+
+  @override
+  Future<Recipe> assignToTeam(UuidValue recipeId, UuidValue teamId) =>
+      _endpoint.assignToTeam(recipeId, teamId);
+
+  @override
+  Future<Recipe> removeFromTeam(UuidValue recipeId) =>
+      _endpoint.removeFromTeam(recipeId);
+
+  @override
   Future<RecipeAccess> getAccess(UuidValue id) => _endpoint.getAccess(id);
 
   @override

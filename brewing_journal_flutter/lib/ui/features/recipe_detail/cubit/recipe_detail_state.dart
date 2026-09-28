@@ -10,6 +10,7 @@ class RecipeDetailState extends Equatable {
     this.detail,
     this.error,
     this.deleting = false,
+    this.assigning = false,
   });
 
   final RecipeDetailStatus status;
@@ -17,6 +18,7 @@ class RecipeDetailState extends Equatable {
   final RecipeDetail? detail;
   final Object? error;
   final bool deleting;
+  final bool assigning;
 
   RecipeDetailState copyWith({
     RecipeDetailStatus? status,
@@ -24,6 +26,7 @@ class RecipeDetailState extends Equatable {
     RecipeDetail? detail,
     Object? error,
     bool? deleting,
+    bool? assigning,
   }) {
     return RecipeDetailState(
       status: status ?? this.status,
@@ -31,9 +34,17 @@ class RecipeDetailState extends Equatable {
       detail: detail ?? this.detail,
       error: error,
       deleting: deleting ?? this.deleting,
+      assigning: assigning ?? this.assigning,
     );
   }
 
   @override
-  List<Object?> get props => [status, recipeId, detail, error, deleting];
+  List<Object?> get props => [
+    status,
+    recipeId,
+    detail,
+    error,
+    deleting,
+    assigning,
+  ];
 }

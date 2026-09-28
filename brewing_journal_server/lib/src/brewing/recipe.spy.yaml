@@ -3,6 +3,7 @@ table: recipe
 fields:
   id: UuidValue?, defaultPersist=random_v7
   owner: module:serverpod_auth_core:AuthUser?, relation(onDelete=Cascade)
+  team: Team?, relation(name=team_recipes, optional, onDelete=SetNull)
   ingredient: Ingredient?, relation(onDelete=NoAction)
   title: String
   waterTempC: double
@@ -25,5 +26,7 @@ fields:
 indexes:
   recipe_owner_updated_idx:
     fields: ownerId, updatedAt
+  recipe_team_updated_idx:
+    fields: teamId, updatedAt
   recipe_ingredient_idx:
     fields: ingredientId

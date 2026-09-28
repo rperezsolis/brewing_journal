@@ -24,6 +24,9 @@ class ServerpodAuthRepository implements AuthRepository {
   bool get isAuthenticated => _auth.isAuthenticated;
 
   @override
+  UuidValue? get currentUserId => _auth.authInfo?.authUserId;
+
+  @override
   Future<void> restore() async {
     await _auth.initialize();
   }

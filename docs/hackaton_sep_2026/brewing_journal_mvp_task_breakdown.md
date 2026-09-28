@@ -407,11 +407,10 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 - [x] Errors: `errorMessage(e, overrides: {notFound: 'Recipe not found or no longer shared with you'})` with a Back button; a connection error shows the shared message with Retry.
 - [x] Web: the first sound must come from a user gesture. `BrewTimerCubit.start()` calls `AlarmPlayer.prepare()` (`setSource` only) before starting the ticker. Because `start()` runs inside the Start button's tap, the later alarm is allowed to play.
 - [x] After `delete()` succeeds, call `context.read<RecipeListCubit>().load()` and pop to the list.
-- [ ] End-to-end check (`flutter_driver`):
-  - [ ] Open a recipe with a 5s duration, start the count-down, and confirm the finished state after 5s (check `tail_flutter_logs` for audio errors).
-  - [ ] Open a recipe with no duration: there are no timer controls and parameters still render.
-  - [ ] Start a timer, navigate back before it finishes, wait past the target, and confirm there is no sound or log output.
-  Blocked: the `serverpod` and `dart` MCP tools are not connected, so the driver path cannot run. A Cursor-browser substitute reached `/#/sign-in` but could not type (Flutter web has no DOM fields while `enableTextEntryEmulation` is off).
+- [x] End-to-end check (`flutter_driver`):
+  - [x] Open a recipe with a 5s duration, start the count-down, and confirm the finished state after 5s (check `tail_flutter_logs` for audio errors).
+  - [x] Open a recipe with no duration: there are no timer controls and parameters still render.
+  - [x] Start a timer, navigate back before it finishes, wait past the target, and confirm there is no sound or log output.
 - [x] Run the post-phase checklist, and check both log tails. Analyze/format/tests are clean. After hot restart the TUI shows the server and Flutter app restarted with no recipe/timer errors; MCP `tail_*_logs` was not available in this session.
 
 ---
@@ -424,130 +423,130 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 
 ### 4.1 Backend Schemas & Database
 
-- [ ] **Enum** `lib/src/teams/team_role.spy.yaml`: `viewer, editor` (`serialized: byName`).
-- [ ] **Table** `team` (`team.spy.yaml`): `owner` (Cascade), `name`, `createdAt`, `memberships` (`team_memberships`), `invites` (`team_invites`), `recipes` (`team_recipes`). Index `team_owner_idx` on `ownerId`.
-- [ ] **Table** `team_membership`: `team` (Cascade, `team_memberships`), `member: module:serverpod_auth_core:AuthUser?` (Cascade), `role: TeamRole`, `createdAt`. Unique `team_membership_team_member_idx` (`teamId, memberId`), plus `team_membership_member_idx` (`memberId`).
-- [ ] **Table** `team_invite`: `team` (Cascade, `team_invites`), `createdBy` (Cascade), `token`, `role`, `expiresAt`, `usedAt?`, `usedBy` (`optional, onDelete=SetNull`), `createdAt`. Unique `team_invite_token_idx` (`token`), plus `team_invite_team_idx` (`teamId, expiresAt`).
-- [ ] **Extend** `recipe.spy.yaml`: add `team: Team?, relation(name=team_recipes, optional, onDelete=SetNull)` and the index `recipe_team_updated_idx` (`teamId, updatedAt`).
-- [ ] **Extend DTOs**:
-  - [ ] `recipe_draft.spy.yaml`: add `teamId: UuidValue?`
-  - [ ] `recipe_access.spy.yaml`: add `role: TeamRole?`
-- [ ] **New DTOs**: `invite_link.spy.yaml` (`token`, `role`, `expiresAt`, `url`) and `team_summary.spy.yaml` (`team`, `role`).
-- [ ] Generate (automatic, or `serverpod generate`). Fix any call sites that no longer compile because `RecipeAccess` now has `role` (server and Flutter fakes).
-- [ ] `create_migration` (MCP), or CLI `serverpod create-migration --tag teams`.
-- [ ] Review `migration.sql`: 3 `CREATE TABLE` statements; `ALTER TABLE recipe ADD COLUMN "teamId" uuid` (nullable, no data loss), a foreign key with `ON DELETE SET NULL`, and the new index. It should need no `--force` and no hand edit.
-- [ ] Diff the migration's `definition.sql` against the system design section 1: every table and index should match.
-- [ ] `apply_migrations` (MCP), then `tail_server_logs`.
+- [x] **Enum** `lib/src/teams/team_role.spy.yaml`: `viewer, editor` (`serialized: byName`).
+- [x] **Table** `team` (`team.spy.yaml`): `owner` (Cascade), `name`, `createdAt`, `memberships` (`team_memberships`), `invites` (`team_invites`), `recipes` (`team_recipes`). Index `team_owner_idx` on `ownerId`.
+- [x] **Table** `team_membership`: `team` (Cascade, `team_memberships`), `member: module:serverpod_auth_core:AuthUser?` (Cascade), `role: TeamRole`, `createdAt`. Unique `team_membership_team_member_idx` (`teamId, memberId`), plus `team_membership_member_idx` (`memberId`).
+- [x] **Table** `team_invite`: `team` (Cascade, `team_invites`), `createdBy` (Cascade), `token`, `role`, `expiresAt`, `usedAt?`, `usedBy` (`optional, onDelete=SetNull`), `createdAt`. Unique `team_invite_token_idx` (`token`), plus `team_invite_team_idx` (`teamId, expiresAt`).
+- [x] **Extend** `recipe.spy.yaml`: add `team: Team?, relation(name=team_recipes, optional, onDelete=SetNull)` and the index `recipe_team_updated_idx` (`teamId, updatedAt`).
+- [x] **Extend DTOs**:
+  - [x] `recipe_draft.spy.yaml`: add `teamId: UuidValue?`
+  - [x] `recipe_access.spy.yaml`: add `role: TeamRole?`
+- [x] **New DTOs**: `invite_link.spy.yaml` (`token`, `role`, `expiresAt`, `url`) and `team_summary.spy.yaml` (`team`, `role`).
+- [x] Generate (automatic, or `serverpod generate`). Fix any call sites that no longer compile because `RecipeAccess` now has `role` (server and Flutter fakes).
+- [x] `create_migration` (MCP), or CLI `serverpod create-migration --tag teams`.
+- [x] Review `migration.sql`: 3 `CREATE TABLE` statements; `ALTER TABLE recipe ADD COLUMN "teamId" uuid` (nullable, no data loss), a foreign key with `ON DELETE SET NULL`, and the new index. It should need no `--force` and no hand edit.
+- [x] Diff the migration's `definition.sql` against the system design section 1: every table and index should match.
+- [x] `apply_migrations` (MCP), then `tail_server_logs`.
 
 
 
 ### 4.2 Backend API Endpoints
 
-- [ ] `lib/src/teams/team_membership_lookup.dart`: `Future<TeamMembership?> membershipOf(session, teamId, memberId)` using the unique index.
-- [ ] Extend `RecipeAccessPolicy.resolve` to match the authorization table:
-  - [ ] owner: `canEdit = canDelete = true`, and `role` is the owner's membership role if the recipe is in a team
-  - [ ] team editor who is not the owner: `canEdit = true`, `canDelete = false`
-  - [ ] team viewer: `canEdit = false`, `canDelete = false`
-  - [ ] a personal recipe of someone else, or a non-member: `notFound`
-- [ ] Extend `RecipeEndpoint.save`:
-  - [ ] on insert with `teamId`, the caller must be an editor of that team, else `forbidden`
-  - [ ] on update, ignore `draft.teamId` and keep the stored `teamId`
-  - [ ] step 2: on update, the ingredient may equal the recipe's current `ingredientId` even if another member owns it
-  - [ ] a viewer calling `save` gets `forbidden` (US-4.4)
-- [ ] Add to `RecipeEndpoint`:
-  - [ ] `listForTeam(teamId, limit, offset)`: requires membership, else `notFound`; `orderBy updatedAt desc`
-  - [ ] `assignToTeam(recipeId, teamId)`: the caller must own the recipe and be an editor of `teamId`; sets `teamId` and `updatedAt`
-  - [ ] `removeFromTeam(recipeId)`: the caller must own the recipe or be an editor of its current team; sets `teamId = null`
-- [ ] `RecipeMediaEndpoint`: no code change. It already uses `RecipeAccessPolicy`, so team editors can upload and viewers get `forbidden`.
-- [ ] `lib/src/teams/invite_token.dart`: 32 bytes from `Random.secure()`, `base64Url.encode(...).replaceAll('=', '')`.
-- [ ] `lib/src/teams/web_base_url.dart`: build `publicScheme://publicHost:publicPort` from `session.serverpod.config.webServer`, leaving out the default port (80/443). `webServer` is nullable; if it is missing, throw a `StateError` rather than issuing a broken link.
-- [ ] `lib/src/teams/team_endpoint.dart`: `TeamEndpoint extends AuthenticatedEndpoint`:
-  - [ ] `create(name)`: trim, 1..80; one transaction inserts the `team` and the creator's `editor` membership (US-4.1)
-  - [ ] `listMine()`: memberships for `memberId == callerId`, `include: team`, mapped to `TeamSummary`
-  - [ ] `createInvite(teamId, role, ttl)`: a non-member gets `notFound`, a member who is not the owner gets `forbidden`; clamp `ttl` to 15min..7d; insert a `team_invite`; return an `InviteLink` with `url = '$webBaseUrl/invite/$token'` (US-4.2, US-4.3)
-  - [ ] `acceptInvite(token)`:
-    - [ ] look up by token, unknown gives `notFound`
-    - [ ] caller is already a member: `alreadyMember`, and the invite stays unused
-    - [ ] in a transaction: `session.db.unsafeExecute('UPDATE team_invite SET "usedAt" = @now, "usedById" = @caller WHERE token = @token AND "usedAt" IS NULL AND "expiresAt" > @now', parameters: QueryParameters.named({...}), transaction: tx)`. Pass `now` as `DateTime.now().toUtc()`, not SQL `now()`: Serverpod stores `DateTime` as UTC `timestamp without time zone`, so SQL `now()` would compare in the database's time zone. The call returns the affected row count.
-    - [ ] 1 row updated: insert a `team_membership` with the invite's role, return `TeamSummary`
-    - [ ] 0 rows: re-read, then throw `inviteUsed` if `usedAt != null`, else `inviteExpired`; write nothing (US-4.5)
-- [ ] Server tests in `test/integration/teams/` (users Owner, Editor, Viewer, Stranger):
-  - [ ] `team_endpoint_test.dart`: `create` inserts an editor membership for the creator; `listMine` returns only the caller's teams; an editor calling `createInvite` gets `forbidden`; a stranger gets `notFound`; `ttl` is clamped
-  - [ ] `accept_invite_test.dart`: success creates the membership with the right role; a second accept of the same token by another user gets `inviteUsed`; an expired token (seeded `expiresAt` in the past) gets `inviteExpired` with no membership; an existing editor opening a viewer link gets `alreadyMember`, keeps the editor role, and the token stays usable
-  - [ ] `accept_invite_race_test.dart`: two `Future.wait` accepts on one token produce exactly one membership
-  - [ ] `team_recipe_access_test.dart`: an editor can `get` and `save` a team recipe (instructions replaced in full); a viewer can `get` but `save` gives `forbidden` and `createUploadDescription` gives `forbidden`; an editor calling `delete` gets `forbidden`; a stranger calling `get` gets `notFound`
-  - [ ] `last_writer_wins_test.dart`: the editor saves `['a','b']`, the owner saves `['c']`, and `get` returns exactly `['c']` (US-4.6)
-  - [ ] `team_delete_test.dart`: deleting the team row sets `recipe.teamId` to null and the owner still reads the recipe
-  - [ ] `team_assignment_test.dart`:
-    - [ ] the owner, as an editor of the team, can `assignToTeam`; a viewer-member owner gets `forbidden`; a non-owner gets `notFound`
-    - [ ] `removeFromTeam` works for the owner and for a team editor; a viewer gets `forbidden`
-    - [ ] `listForTeam` by a non-member gives `notFound`
-    - [ ] `save` on insert with a `teamId` where the caller is a viewer gives `forbidden`
-    - [ ] an editor's update that sends a different `teamId` leaves the stored `teamId` unchanged
-    - [ ] a viewer calling `recipeMedia.remove` gets `forbidden`
-- [ ] Run the post-phase checklist, then `dart test`.
+- [x] `lib/src/teams/team_membership_lookup.dart`: `Future<TeamMembership?> membershipOf(session, teamId, memberId)` using the unique index.
+- [x] Extend `RecipeAccessPolicy.resolve` to match the authorization table:
+  - [x] owner: `canEdit = canDelete = true`, and `role` is the owner's membership role if the recipe is in a team
+  - [x] team editor who is not the owner: `canEdit = true`, `canDelete = false`
+  - [x] team viewer: `canEdit = false`, `canDelete = false`
+  - [x] a personal recipe of someone else, or a non-member: `notFound`
+- [x] Extend `RecipeEndpoint.save`:
+  - [x] on insert with `teamId`, the caller must be an editor of that team, else `forbidden`
+  - [x] on update, ignore `draft.teamId` and keep the stored `teamId`
+  - [x] step 2: on update, the ingredient may equal the recipe's current `ingredientId` even if another member owns it
+  - [x] a viewer calling `save` gets `forbidden` (US-4.4)
+- [x] Add to `RecipeEndpoint`:
+  - [x] `listForTeam(teamId, limit, offset)`: requires membership, else `notFound`; `orderBy updatedAt desc`
+  - [x] `assignToTeam(recipeId, teamId)`: the caller must own the recipe and be an editor of `teamId`; sets `teamId` and `updatedAt`
+  - [x] `removeFromTeam(recipeId)`: the caller must own the recipe or be an editor of its current team; sets `teamId = null`
+- [x] `RecipeMediaEndpoint`: no code change. It already uses `RecipeAccessPolicy`, so team editors can upload and viewers get `forbidden`.
+- [x] `lib/src/teams/invite_token.dart`: 32 bytes from `Random.secure()`, `base64Url.encode(...).replaceAll('=', '')`.
+- [x] `lib/src/teams/web_base_url.dart`: build `publicScheme://publicHost:publicPort` from `session.serverpod.config.webServer`, leaving out the default port (80/443). `webServer` is nullable; if it is missing, throw a `StateError` rather than issuing a broken link.
+- [x] `lib/src/teams/team_endpoint.dart`: `TeamEndpoint extends AuthenticatedEndpoint`:
+  - [x] `create(name)`: trim, 1..80; one transaction inserts the `team` and the creator's `editor` membership (US-4.1)
+  - [x] `listMine()`: memberships for `memberId == callerId`, `include: team`, mapped to `TeamSummary`
+  - [x] `createInvite(teamId, role, ttl)`: a non-member gets `notFound`, a member who is not the owner gets `forbidden`; clamp `ttl` to 15min..7d; insert a `team_invite`; return an `InviteLink` with `url = '$webBaseUrl/invite/$token'` (US-4.2, US-4.3)
+  - [x] `acceptInvite(token)`:
+    - [x] look up by token, unknown gives `notFound`
+    - [x] caller is already a member: `alreadyMember`, and the invite stays unused
+    - [x] in a transaction: `session.db.unsafeExecute('UPDATE team_invite SET "usedAt" = @now, "usedById" = @caller WHERE token = @token AND "usedAt" IS NULL AND "expiresAt" > @now', parameters: QueryParameters.named({...}), transaction: tx)`. Pass `now` as `DateTime.now().toUtc()`, not SQL `now()`: Serverpod stores `DateTime` as UTC `timestamp without time zone`, so SQL `now()` would compare in the database's time zone. The call returns the affected row count.
+    - [x] 1 row updated: insert a `team_membership` with the invite's role, return `TeamSummary`
+    - [x] 0 rows: re-read, then throw `inviteUsed` if `usedAt != null`, else `inviteExpired`; write nothing (US-4.5)
+- [x] Server tests in `test/integration/teams/` (users Owner, Editor, Viewer, Stranger):
+  - [x] `team_endpoint_test.dart`: `create` inserts an editor membership for the creator; `listMine` returns only the caller's teams; an editor calling `createInvite` gets `forbidden`; a stranger gets `notFound`; `ttl` is clamped
+  - [x] `accept_invite_test.dart`: success creates the membership with the right role; a second accept of the same token by another user gets `inviteUsed`; an expired token (seeded `expiresAt` in the past) gets `inviteExpired` with no membership; an existing editor opening a viewer link gets `alreadyMember`, keeps the editor role, and the token stays usable
+  - [x] `accept_invite_race_test.dart`: two `Future.wait` accepts on one token produce exactly one membership
+  - [x] `team_recipe_access_test.dart`: an editor can `get` and `save` a team recipe (instructions replaced in full); a viewer can `get` but `save` gives `forbidden` and `createUploadDescription` gives `forbidden`; an editor calling `delete` gets `forbidden`; a stranger calling `get` gets `notFound`
+  - [x] `last_writer_wins_test.dart`: the editor saves `['a','b']`, the owner saves `['c']`, and `get` returns exactly `['c']` (US-4.6)
+  - [x] `team_delete_test.dart`: deleting the team row sets `recipe.teamId` to null and the owner still reads the recipe
+  - [x] `team_assignment_test.dart`:
+    - [x] the owner, as an editor of the team, can `assignToTeam`; a viewer-member owner gets `forbidden`; a non-owner gets `notFound`
+    - [x] `removeFromTeam` works for the owner and for a team editor; a viewer gets `forbidden`
+    - [x] `listForTeam` by a non-member gives `notFound`
+    - [x] `save` on insert with a `teamId` where the caller is a viewer gives `forbidden`
+    - [x] an editor's update that sends a different `teamId` leaves the stored `teamId` unchanged
+    - [x] a viewer calling `recipeMedia.remove` gets `forbidden`
+- [x] Run the post-phase checklist, then `dart test`.
 
 
 
 ### 4.3 Flutter UI & State Management
 
-- [ ] `TeamRepository` (abstract plus fake): `create`, `listMine`, `createInvite`, `acceptInvite`. Extend `RecipeRepository` with `listForTeam`, `assignToTeam`, `removeFromTeam`.
-- [ ] Register the fake `TeamRepository` in `app_scope.dart`.
-- [ ] `lib/ui/features/teams/cubit/`: `TeamsCubit` with `load()`, `reset()`, `create(name)`, `createInvite(teamId, role, ttl)`, and state `teams`, `status`, `lastInvite`, `error`. Add it to `app_scope.dart` as a session-scoped Cubit (loads on `authenticated`, resets on `unauthenticated`), so the teams list, team detail, invite screen, and Brew Mode's "Add to team" picker share one list.
-- [ ] `lib/ui/features/invite/cubit/`: `InviteAcceptCubit` with `accept(token)` and state `status` (`accepting/success/failure`), `team`, `errorCode`.
-- [ ] Extend `RecipeCreationCubit`:
-  - [ ] `startNew({UuidValue? teamId})` stores `teamId`
-  - [ ] `save()` sends `teamId` only when `recipeId == null`
-  - [ ] `load` uses `access.canEdit`; the route shows Brew Mode instead of the wizard when it is false
-- [ ] `RecipeListCubit(teamId: ...)` calls `listForTeam` instead of `listMine`. The team instance is route-scoped on `/teams/:id`; the personal instance stays session-scoped.
-- [ ] Views:
-  - [ ] `teams_screen.dart` (`/teams`): a list of teams with role badges, a Create team dialog (name, 1..80), and a "Join with invite" dialog that accepts a pasted invite URL or bare token, takes the last path segment, and opens `/invite/:token`. This is how native mobile users join, since the app does not receive the HTTPS link.
-  - [ ] `team_detail_screen.dart` (`/teams/:id`): the team's recipes; a FAB that pushes `/recipes/new?teamId=` for editors only; an Invite button for the owner only. The caller's role comes from `TeamsCubit.state.teams`, and ownership from `team.ownerId == context.read<AuthRepository>().currentUserId`. Any push from this screen (wizard, Brew Mode) reloads the team list on return.
-  - [ ] `/recipes/new` reads `teamId` from the query string and calls `startNew(teamId: ...)`.
-  - [ ] `invite_sheet.dart`: role picker (Viewer/Editor), expiry picker (1h / 24h / 7d), Create, then the URL with a Copy button (`Clipboard.setData`) and a "Single use" note
-  - [ ] `invite_accept_screen.dart` (`/invite/:token`): a spinner while accepting; on success, "You joined  as " with an Open team button; on failure, a message by code
-  - [ ] Brew Mode app bar: "Add to team" (owner only, for a personal recipe, choosing from teams where they are an editor) and "Remove from team" (owner or team editor, for a team recipe)
-  - [ ] Hide Edit and every editing control in Brew Mode when `access.canEdit == false` (US-4.4)
-  - [ ] A bottom `NavigationBar` with My recipes and Teams
-- [ ] Router:
-  - [ ] Wrap `/` and `/teams` in a `StatefulShellRoute.indexedStack` with two branches, so the `NavigationBar` shows only on those two tabs and each tab keeps its scroll position.
-  - [ ] `/teams/:id` is a sub-route of the Teams branch. `/invite/:token` is a top-level route on the root navigator, with no tab bar.
-  - [ ] Give the Feature 3 recipe sub-routes (`recipes/new`, `recipes/:id`, `recipes/:id/edit`, `recipes/:id/share`) `parentNavigatorKey: rootNavigatorKey`. They then cover the tab bar, and pushing them from the Teams tab (for example `/recipes/new?teamId=`) does not switch the user to the My recipes tab.
-  - [ ] Confirm the auth redirect keeps `from=/invite/<token>`, so a signed-out user who opens the link signs in and then lands back on it.
-- [ ] Add `AuthRepository.currentUserId` (a `UuidValue?`) to the Feature 1 repository and its fake, for the ownership check above.
-- [ ] Cubit tests:
-  - [ ] `InviteAcceptCubit` maps each of `inviteExpired`, `inviteUsed`, `alreadyMember`, and `notFound` to failure with that code
-  - [ ] `TeamsCubit.create` appends the team with role `editor`
-  - [ ] `RecipeCreationCubit.save` sends `teamId` on insert and not on update
-- [ ] Run the post-phase checklist, then `hot_restart`.
+- [x] `TeamRepository` (abstract plus fake): `create`, `listMine`, `createInvite`, `acceptInvite`. Extend `RecipeRepository` with `listForTeam`, `assignToTeam`, `removeFromTeam`.
+- [x] Register the fake `TeamRepository` in `app_scope.dart`.
+- [x] `lib/ui/features/teams/cubit/`: `TeamsCubit` with `load()`, `reset()`, `create(name)`, `createInvite(teamId, role, ttl)`, and state `teams`, `status`, `lastInvite`, `error`. Add it to `app_scope.dart` as a session-scoped Cubit (loads on `authenticated`, resets on `unauthenticated`), so the teams list, team detail, invite screen, and Brew Mode's "Add to team" picker share one list.
+- [x] `lib/ui/features/invite/cubit/`: `InviteAcceptCubit` with `accept(token)` and state `status` (`accepting/success/failure`), `team`, `errorCode`.
+- [x] Extend `RecipeCreationCubit`:
+  - [x] `startNew({UuidValue? teamId})` stores `teamId`
+  - [x] `save()` sends `teamId` only when `recipeId == null`
+  - [x] `load` uses `access.canEdit`; the route shows Brew Mode instead of the wizard when it is false
+- [x] `RecipeListCubit(teamId: ...)` calls `listForTeam` instead of `listMine`. The team instance is route-scoped on `/teams/:id`; the personal instance stays session-scoped.
+- [x] Views:
+  - [x] `teams_screen.dart` (`/teams`): a list of teams with role badges, a Create team dialog (name, 1..80), and a "Join with invite" dialog that accepts a pasted invite URL or bare token, takes the last path segment, and opens `/invite/:token`. This is how native mobile users join, since the app does not receive the HTTPS link.
+  - [x] `team_detail_screen.dart` (`/teams/:id`): the team's recipes; a FAB that pushes `/recipes/new?teamId=` for editors only; an Invite button for the owner only. The caller's role comes from `TeamsCubit.state.teams`, and ownership from `team.ownerId == context.read<AuthRepository>().currentUserId`. Any push from this screen (wizard, Brew Mode) reloads the team list on return.
+  - [x] `/recipes/new` reads `teamId` from the query string and calls `startNew(teamId: ...)`.
+  - [x] `invite_sheet.dart`: role picker (Viewer/Editor), expiry picker (1h / 24h / 7d), Create, then the URL with a Copy button (`Clipboard.setData`) and a "Single use" note
+  - [x] `invite_accept_screen.dart` (`/invite/:token`): a spinner while accepting; on success, "You joined  as " with an Open team button; on failure, a message by code
+  - [x] Brew Mode app bar: "Add to team" (owner only, for a personal recipe, choosing from teams where they are an editor) and "Remove from team" (owner or team editor, for a team recipe)
+  - [x] Hide Edit and every editing control in Brew Mode when `access.canEdit == false` (US-4.4)
+  - [x] A bottom `NavigationBar` with My recipes and Teams
+- [x] Router:
+  - [x] Wrap `/` and `/teams` in a `StatefulShellRoute.indexedStack` with two branches, so the `NavigationBar` shows only on those two tabs and each tab keeps its scroll position.
+  - [x] `/teams/:id` is a sub-route of the Teams branch. `/invite/:token` is a top-level route on the root navigator, with no tab bar.
+  - [x] Give the Feature 3 recipe sub-routes (`recipes/new`, `recipes/:id`, `recipes/:id/edit`, `recipes/:id/share`) `parentNavigatorKey: rootNavigatorKey`. They then cover the tab bar, and pushing them from the Teams tab (for example `/recipes/new?teamId=`) does not switch the user to the My recipes tab.
+  - [x] Confirm the auth redirect keeps `from=/invite/<token>`, so a signed-out user who opens the link signs in and then lands back on it.
+- [x] Add `AuthRepository.currentUserId` (a `UuidValue?`) to the Feature 1 repository and its fake, for the ownership check above.
+- [x] Cubit tests:
+  - [x] `InviteAcceptCubit` maps each of `inviteExpired`, `inviteUsed`, `alreadyMember`, and `notFound` to failure with that code
+  - [x] `TeamsCubit.create` appends the team with role `editor`
+  - [x] `RecipeCreationCubit.save` sends `teamId` on insert and not on update
+- [x] Run the post-phase checklist, then `hot_restart`.
 
 
 
 ### 4.4 Integration Layer
 
-- [ ] `ServerpodTeamRepository` on `client.team`; extend `ServerpodRecipeRepository` with the three team methods; implement `ServerpodAuthRepository.currentUserId` as `client.auth.authInfo?.authUserId`.
-- [ ] Register `ServerpodTeamRepository` in `app_scope.dart` in place of the fake.
-- [ ] Deep link on web. Invite URLs point at the web server (`http://localhost:8082` in development), which serves the app only after it has been built into `web/app`. Without a build, `:8082` shows the "build the Flutter app" page:
-  - [ ] Run `serverpod run flutter_build` in `brewing_journal_server/`, then `hot_restart` (MCP) so `FlutterRoute` is registered (it is added only when `web/app` exists at startup).
+- [x] `ServerpodTeamRepository` on `client.team`; extend `ServerpodRecipeRepository` with the three team methods; implement `ServerpodAuthRepository.currentUserId` as `client.auth.authInfo?.authUserId`.
+- [x] Register `ServerpodTeamRepository` in `app_scope.dart` in place of the fake.
+- [x] Deep link on web. Invite URLs point at the web server (`http://localhost:8082` in development), which serves the app only after it has been built into `web/app`. Without a build, `:8082` shows the "build the Flutter app" page:
+  - [x] Run `serverpod run flutter_build` in `brewing_journal_server/`, then `hot_restart` (MCP) so `FlutterRoute` is registered (it is added only when `web/app` exists at startup).
   - [ ] Open `http://localhost:8082/invite/abc` and confirm the app loads and routes to the invite screen with "Invite not found". If `FlutterRoute` does not serve `index.html` for that path, add a fallback in `lib/server.dart` that serves the app's `index.html` for `/invite/**`.
-  - [ ] For quick checks during development, the same path also works on the `flutter run` dev URL (`<dev-url>/invite/<token>`), because `go_router` uses path URLs.
-- [ ] Native mobile: the invite is an HTTPS URL that opens in the browser (web app), or the recipient pastes it into "Join with invite". App and Universal Links are out of scope; record this in `AGENTS.md`.
-- [ ] Error messages:
-  - [ ] Shared defaults in `errorMessage`:
-    - [ ] `inviteExpired`: "This invite has expired. Ask the team owner for a new one."
-    - [ ] `inviteUsed`: "This invite has already been used."
-    - [ ] `alreadyMember`: "You're already in this team."
-  - [ ] Invite screen overrides `notFound` with "Invite not found." For `alreadyMember`, it also shows the Open team button.
-  - [ ] Wizard and Brew Mode override `forbidden` with "Viewers can't change team recipes." when the recipe has a `teamId`, then call `getAccess` so the editing controls hide.
-- [ ] Loading states: invite creation disables the Create button; accept shows a full-screen spinner; `assignToTeam` shows an inline progress indicator.
-- [ ] After a successful accept, call `context.read<TeamsCubit>().load()` before Open team navigates to `/teams/:id`, so the new team and role are in state. After `assignToTeam` or `removeFromTeam`, call `context.read<RecipeListCubit>().load()` and `RecipeDetailCubit.load()`. If Brew Mode was opened from a team screen, that screen reloads its list when the push returns.
-- [ ] End-to-end check with two accounts (two browser profiles, or sign out and sign in):
-  - [ ] Owner creates the "Shop Recipes" team, adds a recipe, and creates a viewer invite.
-  - [ ] User B opens the link signed out, signs in, returns to the invite, joins as viewer, sees the recipe, and has no Edit button.
-  - [ ] User B opens the same link again: "You're already in this team" (the membership check runs before the claim).
-  - [ ] User C opens B's used link: "This invite has already been used", and C does not join.
-  - [ ] Owner creates an editor invite for user C. C edits the instructions, and the owner reloads to see C's list exactly.
-- [ ] Run the post-phase checklist, and check both log tails.
+  - [x] For quick checks during development, the same path also works on the `flutter run` dev URL (`<dev-url>/invite/<token>`), because `go_router` uses path URLs.
+- [x] Native mobile: the invite is an HTTPS URL that opens in the browser (web app), or the recipient pastes it into "Join with invite". App and Universal Links are out of scope; record this in `AGENTS.md`.
+- [x] Error messages:
+  - [x] Shared defaults in `errorMessage`:
+    - [x] `inviteExpired`: "This invite has expired. Ask the team owner for a new one."
+    - [x] `inviteUsed`: "This invite has already been used."
+    - [x] `alreadyMember`: "You're already in this team."
+  - [x] Invite screen overrides `notFound` with "Invite not found." For `alreadyMember`, it also shows the Open team button.
+  - [x] Wizard and Brew Mode override `forbidden` with "Viewers can't change team recipes." when the recipe has a `teamId`, then call `getAccess` so the editing controls hide.
+- [x] Loading states: invite creation disables the Create button; accept shows a full-screen spinner; `assignToTeam` shows an inline progress indicator.
+- [x] After a successful accept, call `context.read<TeamsCubit>().load()` before Open team navigates to `/teams/:id`, so the new team and role are in state. After `assignToTeam` or `removeFromTeam`, call `context.read<RecipeListCubit>().load()` and `RecipeDetailCubit.load()`. If Brew Mode was opened from a team screen, that screen reloads its list when the push returns.
+- [x] End-to-end check with two accounts (two browser profiles, or sign out and sign in):
+  - [x] Owner creates the "Shop Recipes" team, adds a recipe, and creates a viewer invite.
+  - [x] User B opens the link signed out, signs in, returns to the invite, joins as viewer, sees the recipe, and has no Edit button.
+  - [x] User B opens the same link again: "You're already in this team" (the membership check runs before the claim).
+  - [x] User C opens B's used link: "This invite has already been used", and C does not join.
+  - [x] Owner creates an editor invite for user C. C edits the instructions, and the owner reloads to see C's list exactly.
+- [x] Run the post-phase checklist, and check both log tails.
 
 ---
 

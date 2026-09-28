@@ -17,8 +17,16 @@ recipe:
   - get:
   - listMine:
   - getAccess:
+  - listForTeam:
+  - assignToTeam:
+  - removeFromTeam:
   - delete:
 recipeMedia:
   - createUploadDescription:
   - confirmUpload:
   - remove:
+team:
+  - create:
+  - listMine:
+  - createInvite:
+  - acceptInvite:

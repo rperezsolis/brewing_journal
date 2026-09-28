@@ -315,6 +315,41 @@ void main() {
       expect(recipes.savedDrafts.last.instructions, isEmpty);
     });
 
+    test('refreshAccess stores canEdit from getAccess', () async {
+      await fillRequired(cubit);
+      expect(await cubit.save(), isTrue);
+      final id = cubit.state.recipeId!;
+      final detail = recipes.details[id]!;
+      recipes.details[id] = RecipeDetail(
+        recipe: detail.recipe,
+        ingredient: detail.ingredient,
+        instructions: detail.instructions,
+        flavorTags: detail.flavorTags,
+        photos: detail.photos,
+        access: RecipeAccess(
+          role: TeamRole.viewer,
+          canEdit: false,
+          canDelete: false,
+        ),
+      );
+
+      await cubit.refreshAccess();
+
+      expect(cubit.state.canEdit, isFalse);
+    });
+
+    test('save sends teamId on insert and not on update', () async {
+      final teamId = const Uuid().v7obj();
+      cubit.startNew(teamId: teamId);
+      await fillRequired(cubit);
+      expect(await cubit.save(), isTrue);
+      expect(recipes.savedDrafts.single.teamId, teamId);
+
+      cubit.addInstruction('stir');
+      expect(await cubit.save(), isTrue);
+      expect(recipes.savedDrafts.last.teamId, isNull);
+    });
+
     test('a failed save keeps every field and sets failure', () async {
       await fillRequired(cubit);
       cubit

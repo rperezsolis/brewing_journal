@@ -1,3 +1,4 @@
+import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../data/repositories/recipe_repository.dart';
@@ -5,10 +6,11 @@ import 'recipe_list_state.dart';
 
 /// A paged list of recipes, most recently updated first.
 class RecipeListCubit extends Cubit<RecipeListState> {
-  RecipeListCubit(this._recipes, {this.pageSize = 20})
+  RecipeListCubit(this._recipes, {this.teamId, this.pageSize = 20})
     : super(const RecipeListState());
 
   final RecipeRepository _recipes;
+  final UuidValue? teamId;
   final int pageSize;
 
   /// Bumped by [load] and [reset], so a page requested before either of them
@@ -20,7 +22,7 @@ class RecipeListCubit extends Cubit<RecipeListState> {
     final generation = ++_generation;
     emit(state.copyWith(status: RecipeListStatus.loading, loadingMore: false));
     try {
-      final page = await _recipes.listMine(limit: pageSize, offset: 0);
+      final page = await _page(limit: pageSize, offset: 0);
       if (isClosed || generation != _generation) return;
       emit(
         RecipeListState(
@@ -45,7 +47,7 @@ class RecipeListCubit extends Cubit<RecipeListState> {
     final generation = _generation;
     emit(state.copyWith(loadingMore: true));
     try {
-      final page = await _recipes.listMine(
+      final page = await _page(
         limit: pageSize,
         offset: state.recipes.length,
       );
@@ -67,5 +69,13 @@ class RecipeListCubit extends Cubit<RecipeListState> {
   void reset() {
     _generation++;
     emit(const RecipeListState());
+  }
+
+  Future<List<Recipe>> _page({required int limit, required int offset}) {
+    final id = teamId;
+    if (id != null) {
+      return _recipes.listForTeam(id, limit: limit, offset: offset);
+    }
+    return _recipes.listMine(limit: limit, offset: offset);
   }
 }

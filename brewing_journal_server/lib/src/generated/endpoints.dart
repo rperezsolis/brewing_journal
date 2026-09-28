@@ -16,6 +16,8 @@ import 'package:brewing_journal_server/src/generated/brewing/ingredient_draft.da
     as _ia1mb7ic;
 import 'package:brewing_journal_server/src/generated/brewing/recipe_draft.dart'
     as _ig3znlm5;
+import 'package:brewing_journal_server/src/generated/teams/team_role.dart'
+    as _i0s6zzin;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _iacs;
@@ -26,6 +28,7 @@ import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
 import '../brewing/ingredient_endpoint.dart' as _iow895b6;
 import '../brewing/recipe_endpoint.dart' as _i34apttk;
 import '../brewing/recipe_media_endpoint.dart' as _i76lspal;
+import '../teams/team_endpoint.dart' as _i4y95ffu;
 
 class Endpoints extends _is.EndpointDispatch {
   @override
@@ -59,6 +62,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'recipeMedia',
+          null,
+        ),
+      'team': _i4y95ffu.TeamEndpoint()
+        ..initialize(
+          server,
+          'team',
           null,
         ),
     };
@@ -410,6 +419,81 @@ class Endpoints extends _is.EndpointDispatch {
                     params['id'],
                   ),
         ),
+        'listForTeam': _is.MethodConnector(
+          name: 'listForTeam',
+          params: {
+            'teamId': _is.ParameterDescription(
+              name: 'teamId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+            'limit': _is.ParameterDescription(
+              name: 'limit',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'offset': _is.ParameterDescription(
+              name: 'offset',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['recipe'] as _i34apttk.RecipeEndpoint).listForTeam(
+                    session,
+                    params['teamId'],
+                    params['limit'],
+                    params['offset'],
+                  ),
+        ),
+        'assignToTeam': _is.MethodConnector(
+          name: 'assignToTeam',
+          params: {
+            'recipeId': _is.ParameterDescription(
+              name: 'recipeId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+            'teamId': _is.ParameterDescription(
+              name: 'teamId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint)
+                  .assignToTeam(
+                    session,
+                    params['recipeId'],
+                    params['teamId'],
+                  ),
+        ),
+        'removeFromTeam': _is.MethodConnector(
+          name: 'removeFromTeam',
+          params: {
+            'recipeId': _is.ParameterDescription(
+              name: 'recipeId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint)
+                  .removeFromTeam(
+                    session,
+                    params['recipeId'],
+                  ),
+        ),
         'delete': _is.MethodConnector(
           name: 'delete',
           params: {
@@ -500,6 +584,91 @@ class Endpoints extends _is.EndpointDispatch {
                         session,
                         params['photoId'],
                       ),
+        ),
+      },
+    );
+    connectors['team'] = _is.EndpointConnector(
+      name: 'team',
+      endpoint: endpoints['team']!,
+      methodConnectors: {
+        'create': _is.MethodConnector(
+          name: 'create',
+          params: {
+            'name': _is.ParameterDescription(
+              name: 'name',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['team'] as _i4y95ffu.TeamEndpoint).create(
+                session,
+                params['name'],
+              ),
+        ),
+        'listMine': _is.MethodConnector(
+          name: 'listMine',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['team'] as _i4y95ffu.TeamEndpoint).listMine(
+                session,
+              ),
+        ),
+        'createInvite': _is.MethodConnector(
+          name: 'createInvite',
+          params: {
+            'teamId': _is.ParameterDescription(
+              name: 'teamId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+            'role': _is.ParameterDescription(
+              name: 'role',
+              type: _is.getType<_i0s6zzin.TeamRole>(),
+              nullable: false,
+            ),
+            'ttl': _is.ParameterDescription(
+              name: 'ttl',
+              type: _is.getType<Duration>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['team'] as _i4y95ffu.TeamEndpoint).createInvite(
+                    session,
+                    params['teamId'],
+                    params['role'],
+                    params['ttl'],
+                  ),
+        ),
+        'acceptInvite': _is.MethodConnector(
+          name: 'acceptInvite',
+          params: {
+            'token': _is.ParameterDescription(
+              name: 'token',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['team'] as _i4y95ffu.TeamEndpoint).acceptInvite(
+                    session,
+                    params['token'],
+                  ),
         ),
       },
     );

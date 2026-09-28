@@ -29,6 +29,12 @@ import 'package:brewing_journal_client/src/protocol/brewing/recipe_photo.dart'
     as _ijse9n9l;
 import 'package:brewing_journal_client/src/protocol/brewing/upload_ticket.dart'
     as _i1wqbnj3;
+import 'package:brewing_journal_client/src/protocol/teams/invite_link.dart'
+    as _i5bdzsjf;
+import 'package:brewing_journal_client/src/protocol/teams/team_role.dart'
+    as _in4rfda8;
+import 'package:brewing_journal_client/src/protocol/teams/team_summary.dart'
+    as _ih3q8aev;
 import 'package:http/http.dart' as _i85jenna;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _iacc;
@@ -341,6 +347,42 @@ class EndpointRecipe extends EndpointAuthenticated {
         {'id': id},
       );
 
+  /// Team recipes, most recently updated first. Membership required.
+  _ida.Future<List<_i261jxz0.Recipe>> listForTeam(
+    _isc.UuidValue teamId,
+    int limit,
+    int offset,
+  ) => caller.callServerEndpoint<List<_i261jxz0.Recipe>>(
+    'recipe',
+    'listForTeam',
+    {
+      'teamId': teamId,
+      'limit': limit,
+      'offset': offset,
+    },
+  );
+
+  /// Moves a personal recipe the caller owns onto a team they edit.
+  _ida.Future<_i261jxz0.Recipe> assignToTeam(
+    _isc.UuidValue recipeId,
+    _isc.UuidValue teamId,
+  ) => caller.callServerEndpoint<_i261jxz0.Recipe>(
+    'recipe',
+    'assignToTeam',
+    {
+      'recipeId': recipeId,
+      'teamId': teamId,
+    },
+  );
+
+  /// Clears `teamId`. The recipe owner or a team editor may do this.
+  _ida.Future<_i261jxz0.Recipe> removeFromTeam(_isc.UuidValue recipeId) =>
+      caller.callServerEndpoint<_i261jxz0.Recipe>(
+        'recipe',
+        'removeFromTeam',
+        {'recipeId': recipeId},
+      );
+
   /// Deletes the recipe and its child rows; photo files are removed
   /// best-effort after the delete commits.
   _ida.Future<void> delete(_isc.UuidValue id) =>
@@ -396,6 +438,56 @@ abstract class EndpointAuthenticated extends _isc.EndpointRef {
   EndpointAuthenticated(_isc.EndpointCaller caller) : super(caller);
 }
 
+/// {@category Endpoint}
+class EndpointTeam extends EndpointAuthenticated {
+  EndpointTeam(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'team';
+
+  /// Creates a team and an editor membership for the caller.
+  _ida.Future<_ih3q8aev.TeamSummary> create(String name) =>
+      caller.callServerEndpoint<_ih3q8aev.TeamSummary>(
+        'team',
+        'create',
+        {'name': name},
+      );
+
+  /// Teams the caller belongs to, with their role on each.
+  _ida.Future<List<_ih3q8aev.TeamSummary>> listMine() =>
+      caller.callServerEndpoint<List<_ih3q8aev.TeamSummary>>(
+        'team',
+        'listMine',
+        {},
+      );
+
+  /// Issues a single-use invite URL. Only the team owner may create invites.
+  _ida.Future<_i5bdzsjf.InviteLink> createInvite(
+    _isc.UuidValue teamId,
+    _in4rfda8.TeamRole role,
+    Duration ttl,
+  ) => caller.callServerEndpoint<_i5bdzsjf.InviteLink>(
+    'team',
+    'createInvite',
+    {
+      'teamId': teamId,
+      'role': role,
+      'ttl': ttl,
+    },
+  );
+
+  /// Claims an unused, unexpired invite and inserts a membership.
+  ///
+  /// Already a member → `alreadyMember` (invite stays unused). A lost race
+  /// on the claim → `inviteUsed` or `inviteExpired`, with no write.
+  _ida.Future<_ih3q8aev.TeamSummary> acceptInvite(String token) =>
+      caller.callServerEndpoint<_ih3q8aev.TeamSummary>(
+        'team',
+        'acceptInvite',
+        {'token': token},
+      );
+}
+
 class Modules {
   Modules(Client client) {
     serverpod_auth_idp = _iaic.Caller(client);
@@ -439,6 +531,7 @@ class Client extends _isc.ServerpodClientShared {
     ingredient = EndpointIngredient(this);
     recipe = EndpointRecipe(this);
     recipeMedia = EndpointRecipeMedia(this);
+    team = EndpointTeam(this);
     modules = Modules(this);
   }
 
@@ -452,6 +545,8 @@ class Client extends _isc.ServerpodClientShared {
 
   late final EndpointRecipeMedia recipeMedia;
 
+  late final EndpointTeam team;
+
   late final Modules modules;
 
   @override
@@ -461,6 +556,7 @@ class Client extends _isc.ServerpodClientShared {
     'ingredient': ingredient,
     'recipe': recipe,
     'recipeMedia': recipeMedia,
+    'team': team,
   };
 
   @override

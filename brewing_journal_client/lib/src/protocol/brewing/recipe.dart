@@ -19,6 +19,7 @@ import '../brewing/ingredient.dart' as _ippg9os6;
 import '../brewing/recipe_flavor_tag.dart' as _i55exiaf;
 import '../brewing/recipe_instruction.dart' as _i1t6etiy;
 import '../brewing/recipe_photo.dart' as _iir54vf2;
+import '../teams/team.dart' as _izqfkhlk;
 
 abstract class Recipe
     implements _isc.SerializableModel, _isc.ProtocolSerialization {
@@ -26,6 +27,8 @@ abstract class Recipe
     this.id,
     required this.ownerId,
     this.owner,
+    this.teamId,
+    this.team,
     required this.ingredientId,
     this.ingredient,
     required this.title,
@@ -52,6 +55,8 @@ abstract class Recipe
     _isc.UuidValue? id,
     required _isc.UuidValue ownerId,
     _iacc.AuthUser? owner,
+    _isc.UuidValue? teamId,
+    _izqfkhlk.Team? team,
     required _isc.UuidValue ingredientId,
     _ippg9os6.Ingredient? ingredient,
     required String title,
@@ -85,6 +90,14 @@ abstract class Recipe
           ? null
           : _ibcyqwbp.Protocol().deserialize<_iacc.AuthUser>(
               jsonSerialization['owner'],
+            ),
+      teamId: jsonSerialization['teamId'] == null
+          ? null
+          : _isc.UuidValueJsonExtension.fromJson(jsonSerialization['teamId']),
+      team: jsonSerialization['team'] == null
+          ? null
+          : _ibcyqwbp.Protocol().deserialize<_izqfkhlk.Team>(
+              jsonSerialization['team'],
             ),
       ingredientId: _isc.UuidValueJsonExtension.fromJson(
         jsonSerialization['ingredientId'],
@@ -146,6 +159,10 @@ abstract class Recipe
 
   _iacc.AuthUser? owner;
 
+  _isc.UuidValue? teamId;
+
+  _izqfkhlk.Team? team;
+
   _isc.UuidValue ingredientId;
 
   _ippg9os6.Ingredient? ingredient;
@@ -191,6 +208,8 @@ abstract class Recipe
     _isc.UuidValue? id,
     _isc.UuidValue? ownerId,
     _iacc.AuthUser? owner,
+    _isc.UuidValue? teamId,
+    _izqfkhlk.Team? team,
     _isc.UuidValue? ingredientId,
     _ippg9os6.Ingredient? ingredient,
     String? title,
@@ -218,6 +237,8 @@ abstract class Recipe
       if (id != null) 'id': id?.toJson(),
       'ownerId': ownerId.toJson(),
       if (owner != null) 'owner': owner?.toJson(),
+      if (teamId != null) 'teamId': teamId?.toJson(),
+      if (team != null) 'team': team?.toJson(),
       'ingredientId': ingredientId.toJson(),
       if (ingredient != null) 'ingredient': ingredient?.toJson(),
       'title': title,
@@ -252,6 +273,8 @@ abstract class Recipe
       if (id != null) 'id': id?.toJson(),
       'ownerId': ownerId.toJson(),
       if (owner != null) 'owner': owner?.toJson(),
+      if (teamId != null) 'teamId': teamId?.toJson(),
+      if (team != null) 'team': team?.toJsonForProtocol(),
       'ingredientId': ingredientId.toJson(),
       if (ingredient != null) 'ingredient': ingredient?.toJsonForProtocol(),
       'title': title,
@@ -296,6 +319,8 @@ class _RecipeImpl extends Recipe {
     _isc.UuidValue? id,
     required _isc.UuidValue ownerId,
     _iacc.AuthUser? owner,
+    _isc.UuidValue? teamId,
+    _izqfkhlk.Team? team,
     required _isc.UuidValue ingredientId,
     _ippg9os6.Ingredient? ingredient,
     required String title,
@@ -319,6 +344,8 @@ class _RecipeImpl extends Recipe {
          id: id,
          ownerId: ownerId,
          owner: owner,
+         teamId: teamId,
+         team: team,
          ingredientId: ingredientId,
          ingredient: ingredient,
          title: title,
@@ -348,6 +375,8 @@ class _RecipeImpl extends Recipe {
     Object? id = _Undefined,
     _isc.UuidValue? ownerId,
     Object? owner = _Undefined,
+    Object? teamId = _Undefined,
+    Object? team = _Undefined,
     _isc.UuidValue? ingredientId,
     Object? ingredient = _Undefined,
     String? title,
@@ -372,6 +401,8 @@ class _RecipeImpl extends Recipe {
       id: id is _isc.UuidValue? ? id : this.id,
       ownerId: ownerId ?? this.ownerId,
       owner: owner is _iacc.AuthUser? ? owner : this.owner?.copyWith(),
+      teamId: teamId is _isc.UuidValue? ? teamId : this.teamId,
+      team: team is _izqfkhlk.Team? ? team : this.team?.copyWith(),
       ingredientId: ingredientId ?? this.ingredientId,
       ingredient: ingredient is _ippg9os6.Ingredient?
           ? ingredient

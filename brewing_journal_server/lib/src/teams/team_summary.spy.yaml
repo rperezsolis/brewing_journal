@@ -1,0 +1,4 @@
+class: TeamSummary
+fields:
+  team: Team
+  role: TeamRole

@@ -1,0 +1,14 @@
+class: Team
+table: team
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  owner: module:serverpod_auth_core:AuthUser?, relation(onDelete=Cascade)
+  name: String
+  createdAt: DateTime, default=now
+  memberships: List<TeamMembership>?, relation(name=team_memberships)
+  invites: List<TeamInvite>?, relation(name=team_invites)
+  recipes: List<Recipe>?, relation(name=team_recipes)
+
+indexes:
+  team_owner_idx:
+    fields: ownerId

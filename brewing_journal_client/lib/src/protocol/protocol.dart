@@ -15,6 +15,8 @@ import 'package:brewing_journal_client/src/protocol/brewing/ingredient.dart'
     as _ifm45unr;
 import 'package:brewing_journal_client/src/protocol/brewing/recipe.dart'
     as _i261jxz0;
+import 'package:brewing_journal_client/src/protocol/teams/team_summary.dart'
+    as _ih3q8aev;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _iacc;
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
@@ -35,6 +37,12 @@ import 'brewing/recipe_instruction.dart' as _id0mij74;
 import 'brewing/recipe_photo.dart' as _i9xtdqqg;
 import 'brewing/roast_level.dart' as _ilmoykyi;
 import 'brewing/upload_ticket.dart' as _ivpdymeq;
+import 'teams/invite_link.dart' as _ih3460lx;
+import 'teams/team.dart' as _im6wd3ml;
+import 'teams/team_invite.dart' as _ixubbi3v;
+import 'teams/team_membership.dart' as _it1ysroj;
+import 'teams/team_role.dart' as _i8uq5mqx;
+import 'teams/team_summary.dart' as _i5r78mbx;
 export 'brewing/beverage_kind.dart';
 export 'brewing/brewing_error_code.dart';
 export 'brewing/brewing_exception.dart';
@@ -50,6 +58,12 @@ export 'brewing/recipe_instruction.dart';
 export 'brewing/recipe_photo.dart';
 export 'brewing/roast_level.dart';
 export 'brewing/upload_ticket.dart';
+export 'teams/invite_link.dart';
+export 'teams/team.dart';
+export 'teams/team_invite.dart';
+export 'teams/team_membership.dart';
+export 'teams/team_role.dart';
+export 'teams/team_summary.dart';
 export 'client.dart';
 
 class Protocol extends _isc.SerializationManager {
@@ -131,6 +145,24 @@ class Protocol extends _isc.SerializationManager {
     if (t == _ivpdymeq.UploadTicket) {
       return _ivpdymeq.UploadTicket.fromJson(data) as T;
     }
+    if (t == _ih3460lx.InviteLink) {
+      return _ih3460lx.InviteLink.fromJson(data) as T;
+    }
+    if (t == _im6wd3ml.Team) {
+      return _im6wd3ml.Team.fromJson(data) as T;
+    }
+    if (t == _ixubbi3v.TeamInvite) {
+      return _ixubbi3v.TeamInvite.fromJson(data) as T;
+    }
+    if (t == _it1ysroj.TeamMembership) {
+      return _it1ysroj.TeamMembership.fromJson(data) as T;
+    }
+    if (t == _i8uq5mqx.TeamRole) {
+      return _i8uq5mqx.TeamRole.fromJson(data) as T;
+    }
+    if (t == _i5r78mbx.TeamSummary) {
+      return _i5r78mbx.TeamSummary.fromJson(data) as T;
+    }
     if (t == _isc.getType<_ino7p0mu.BeverageKind?>()) {
       return (data != null ? _ino7p0mu.BeverageKind.fromJson(data) : null) as T;
     }
@@ -182,6 +214,25 @@ class Protocol extends _isc.SerializationManager {
     if (t == _isc.getType<_ivpdymeq.UploadTicket?>()) {
       return (data != null ? _ivpdymeq.UploadTicket.fromJson(data) : null) as T;
     }
+    if (t == _isc.getType<_ih3460lx.InviteLink?>()) {
+      return (data != null ? _ih3460lx.InviteLink.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_im6wd3ml.Team?>()) {
+      return (data != null ? _im6wd3ml.Team.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_ixubbi3v.TeamInvite?>()) {
+      return (data != null ? _ixubbi3v.TeamInvite.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_it1ysroj.TeamMembership?>()) {
+      return (data != null ? _it1ysroj.TeamMembership.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_i8uq5mqx.TeamRole?>()) {
+      return (data != null ? _i8uq5mqx.TeamRole.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_i5r78mbx.TeamSummary?>()) {
+      return (data != null ? _i5r78mbx.TeamSummary.fromJson(data) : null) as T;
+    }
     if (t == List<_id0mij74.RecipeInstruction>) {
       return (data as List)
               .map((e) => deserialize<_id0mij74.RecipeInstruction>(e))
@@ -227,6 +278,48 @@ class Protocol extends _isc.SerializationManager {
     if (t == List<String>) {
       return (data as List).map((e) => deserialize<String>(e)).toList() as T;
     }
+    if (t == List<_it1ysroj.TeamMembership>) {
+      return (data as List)
+              .map((e) => deserialize<_it1ysroj.TeamMembership>(e))
+              .toList()
+          as T;
+    }
+    if (t == _isc.getType<List<_it1ysroj.TeamMembership>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_it1ysroj.TeamMembership>(e))
+                    .toList()
+              : null)
+          as T;
+    }
+    if (t == List<_ixubbi3v.TeamInvite>) {
+      return (data as List)
+              .map((e) => deserialize<_ixubbi3v.TeamInvite>(e))
+              .toList()
+          as T;
+    }
+    if (t == _isc.getType<List<_ixubbi3v.TeamInvite>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_ixubbi3v.TeamInvite>(e))
+                    .toList()
+              : null)
+          as T;
+    }
+    if (t == List<_izkawori.Recipe>) {
+      return (data as List)
+              .map((e) => deserialize<_izkawori.Recipe>(e))
+              .toList()
+          as T;
+    }
+    if (t == _isc.getType<List<_izkawori.Recipe>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_izkawori.Recipe>(e))
+                    .toList()
+              : null)
+          as T;
+    }
     if (t == List<_ifm45unr.Ingredient>) {
       return (data as List)
               .map((e) => deserialize<_ifm45unr.Ingredient>(e))
@@ -236,6 +329,12 @@ class Protocol extends _isc.SerializationManager {
     if (t == List<_i261jxz0.Recipe>) {
       return (data as List)
               .map((e) => deserialize<_i261jxz0.Recipe>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_ih3q8aev.TeamSummary>) {
+      return (data as List)
+              .map((e) => deserialize<_ih3q8aev.TeamSummary>(e))
               .toList()
           as T;
     }
@@ -265,6 +364,12 @@ class Protocol extends _isc.SerializationManager {
       _i9xtdqqg.RecipePhoto => 'RecipePhoto',
       _ilmoykyi.RoastLevel => 'RoastLevel',
       _ivpdymeq.UploadTicket => 'UploadTicket',
+      _ih3460lx.InviteLink => 'InviteLink',
+      _im6wd3ml.Team => 'Team',
+      _ixubbi3v.TeamInvite => 'TeamInvite',
+      _it1ysroj.TeamMembership => 'TeamMembership',
+      _i8uq5mqx.TeamRole => 'TeamRole',
+      _i5r78mbx.TeamSummary => 'TeamSummary',
       _ => null,
     };
   }
@@ -312,6 +417,18 @@ class Protocol extends _isc.SerializationManager {
         return 'RoastLevel';
       case _ivpdymeq.UploadTicket():
         return 'UploadTicket';
+      case _ih3460lx.InviteLink():
+        return 'InviteLink';
+      case _im6wd3ml.Team():
+        return 'Team';
+      case _ixubbi3v.TeamInvite():
+        return 'TeamInvite';
+      case _it1ysroj.TeamMembership():
+        return 'TeamMembership';
+      case _i8uq5mqx.TeamRole():
+        return 'TeamRole';
+      case _i5r78mbx.TeamSummary():
+        return 'TeamSummary';
     }
     className = _iaic.Protocol().getClassNameForObject(data);
     if (className != null) {
@@ -378,6 +495,24 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'UploadTicket') {
       return deserialize<_ivpdymeq.UploadTicket>(data['data']);
+    }
+    if (dataClassName == 'InviteLink') {
+      return deserialize<_ih3460lx.InviteLink>(data['data']);
+    }
+    if (dataClassName == 'Team') {
+      return deserialize<_im6wd3ml.Team>(data['data']);
+    }
+    if (dataClassName == 'TeamInvite') {
+      return deserialize<_ixubbi3v.TeamInvite>(data['data']);
+    }
+    if (dataClassName == 'TeamMembership') {
+      return deserialize<_it1ysroj.TeamMembership>(data['data']);
+    }
+    if (dataClassName == 'TeamRole') {
+      return deserialize<_i8uq5mqx.TeamRole>(data['data']);
+    }
+    if (dataClassName == 'TeamSummary') {
+      return deserialize<_i5r78mbx.TeamSummary>(data['data']);
     }
     if (dataClassName.startsWith('serverpod_auth_idp.')) {
       data['className'] = dataClassName.substring(19);

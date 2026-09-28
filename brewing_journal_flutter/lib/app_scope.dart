@@ -10,6 +10,7 @@ import 'data/repositories/fake_auth_repository.dart';
 import 'data/repositories/fake_ingredient_repository.dart';
 import 'data/repositories/fake_recipe_media_repository.dart';
 import 'data/repositories/fake_recipe_repository.dart';
+import 'data/repositories/fake_team_repository.dart';
 import 'data/repositories/ingredient_repository.dart';
 import 'data/repositories/recipe_media_repository.dart';
 import 'data/repositories/recipe_repository.dart';
@@ -17,10 +18,13 @@ import 'data/repositories/serverpod_auth_repository.dart';
 import 'data/repositories/serverpod_ingredient_repository.dart';
 import 'data/repositories/serverpod_recipe_media_repository.dart';
 import 'data/repositories/serverpod_recipe_repository.dart';
+import 'data/repositories/serverpod_team_repository.dart';
+import 'data/repositories/team_repository.dart';
 import 'data/services/alarm_player.dart';
 import 'ui/features/auth/cubit/auth_cubit.dart';
 import 'ui/features/auth/cubit/auth_state.dart';
 import 'ui/features/recipe_list/cubit/recipe_list_cubit.dart';
+import 'ui/features/teams/cubit/teams_cubit.dart';
 
 /// App-level repositories, backed by the global Serverpod [client].
 class AppRepositories {
@@ -29,6 +33,7 @@ class AppRepositories {
       ingredients = ServerpodIngredientRepository(client.ingredient),
       recipes = ServerpodRecipeRepository(client.recipe),
       recipeMedia = ServerpodRecipeMediaRepository(client.recipeMedia),
+      teams = ServerpodTeamRepository(client.team),
       alarm = AudioAlarmPlayer();
 
   AppRepositories.custom({
@@ -36,6 +41,7 @@ class AppRepositories {
     required this.ingredients,
     required this.recipes,
     required this.recipeMedia,
+    required this.teams,
     required this.alarm,
   });
 
@@ -47,6 +53,7 @@ class AppRepositories {
       ingredients: ingredients,
       recipes: FakeRecipeRepository(ingredients),
       recipeMedia: FakeRecipeMediaRepository(),
+      teams: FakeTeamRepository(),
       alarm: alarm ?? FakeAlarmPlayer(),
     );
   }
@@ -55,6 +62,7 @@ class AppRepositories {
   final IngredientRepository ingredients;
   final RecipeRepository recipes;
   final RecipeMediaRepository recipeMedia;
+  final TeamRepository teams;
   final AlarmPlayer alarm;
 }
 
@@ -81,6 +89,7 @@ class AppScope extends StatefulWidget {
 
 class _AppScopeState extends State<AppScope> {
   late final RecipeListCubit _recipeList;
+  late final TeamsCubit _teams;
   late final StreamSubscription<AuthState> _authSubscription;
   AuthStatus? _lastStatus;
 
@@ -88,6 +97,7 @@ class _AppScopeState extends State<AppScope> {
   void initState() {
     super.initState();
     _recipeList = RecipeListCubit(widget.repositories.recipes);
+    _teams = TeamsCubit(widget.repositories.teams);
     _authSubscription = widget.authCubit.stream.listen(_onAuthChanged);
     _onAuthChanged(widget.authCubit.state);
   }
@@ -98,8 +108,10 @@ class _AppScopeState extends State<AppScope> {
     switch (auth.status) {
       case AuthStatus.authenticated:
         unawaited(_recipeList.load());
+        unawaited(_teams.load());
       case AuthStatus.unauthenticated:
         _recipeList.reset();
+        _teams.reset();
       case AuthStatus.unknown:
         break;
     }
@@ -109,6 +121,7 @@ class _AppScopeState extends State<AppScope> {
   void dispose() {
     _authSubscription.cancel();
     _recipeList.close();
+    _teams.close();
     super.dispose();
   }
 
@@ -127,12 +140,14 @@ class _AppScopeState extends State<AppScope> {
         RepositoryProvider<RecipeMediaRepository>.value(
           value: repositories.recipeMedia,
         ),
+        RepositoryProvider<TeamRepository>.value(value: repositories.teams),
         RepositoryProvider<AlarmPlayer>.value(value: repositories.alarm),
       ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider<AuthCubit>.value(value: widget.authCubit),
           BlocProvider<RecipeListCubit>.value(value: _recipeList),
+          BlocProvider<TeamsCubit>.value(value: _teams),
         ],
         child: widget.child,
       ),

@@ -31,6 +31,7 @@ class FakeRecipeRepository implements RecipeRepository {
     final recipe = Recipe(
       id: id,
       ownerId: ingredient.ownerId,
+      teamId: previous?.recipe.teamId ?? draft.teamId,
       ingredientId: ingredient.id!,
       ingredient: ingredient,
       title: draft.title.trim(),
@@ -85,6 +86,54 @@ class FakeRecipeRepository implements RecipeRepository {
     final recipes = details.values.map((d) => d.recipe).toList()
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return recipes.skip(offset).take(limit).toList();
+  }
+
+  @override
+  Future<List<Recipe>> listForTeam(
+    UuidValue teamId, {
+    required int limit,
+    required int offset,
+  }) async {
+    _throwIfFailing();
+    final recipes =
+        details.values
+            .map((d) => d.recipe)
+            .where((r) => r.teamId == teamId)
+            .toList()
+          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return recipes.skip(offset).take(limit).toList();
+  }
+
+  @override
+  Future<Recipe> assignToTeam(UuidValue recipeId, UuidValue teamId) async {
+    _throwIfFailing();
+    final detail = details[recipeId] ?? (throw _notFound());
+    final recipe = detail.recipe.copyWith(teamId: teamId);
+    details[recipeId] = RecipeDetail(
+      recipe: recipe,
+      ingredient: detail.ingredient,
+      instructions: detail.instructions,
+      flavorTags: detail.flavorTags,
+      photos: detail.photos,
+      access: detail.access,
+    );
+    return recipe;
+  }
+
+  @override
+  Future<Recipe> removeFromTeam(UuidValue recipeId) async {
+    _throwIfFailing();
+    final detail = details[recipeId] ?? (throw _notFound());
+    final recipe = detail.recipe.copyWith(teamId: null);
+    details[recipeId] = RecipeDetail(
+      recipe: recipe,
+      ingredient: detail.ingredient,
+      instructions: detail.instructions,
+      flavorTags: detail.flavorTags,
+      photos: detail.photos,
+      access: detail.access,
+    );
+    return recipe;
   }
 
   @override

@@ -1,0 +1,15 @@
+class: TeamMembership
+table: team_membership
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  team: Team?, relation(name=team_memberships, onDelete=Cascade)
+  member: module:serverpod_auth_core:AuthUser?, relation(onDelete=Cascade)
+  role: TeamRole
+  createdAt: DateTime, default=now
+
+indexes:
+  team_membership_team_member_idx:
+    fields: teamId, memberId
+    unique: true
+  team_membership_member_idx:
+    fields: memberId

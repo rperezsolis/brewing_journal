@@ -2,10 +2,16 @@ import 'package:serverpod/serverpod.dart';
 
 import '../common/session_auth.dart';
 import '../generated/protocol.dart';
+import '../teams/team_membership_lookup.dart';
 
 BrewingException recipeNotFound() => BrewingException(
   code: BrewingErrorCode.notFound,
   message: 'Recipe not found',
+);
+
+BrewingException recipeForbidden([String? message]) => BrewingException(
+  code: BrewingErrorCode.forbidden,
+  message: message ?? "You can't edit this recipe",
 );
 
 /// The single authorization check for recipe reads and writes.
@@ -17,10 +23,31 @@ abstract final class RecipeAccessPolicy {
     Recipe recipe, {
     Transaction? transaction,
   }) async {
-    if (recipe.ownerId == session.callerId) {
-      return RecipeAccess(canEdit: true, canDelete: true);
+    final callerId = session.callerId;
+    final isOwner = recipe.ownerId == callerId;
+    final teamId = recipe.teamId;
+    final membership = teamId == null
+        ? null
+        : await membershipOf(
+            session,
+            teamId,
+            callerId,
+            transaction: transaction,
+          );
+
+    if (isOwner) {
+      return RecipeAccess(
+        role: membership?.role,
+        canEdit: true,
+        canDelete: true,
+      );
     }
-    throw recipeNotFound();
+    if (membership == null) throw recipeNotFound();
+    return RecipeAccess(
+      role: membership.role,
+      canEdit: membership.role == TeamRole.editor,
+      canDelete: false,
+    );
   }
 
   /// Loads the recipe [id] and resolves the caller's access to it.
@@ -47,10 +74,7 @@ abstract final class RecipeAccessPolicy {
   }) async {
     final (recipe, access) = await load(session, id, transaction: transaction);
     if (!access.canEdit) {
-      throw BrewingException(
-        code: BrewingErrorCode.forbidden,
-        message: "You can't edit this recipe",
-      );
+      throw recipeForbidden();
     }
     return recipe;
   }

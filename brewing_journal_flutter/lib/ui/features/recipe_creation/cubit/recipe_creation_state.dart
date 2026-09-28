@@ -16,6 +16,7 @@ class RecipeCreationState extends Equatable {
     this.saveStatus = SaveStatus.idle,
     this.error,
     this.recipeId,
+    this.teamId,
     this.ingredientKind = BeverageKind.coffee,
     this.ingredientQuery = '',
     this.ingredientResults = const [],
@@ -53,6 +54,9 @@ class RecipeCreationState extends Equatable {
 
   /// Null until the first successful save; set when editing.
   final UuidValue? recipeId;
+
+  /// Set for a new team recipe; ignored on update.
+  final UuidValue? teamId;
 
   final BeverageKind ingredientKind;
   final String ingredientQuery;
@@ -104,6 +108,7 @@ class RecipeCreationState extends Equatable {
     SaveStatus? saveStatus,
     Object? error,
     ValueGetter<UuidValue?>? recipeId,
+    ValueGetter<UuidValue?>? teamId,
     BeverageKind? ingredientKind,
     String? ingredientQuery,
     List<Ingredient>? ingredientResults,
@@ -137,6 +142,7 @@ class RecipeCreationState extends Equatable {
       saveStatus: saveStatus ?? this.saveStatus,
       error: error,
       recipeId: recipeId != null ? recipeId() : this.recipeId,
+      teamId: teamId != null ? teamId() : this.teamId,
       ingredientKind: ingredientKind ?? this.ingredientKind,
       ingredientQuery: ingredientQuery ?? this.ingredientQuery,
       ingredientResults: ingredientResults ?? this.ingredientResults,
@@ -182,6 +188,7 @@ class RecipeCreationState extends Equatable {
     saveStatus,
     error,
     recipeId,
+    teamId,
     ingredientKind,
     ingredientQuery,
     ingredientResults,

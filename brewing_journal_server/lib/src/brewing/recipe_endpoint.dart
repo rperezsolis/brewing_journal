@@ -3,6 +3,7 @@ import 'package:serverpod/serverpod.dart';
 import '../common/authenticated_endpoint.dart';
 import '../common/session_auth.dart';
 import '../generated/protocol.dart';
+import '../teams/team_membership_lookup.dart';
 import 'recipe_access_policy.dart';
 import 'recipe_storage.dart';
 import 'recipe_validator.dart';
@@ -41,12 +42,31 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
 
       final valid = validateRecipeDraft(draft);
 
+      final UuidValue? teamId;
+      if (existing == null) {
+        teamId = draft.teamId;
+        if (teamId != null) {
+          final membership = await membershipOf(
+            session,
+            teamId,
+            callerId,
+            transaction: tx,
+          );
+          if (membership?.role != TeamRole.editor) {
+            throw recipeForbidden("You can't add a recipe to this team");
+          }
+        }
+      } else {
+        teamId = existing.teamId;
+      }
+
       final Recipe saved;
       if (existing == null) {
         saved = await Recipe.db.insertRow(
           session,
           Recipe(
             ownerId: callerId,
+            teamId: teamId,
             ingredientId: ingredient.id!,
             title: valid.title,
             waterTempC: draft.waterTempC,
@@ -164,6 +184,57 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
   Future<RecipeAccess> getAccess(Session session, UuidValue id) async {
     final (_, access) = await RecipeAccessPolicy.load(session, id);
     return access;
+  }
+
+  /// Team recipes, most recently updated first. Membership required.
+  Future<List<Recipe>> listForTeam(
+    Session session,
+    UuidValue teamId,
+    int limit,
+    int offset,
+  ) async {
+    final membership = await membershipOf(session, teamId, session.callerId);
+    if (membership == null) throw recipeNotFound();
+    return Recipe.db.find(
+      session,
+      where: (t) => t.teamId.equals(teamId),
+      orderByList: (t) => [t.updatedAt.desc(), t.id.desc()],
+      limit: limit.clamp(1, 50),
+      offset: offset < 0 ? 0 : offset,
+      include: Recipe.include(ingredient: Ingredient.include()),
+    );
+  }
+
+  /// Moves a personal recipe the caller owns onto a team they edit.
+  Future<Recipe> assignToTeam(
+    Session session,
+    UuidValue recipeId,
+    UuidValue teamId,
+  ) async {
+    final (recipe, _) = await RecipeAccessPolicy.load(session, recipeId);
+    if (recipe.ownerId != session.callerId) throw recipeNotFound();
+    final membership = await membershipOf(session, teamId, session.callerId);
+    if (membership?.role != TeamRole.editor) {
+      throw recipeForbidden("You can't add a recipe to this team");
+    }
+    return Recipe.db.updateRow(
+      session,
+      recipe.copyWith(teamId: teamId, updatedAt: DateTime.now().toUtc()),
+    );
+  }
+
+  /// Clears `teamId`. The recipe owner or a team editor may do this.
+  Future<Recipe> removeFromTeam(Session session, UuidValue recipeId) async {
+    final (recipe, access) = await RecipeAccessPolicy.load(session, recipeId);
+    final isOwner = recipe.ownerId == session.callerId;
+    final isTeamEditor = access.role == TeamRole.editor;
+    if (!isOwner && !isTeamEditor) {
+      throw recipeForbidden("You can't remove this recipe from the team");
+    }
+    return Recipe.db.updateRow(
+      session,
+      recipe.copyWith(teamId: null, updatedAt: DateTime.now().toUtc()),
+    );
   }
 
   /// Deletes the recipe and its child rows; photo files are removed

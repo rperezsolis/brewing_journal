@@ -62,4 +62,36 @@ class RecipeDetailCubit extends Cubit<RecipeDetailState> {
       return false;
     }
   }
+
+  Future<bool> assignToTeam(UuidValue teamId) async {
+    final id = state.recipeId;
+    if (id == null || state.assigning) return false;
+    emit(state.copyWith(assigning: true, error: null));
+    try {
+      await _recipes.assignToTeam(id, teamId);
+      if (isClosed) return false;
+      await load(id);
+      return true;
+    } catch (error) {
+      if (isClosed) return false;
+      emit(state.copyWith(assigning: false, error: error));
+      return false;
+    }
+  }
+
+  Future<bool> removeFromTeam() async {
+    final id = state.recipeId;
+    if (id == null || state.assigning) return false;
+    emit(state.copyWith(assigning: true, error: null));
+    try {
+      await _recipes.removeFromTeam(id);
+      if (isClosed) return false;
+      await load(id);
+      return true;
+    } catch (error) {
+      if (isClosed) return false;
+      emit(state.copyWith(assigning: false, error: error));
+      return false;
+    }
+  }
 }

@@ -28,9 +28,9 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
   Timer? _ticker;
   int _searchSeq = 0;
 
-  void startNew() {
+  void startNew({UuidValue? teamId}) {
     _cancelStopwatch();
-    emit(const RecipeCreationState());
+    emit(RecipeCreationState(teamId: teamId));
   }
 
   Future<void> load(UuidValue id) async {
@@ -54,6 +54,7 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     emit(
       RecipeCreationState(
         recipeId: recipe.id,
+        teamId: recipe.teamId,
         canEdit: detail.access.canEdit,
         ingredientKind: detail.ingredient.kind,
         selectedIngredient: detail.ingredient,
@@ -432,6 +433,7 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     final note = s.extractionMethodNote.trim();
     final draft = RecipeDraft(
       id: s.recipeId,
+      teamId: s.recipeId == null ? s.teamId : null,
       ingredientId: s.selectedIngredient!.id!,
       title: s.title.trim(),
       waterTempC: s.waterTempC!,
@@ -467,6 +469,21 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
       if (isClosed) return false;
       emit(state.copyWith(saveStatus: SaveStatus.failure, error: error));
       return false;
+    }
+  }
+
+  /// Re-reads access after a `forbidden` save so a demoted editor leaves the
+  /// wizard. The view redirects to Brew Mode when [canEdit] becomes false.
+  Future<void> refreshAccess() async {
+    final id = state.recipeId;
+    if (id == null) return;
+    try {
+      final access = await _recipes.getAccess(id);
+      if (isClosed) return;
+      emit(state.copyWith(canEdit: access.canEdit));
+    } catch (_) {
+      // The save error is already on screen. A failed access check leaves
+      // the wizard as it is.
     }
   }
 

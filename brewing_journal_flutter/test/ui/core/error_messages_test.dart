@@ -46,6 +46,18 @@ void main() {
       errorMessage(brewing(BrewingErrorCode.uploadRejected)),
       'Photo could not be verified — try again or skip',
     );
+    expect(
+      errorMessage(brewing(BrewingErrorCode.inviteExpired)),
+      'This invite has expired. Ask the team owner for a new one.',
+    );
+    expect(
+      errorMessage(brewing(BrewingErrorCode.inviteUsed)),
+      'This invite has already been used.',
+    );
+    expect(
+      errorMessage(brewing(BrewingErrorCode.alreadyMember)),
+      "You're already in this team.",
+    );
   });
 
   test('overrides win over the shared default', () {

@@ -30,6 +30,13 @@ extension ExtractionMethodLabel on ExtractionMethod {
   };
 }
 
+extension TeamRoleLabel on TeamRole {
+  String get label => switch (this) {
+    TeamRole.viewer => 'Viewer',
+    TeamRole.editor => 'Editor',
+  };
+}
+
 /// "Ethiopia · Onyx · Light · Washed", leaving out missing attributes.
 String ingredientDetails(Ingredient ingredient) => [
   ingredient.origin,

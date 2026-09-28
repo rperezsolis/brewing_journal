@@ -1,0 +1,6 @@
+class: InviteLink
+fields:
+  token: String
+  role: TeamRole
+  expiresAt: DateTime
+  url: String

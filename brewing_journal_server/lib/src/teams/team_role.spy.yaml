@@ -1,0 +1,5 @@
+enum: TeamRole
+serialized: byName
+values:
+  - viewer
+  - editor
