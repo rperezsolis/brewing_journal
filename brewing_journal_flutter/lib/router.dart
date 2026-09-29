@@ -13,6 +13,7 @@ import 'ui/features/home/view/home_shell.dart';
 import 'ui/features/invite/view/invite_accept_screen.dart';
 import 'ui/features/recipe_creation/view/recipe_wizard_screen.dart';
 import 'ui/features/recipe_list/view/recipe_list_screen.dart';
+import 'ui/features/share/view/share_screen.dart';
 import 'ui/features/teams/view/team_detail_screen.dart';
 import 'ui/features/teams/view/teams_screen.dart';
 
@@ -24,6 +25,7 @@ abstract final class Routes {
   static const newRecipe = '/recipes/new';
   static String recipe(UuidValue id) => '/recipes/${id.uuid}';
   static String editRecipe(UuidValue id) => '/recipes/${id.uuid}/edit';
+  static String shareRecipe(UuidValue id) => '/recipes/${id.uuid}/share';
   static String team(UuidValue id) => '/teams/${id.uuid}';
   static String invite(String token) => '/invite/$token';
   static String newTeamRecipe(UuidValue teamId) =>
@@ -69,6 +71,20 @@ GoRouter createRouter(AuthCubit auth) {
                     builder: (context, state) => RecipeWizardScreen(
                       teamId: _parseId(state.uri.queryParameters['teamId']),
                     ),
+                  ),
+                  GoRoute(
+                    path: 'recipes/:id/share',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = _parseId(state.pathParameters['id']);
+                      if (id == null) return const _NotFoundScreen();
+                      final extra = state.extra;
+                      return ShareScreen(
+                        key: ValueKey(id),
+                        recipeId: id,
+                        initialDetail: extra is RecipeDetail ? extra : null,
+                      );
+                    },
                   ),
                   GoRoute(
                     path: 'recipes/:id/edit',

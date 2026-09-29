@@ -248,13 +248,12 @@ class _BrewModeViewState extends State<BrewModeView> {
                     key: const Key('brew-share'),
                     tooltip: 'Share',
                     icon: const Icon(Icons.ios_share),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Sharing is coming soon.'),
-                        ),
-                      );
-                    },
+                    onPressed: detail.recipe.id == null
+                        ? null
+                        : () => context.push(
+                            Routes.shareRecipe(detail.recipe.id!),
+                            extra: detail,
+                          ),
                   ),
                   if (detail.access.canDelete && detail.recipe.teamId == null)
                     IconButton(

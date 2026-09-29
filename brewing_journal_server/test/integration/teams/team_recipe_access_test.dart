@@ -33,6 +33,7 @@ void main() {
         owner,
         team.team.id!,
         instructions: ['bloom', 'pour'],
+        flavorTags: const ['Fruity', 'Floral'],
       );
     });
 
@@ -58,6 +59,30 @@ void main() {
           ).copyWith(id: recipe.recipe.id, title: recipe.recipe.title),
         );
         expect(updated.instructions.map((i) => i.text), ['stir']);
+      },
+    );
+
+    test(
+      'when a viewer gets then the detail has the share card fields',
+      () async {
+        final detail = await endpoints.recipe.get(
+          viewer.sessionBuilder,
+          recipe.recipe.id!,
+        );
+        expect(detail.instructions.map((step) => step.text), [
+          'bloom',
+          'pour',
+        ]);
+        expect(
+          detail.flavorTags.map((tag) => tag.tag),
+          unorderedEquals(['Fruity', 'Floral']),
+        );
+        expect(detail.recipe.acidity, 3);
+        expect(detail.recipe.sweetness, 4);
+        expect(detail.recipe.body, 2);
+        expect(detail.recipe.bitterness, 1);
+        expect(detail.ingredient.name, 'Ethiopia Guji');
+        expect(detail.recipe.extractionDuration, const Duration(minutes: 3));
       },
     );
 

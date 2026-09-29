@@ -21,6 +21,7 @@ import 'data/repositories/serverpod_recipe_repository.dart';
 import 'data/repositories/serverpod_team_repository.dart';
 import 'data/repositories/team_repository.dart';
 import 'data/services/alarm_player.dart';
+import 'data/services/share_service.dart';
 import 'ui/features/auth/cubit/auth_cubit.dart';
 import 'ui/features/auth/cubit/auth_state.dart';
 import 'ui/features/recipe_list/cubit/recipe_list_cubit.dart';
@@ -34,7 +35,8 @@ class AppRepositories {
       recipes = ServerpodRecipeRepository(client.recipe),
       recipeMedia = ServerpodRecipeMediaRepository(client.recipeMedia),
       teams = ServerpodTeamRepository(client.team),
-      alarm = AudioAlarmPlayer();
+      alarm = AudioAlarmPlayer(),
+      share = SharePlusShareService();
 
   AppRepositories.custom({
     required this.auth,
@@ -43,10 +45,15 @@ class AppRepositories {
     required this.recipeMedia,
     required this.teams,
     required this.alarm,
+    required this.share,
   });
 
   /// In-memory repositories, for tests and previews.
-  factory AppRepositories.fake({AuthRepository? auth, AlarmPlayer? alarm}) {
+  factory AppRepositories.fake({
+    AuthRepository? auth,
+    AlarmPlayer? alarm,
+    ShareService? share,
+  }) {
     final ingredients = FakeIngredientRepository();
     return AppRepositories.custom(
       auth: auth ?? FakeAuthRepository(),
@@ -55,6 +62,7 @@ class AppRepositories {
       recipeMedia: FakeRecipeMediaRepository(),
       teams: FakeTeamRepository(),
       alarm: alarm ?? FakeAlarmPlayer(),
+      share: share ?? FakeShareService(),
     );
   }
 
@@ -64,6 +72,7 @@ class AppRepositories {
   final RecipeMediaRepository recipeMedia;
   final TeamRepository teams;
   final AlarmPlayer alarm;
+  final ShareService share;
 }
 
 /// Provides the app-level repositories and session-scoped Cubits to every
@@ -142,6 +151,7 @@ class _AppScopeState extends State<AppScope> {
         ),
         RepositoryProvider<TeamRepository>.value(value: repositories.teams),
         RepositoryProvider<AlarmPlayer>.value(value: repositories.alarm),
+        RepositoryProvider<ShareService>.value(value: repositories.share),
       ],
       child: MultiBlocProvider(
         providers: [

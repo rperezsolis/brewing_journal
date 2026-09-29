@@ -35,6 +35,7 @@ Future<RecipeDetail> createTeamRecipe(
   TestUser owner,
   UuidValue teamId, {
   List<String> instructions = const [],
+  List<String> flavorTags = const [],
   String title = 'Shop V60',
 }) async {
   final ingredient = await registerIngredient(endpoints, owner);
@@ -43,6 +44,7 @@ Future<RecipeDetail> createTeamRecipe(
     sampleDraft(
       ingredient.id!,
       instructions: instructions,
+      flavorTags: flavorTags,
     ).copyWith(teamId: teamId, title: title),
   );
 }

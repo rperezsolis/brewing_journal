@@ -558,64 +558,64 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 
 ### 5.1 Backend Schemas & Database
 
-- [ ] No schema changes. The share card reads only `RecipeDetail` fields that already exist.
-- [ ] No migration. Run `create_migration` (MCP) once and confirm it reports no changes.
+- [x] No schema changes. The share card reads only `RecipeDetail` fields that already exist.
+- [x] No migration. Run `create_migration` (MCP) once and confirm it reports no changes. MCP was not connected; CLI `serverpod create-migration` reported "Server migration skipped. No changes detected."
 
 
 
 ### 5.2 Backend API Endpoints
 
-- [ ] No new endpoints. Sharing writes nothing to the server and attaches no recipe link.
-- [ ] Add a server test to `team_recipe_access_test.dart` confirming a team viewer's `recipe.get` returns the full `RecipeDetail` (instructions, tags, scores), which is everything the card needs.
-- [ ] Run `dart test`.
+- [x] No new endpoints. Sharing writes nothing to the server and attaches no recipe link.
+- [x] Add a server test to `team_recipe_access_test.dart` confirming a team viewer's `recipe.get` returns the full `RecipeDetail` (instructions, tags, scores), which is everything the card needs.
+- [x] Run `dart test`. Server suite passed.
 
 
 
 ### 5.3 Flutter UI & State Management
 
-- [ ] Dependencies: `flutter pub add share_plus` (brings in `XFile` from `cross_file`; add `cross_file` explicitly if the analyzer asks for it).
-- [ ] `lib/ui/features/share/share_card_layout.dart`: pure functions, unit-tested:
-  - [ ] `visibleInstructions(List<String>)` returns `(rows, moreCount)`: 0 items gives `([], 0)`; 1..4 gives all rows and `0`; more than 4 gives the first 3 and `length - 3`
-- [ ] `lib/ui/features/share/view/recipe_share_card.dart`: `RecipeShareCard(RecipeDetail)`:
-  - [ ] Fixed `SizedBox(width: 360, height: 450)`, a `Column` with the content in `Expanded` + `ClipRect`, and a fixed 24px footer reading "Made with BrewSync", so content is cut above the footer
-  - [ ] Content: title, ingredient name and kind, method, dose, temperature, grind, grinder, duration (only when non-null), `FlavorRadarChart` (from Feature 2), and flavor tags
-  - [ ] Instruction rows with `maxLines: 2` and `TextOverflow.ellipsis`, plus a `+N more` line; the whole block is absent when there are no instructions (US-5.3)
-  - [ ] No network images
-- [ ] `lib/ui/features/share/cubit/`: `ShareCubit(ShareService)` with `status` (`idle/rendering/sharing/shared/unavailable/failure`) and `pngBytes`.
-  - [ ] `beginRender()` sets `rendering`. The view calls it on tap before capturing the `RepaintBoundary`, because capture needs the widget tree and cannot run in the Cubit.
-  - [ ] `share(Uint8List png, String title)` stores `pngBytes`, sets `sharing`, then: `dismissed` goes back to `idle` with no message; `unavailable` or an exception sets `unavailable`, which shows the download button
-  - [ ] `download()` calls `ShareService.saveToDownloads(pngBytes)`; a failure sets `failure`
-- [ ] `lib/data/services/share_service.dart`: abstract, plus a fake registered in `app_scope.dart`. The real one is added in 5.4.
-- [ ] `lib/ui/features/share/view/share_screen.dart` (`/recipes/:id/share`, a sub-route next to `recipes/:id`):
-  - [ ] Reads `RecipeDetail` from Brew Mode's `RecipeDetailCubit` (passed as `extra`, or loaded again by `id` on a web refresh)
-  - [ ] Preview: the card inside a `RepaintBoundary(key: _cardKey)`, scaled to fit with `FittedBox`
-  - [ ] A Share button that calls `ShareCubit.beginRender()`, then `await WidgetsBinding.instance.endOfFrame`, then `boundary.toImage(pixelRatio: 3)`, then `toByteData(format: png)`, then `ShareCubit.share`
-  - [ ] A "Download image" button, shown only in the `unavailable` state
-- [ ] Brew Mode: the Share action goes to `/recipes/:id/share` for anyone with read access, viewers included.
-- [ ] Tests:
-  - [ ] Unit: `visibleInstructions` for 0, 1, 4, 5, and 30 items
-  - [ ] Widget: no instructions means no instruction block; 6 instructions show 3 rows plus "+3 more"; a 280-character instruction does not overflow (no `RenderFlex` error); the footer is always found
+- [x] Dependencies: `flutter pub add share_plus` (brings in `XFile` from `cross_file`; add `cross_file` explicitly if the analyzer asks for it).
+- [x] `lib/ui/features/share/share_card_layout.dart`: pure functions, unit-tested:
+  - [x] `visibleInstructions(List<String>)` returns `(rows, moreCount)`: 0 items gives `([], 0)`; 1..4 gives all rows and `0`; more than 4 gives the first 3 and `length - 3`
+- [x] `lib/ui/features/share/view/recipe_share_card.dart`: `RecipeShareCard(RecipeDetail)`:
+  - [x] Fixed `SizedBox(width: 360, height: 450)`, a `Column` with the content in `Expanded` + `ClipRect`, and a fixed 24px footer reading "Made with BrewSync", so content is cut above the footer
+  - [x] Content: title, ingredient name and kind, method, dose, temperature, grind, grinder, duration (only when non-null), `FlavorRadarChart` (from Feature 2), and flavor tags
+  - [x] Instruction rows with `maxLines: 2` and `TextOverflow.ellipsis`, plus a `+N more` line; the whole block is absent when there are no instructions (US-5.3)
+  - [x] No network images
+- [x] `lib/ui/features/share/cubit/`: `ShareCubit(ShareService)` with `status` (`idle/rendering/sharing/shared/unavailable/failure`) and `pngBytes`.
+  - [x] `beginRender()` sets `rendering`. The view calls it on tap before capturing the `RepaintBoundary`, because capture needs the widget tree and cannot run in the Cubit.
+  - [x] `share(Uint8List png, String title)` stores `pngBytes`, sets `sharing`, then: `dismissed` goes back to `idle` with no message; `unavailable` or an exception sets `unavailable`, which shows the download button
+  - [x] `download()` calls `ShareService.saveToDownloads(pngBytes)`; a failure sets `failure`
+- [x] `lib/data/services/share_service.dart`: abstract, plus a fake registered in `app_scope.dart`. The real one is added in 5.4.
+- [x] `lib/ui/features/share/view/share_screen.dart` (`/recipes/:id/share`, a sub-route next to `recipes/:id`):
+  - [x] Reads `RecipeDetail` from Brew Mode's `RecipeDetailCubit` (passed as `extra`, or loaded again by `id` on a web refresh)
+  - [x] Preview: the card inside a `RepaintBoundary(key: _cardKey)`, scaled to fit with `FittedBox`
+  - [x] A Share button that calls `ShareCubit.beginRender()`, then `await WidgetsBinding.instance.endOfFrame`, then `boundary.toImage(pixelRatio: 3)`, then `toByteData(format: png)`, then `ShareCubit.share`
+  - [x] A "Download image" button, shown only in the `unavailable` state
+- [x] Brew Mode: the Share action goes to `/recipes/:id/share` for anyone with read access, viewers included.
+- [x] Tests:
+  - [x] Unit: `visibleInstructions` for 0, 1, 4, 5, and 30 items
+  - [x] Widget: no instructions means no instruction block; 6 instructions show 3 rows plus "+3 more"; a 280-character instruction does not overflow (no `RenderFlex` error); the footer is always found
   - [ ] Golden (optional): `matchesGoldenFile('goldens/share_card_v60.png')` for a sample recipe
-  - [ ] Cubit: `beginRender` goes to `rendering`; `dismissed` goes to `idle`; `unavailable` goes to `unavailable`; an exception goes to `unavailable`; a failed `download` goes to `failure`
-- [ ] Run the post-phase checklist, then `hot_restart`.
+  - [x] Cubit: `beginRender` goes to `rendering`; `dismissed` goes to `idle`; `unavailable` goes to `unavailable`; an exception goes to `unavailable`; a failed `download` goes to `failure`
+- [x] Run the post-phase checklist, then `hot_restart`. Analyze, format, and `flutter test` (115) are clean. The running `serverpod start` hot reloaded; press R so the new `share_plus` plugin is registered. MCP `hot_restart` was not available.
 
 
 
 ### 5.4 Integration Layer
 
-- [ ] `SharePlusShareService implements ShareService`:
-  - [ ] `share(bytes, title)`: `SharePlus.instance.share(ShareParams(files: [XFile.fromData(bytes, mimeType: 'image/png', name: 'brewsync-recipe.png')], subject: title))`, returning `ShareResult.status`
-  - [ ] No `text` or `uri` parameter, so only the image is shared
-  - [ ] `saveToDownloads(bytes)`: `XFile.fromData(...).saveTo('brewsync-recipe.png')`, which triggers a browser download on web. On iOS and Android the share sheet is always available, so this fallback is expected only on web. On mobile, `saveTo` would need a real file path.
-  - [ ] iPad: pass `sharePositionOrigin` from the Share button's `RenderBox`, or the share sheet throws
-- [ ] Register `SharePlusShareService` in `app_scope.dart` in place of the fake.
-- [ ] Loading: `rendering` or `sharing` disables the Share button and shows a spinner.
-- [ ] Errors: `unavailable` shows "Sharing isn't supported here — download the image instead"; a failed download shows a snackbar with Retry.
+- [x] `SharePlusShareService implements ShareService`:
+  - [x] `share(bytes, title)`: `SharePlus.instance.share(ShareParams(files: [XFile.fromData(bytes, mimeType: 'image/png', name: 'brewsync-recipe.png')], subject: title))`, returning `ShareResult.status`
+  - [x] No `text` or `uri` parameter, so only the image is shared
+  - [x] `saveToDownloads(bytes)`: `XFile.fromData(...).saveTo('brewsync-recipe.png')`, which triggers a browser download on web. On iOS and Android the share sheet is always available, so this fallback is expected only on web. On mobile, `saveTo` would need a real file path.
+  - [x] iPad: pass `sharePositionOrigin` from the Share button's `RenderBox`, or the share sheet throws
+- [x] Register `SharePlusShareService` in `app_scope.dart` in place of the fake.
+- [x] Loading: `rendering` or `sharing` disables the Share button and shows a spinner.
+- [x] Errors: `unavailable` shows "Sharing isn't supported here — download the image instead"; a failed download shows a snackbar with Retry.
 - [ ] Platform checks:
   - [ ] Web (Chrome desktop, which has no file sharing): Share falls back to Download, and the downloaded PNG is 1080×1350
   - [ ] iOS or Android simulator: the share sheet opens with one PNG and no text
   - [ ] Team viewer account: Share is visible and works
-- [ ] Run the post-phase checklist, and check both log tails.
+- [x] Run the post-phase checklist, and check both log tails. Analyze, format, server tests, and Flutter tests are clean. `serverpod start` reloaded with no compile errors. MCP `tail_*_logs` was not available. The platform checks above still need a hot restart (press R) so `share_plus` is registered.
 
 ---
 
