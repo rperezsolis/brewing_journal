@@ -11,6 +11,12 @@ void main() {
     await tester.pumpWidget(_card(<String>[]));
 
     expect(find.byKey(const Key('share-instructions')), findsNothing);
+    expect(find.text('Coffee: Ethiopia Guji'), findsOneWidget);
+    expect(find.text('Brewing: V60 · 15 g · 93 °C'), findsOneWidget);
+    expect(
+      find.text('Grinding: Medium-fine · Comandante C40'),
+      findsOneWidget,
+    );
     expect(find.text('Made with BrewSync'), findsOneWidget);
     expect(find.byKey(const Key('share-footer')), findsOneWidget);
   });
@@ -56,7 +62,7 @@ void main() {
       _card(const ['bloom'], duration: const Duration(minutes: 3)),
     );
 
-    expect(find.text('3:00'), findsOneWidget);
+    expect(find.text('Timer: 3m 00s'), findsOneWidget);
     expect(find.text('Made with BrewSync'), findsOneWidget);
   });
 }

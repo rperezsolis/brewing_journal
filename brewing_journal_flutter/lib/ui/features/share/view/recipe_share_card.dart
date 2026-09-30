@@ -2,7 +2,6 @@ import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/brewing_labels.dart';
-import '../../../core/duration_format.dart';
 import '../../../core/widgets/flavor_radar_chart.dart';
 import '../share_card_layout.dart';
 
@@ -61,22 +60,18 @@ class RecipeShareCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          detail.ingredient.name,
+                          '${detail.ingredient.kind.label}: ${detail.ingredient.name}',
                           style: theme.textTheme.titleSmall,
-                        ),
-                        Text(
-                          detail.ingredient.kind.label,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colors.onSurfaceVariant,
-                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '$method · ${_formatNumber(recipe.doseGrams)} g · '
+                          'Brewing: $method · ${_formatNumber(recipe.doseGrams)} g · '
                           '${_formatNumber(recipe.waterTempC)} °C',
                         ),
-                        Text('${recipe.grindSize} · ${recipe.grinderModel}'),
-                        if (duration != null) Text(formatDuration(duration)),
+                        Text(
+                          'Grinding: ${recipe.grindSize} · ${recipe.grinderModel}',
+                        ),
+                        if (duration != null) Text(_formatTimer(duration)),
                         const SizedBox(height: 8),
                         Center(
                           child: FlavorRadarChart(
@@ -153,3 +148,14 @@ class RecipeShareCard extends StatelessWidget {
 String _formatNumber(double value) => value == value.roundToDouble()
     ? value.toStringAsFixed(0)
     : value.toString();
+
+/// `Timer: 3m 00s`, with a tenth when the duration has one (`2m 30.5s`).
+String _formatTimer(Duration duration) {
+  final tenths = duration.inMilliseconds ~/ 100;
+  final minutes = tenths ~/ 600;
+  final seconds = (tenths ~/ 10) % 60;
+  final fraction = tenths % 10 == 0 ? '' : '.${tenths % 10}';
+  return 'Timer: ${minutes}m ${_two(seconds)}${fraction}s';
+}
+
+String _two(int value) => value.toString().padLeft(2, '0');
