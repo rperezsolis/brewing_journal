@@ -374,7 +374,7 @@ class RecipeHarness {
     await _waitUntil(
       tester,
       () =>
-          find.byKey(const Key('brew-edit')).evaluate().isNotEmpty &&
+          find.byKey(const Key('brew-share')).evaluate().isNotEmpty &&
           find
               .descendant(
                 of: find.byType(BrewModeScreen),
@@ -657,7 +657,7 @@ class RecipeHarness {
     final deadline = DateTime.now().add(const Duration(seconds: 25));
     while (DateTime.now().isBefore(deadline)) {
       await tester.pump(const Duration(milliseconds: 100));
-      if (find.byKey(const Key('brew-edit')).evaluate().isEmpty) continue;
+      if (find.byKey(const Key('brew-share')).evaluate().isEmpty) continue;
       final scrollable = _brewScrollable();
       if (scrollable.evaluate().isEmpty) continue;
       if (!await _scan(tester, scrollable, photos)) return;
@@ -746,10 +746,11 @@ class RecipeHarness {
     await tester.pump(const Duration(milliseconds: 300));
   }
 
+  /// Share is on every loaded recipe, including one a viewer cannot edit.
   Future<void> _waitForBrew(WidgetTester tester) {
     return _waitFor(
       tester,
-      find.byKey(const Key('brew-edit')),
+      find.byKey(const Key('brew-share')),
       'brew mode',
       timeout: const Duration(seconds: 30),
     );
@@ -758,7 +759,7 @@ class RecipeHarness {
   /// The saved steps once a detail is on screen, or null while Brew Mode
   /// is still loading its first detail.
   Future<List<String>?> _readBrewInstructions(WidgetTester tester) async {
-    if (find.byKey(const Key('brew-edit')).evaluate().isEmpty) return null;
+    if (find.byKey(const Key('brew-share')).evaluate().isEmpty) return null;
     final scrollable = _brewScrollable();
     if (scrollable.evaluate().isEmpty) return null;
     final card = find.descendant(
@@ -873,6 +874,26 @@ class RecipeHarness {
     }
     return true;
   }
+
+  Future<void> waitFor(
+    WidgetTester tester,
+    Finder finder,
+    String description, {
+    Duration timeout = const Duration(seconds: 20),
+  }) {
+    return _waitFor(tester, finder, description, timeout: timeout);
+  }
+
+  Future<void> waitUntil(
+    WidgetTester tester,
+    bool Function() condition,
+    String description, {
+    Duration timeout = const Duration(seconds: 20),
+  }) {
+    return _waitUntil(tester, condition, description, timeout: timeout);
+  }
+
+  void dismissSnackBars(WidgetTester tester) => _dismissSnackBars(tester);
 
   Future<void> _waitFor(
     WidgetTester tester,

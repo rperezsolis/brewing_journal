@@ -67,6 +67,7 @@ class _InviteSheetState extends State<_InviteSheet> {
               ),
               const SizedBox(height: 16),
               SegmentedButton<TeamRole>(
+                key: const Key('invite-role'),
                 segments: [
                   ButtonSegment(
                     value: TeamRole.viewer,
@@ -86,6 +87,7 @@ class _InviteSheetState extends State<_InviteSheet> {
               ),
               const SizedBox(height: 12),
               SegmentedButton<Duration>(
+                key: const Key('invite-ttl'),
                 segments: [
                   ButtonSegment(
                     value: const Duration(hours: 1),
@@ -107,6 +109,7 @@ class _InviteSheetState extends State<_InviteSheet> {
               ),
               const SizedBox(height: 16),
               FilledButton(
+                key: const Key('invite-create'),
                 onPressed: state.creatingInvite
                     ? null
                     : () => context.read<TeamsCubit>().createInvite(
@@ -123,9 +126,10 @@ class _InviteSheetState extends State<_InviteSheet> {
               ),
               if (invite != null) ...[
                 const SizedBox(height: 16),
-                SelectableText(invite.url),
+                SelectableText(invite.url, key: const Key('invite-url')),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
+                  key: const Key('invite-copy'),
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: invite.url));
                     if (!context.mounted) return;

@@ -92,6 +92,7 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
               ),
             if (isOwner)
               IconButton(
+                key: const Key('team-invite'),
                 tooltip: l10n.invite,
                 icon: const Icon(Icons.person_add_outlined),
                 onPressed: () => showInviteSheet(context, teamId),
@@ -100,6 +101,7 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
         ),
         floatingActionButton: isEditor
             ? FloatingActionButton.extended(
+                heroTag: 'team-new-recipe',
                 key: const Key('team-new-recipe'),
                 onPressed: () => _openNewRecipe(context),
                 icon: const Icon(Icons.add),

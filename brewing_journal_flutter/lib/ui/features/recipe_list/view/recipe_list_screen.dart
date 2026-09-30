@@ -31,6 +31,7 @@ class RecipeListScreen extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'recipe-list-new',
         key: const Key('recipe-list-new'),
         onPressed: () => context.push(Routes.newRecipe),
         icon: const Icon(Icons.add),

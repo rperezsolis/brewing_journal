@@ -23,6 +23,7 @@ class TeamsScreen extends StatelessWidget {
         title: Text(l10n.teams),
         actions: [
           IconButton(
+            key: const Key('teams-join'),
             tooltip: l10n.joinWithInvite,
             icon: const Icon(Icons.mail_outline),
             onPressed: () => _joinWithInvite(context),
@@ -35,6 +36,7 @@ class TeamsScreen extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'teams-create',
         key: const Key('teams-create'),
         onPressed: () => _createTeam(context),
         icon: const Icon(Icons.add),
@@ -150,6 +152,7 @@ class _CreateTeamDialogState extends State<_CreateTeamDialog> {
     return AlertDialog(
       title: Text(l10n.createTeam),
       content: TextField(
+        key: const Key('team-name'),
         controller: _controller,
         autofocus: true,
         maxLength: 80,
@@ -192,6 +195,7 @@ class _JoinInviteDialogState extends State<_JoinInviteDialog> {
     return AlertDialog(
       title: Text(l10n.joinWithInvite),
       content: TextField(
+        key: const Key('join-invite-input'),
         controller: _controller,
         autofocus: true,
         decoration: InputDecoration(labelText: l10n.inviteUrlOrToken),

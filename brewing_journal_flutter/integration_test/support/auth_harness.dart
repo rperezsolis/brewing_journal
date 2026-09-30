@@ -120,6 +120,27 @@ class AuthHarness {
     }
   }
 
+  /// Signs in an account that already finished registration.
+  ///
+  /// Waits until the sign-in screen is gone. A deep link carried as `from`
+  /// then opens that path instead of the journal.
+  Future<void> signIn(
+    WidgetTester tester,
+    String email,
+    String password,
+  ) async {
+    await showLogin(tester);
+    await _enterField(tester, 'Email', email);
+    await _enterField(tester, 'Password', password);
+    await _tapButton(tester, 'Sign in');
+    await _waitUntil(
+      tester,
+      () => find.byKey(const ValueKey('sign-in')).evaluate().isEmpty,
+      'the signed-in app',
+    );
+    accountEmail = email;
+  }
+
   Future<void> signOut(WidgetTester tester) async {
     final button = find.byKey(const ValueKey('sign-out'));
     await tester.ensureVisible(button);
@@ -167,6 +188,23 @@ class AuthHarness {
     );
     expect(find.text('Sign In with email'), findsOneWidget);
     expect(find.byType(RecipeListScreen), findsNothing);
+  }
+
+  /// Moves an invite into the past so accept reports it as expired.
+  Future<void> expireInvite(String token) async {
+    final db = await _database();
+    final rows = await db.execute(
+      Sql.named(
+        'UPDATE team_invite '
+        "SET \"expiresAt\" = TIMESTAMP '2000-01-01 00:00:00' "
+        'WHERE token = @token:text '
+        'RETURNING token',
+      ),
+      parameters: {'token': token},
+    );
+    if (rows.isEmpty) {
+      throw StateError('No invite found for token $token.');
+    }
   }
 
   Future<void> close() async {
