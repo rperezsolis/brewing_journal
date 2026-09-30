@@ -23,6 +23,7 @@ class RecipeListScreen extends StatelessWidget {
         title: Text(l10n.appTitle),
         actions: [
           IconButton(
+            key: const ValueKey('sign-out'),
             tooltip: l10n.signOut,
             icon: const Icon(Icons.logout),
             onPressed: () => context.read<AuthCubit>().signOut(),

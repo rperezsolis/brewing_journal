@@ -44,11 +44,13 @@ GoRouter createRouter(AuthCubit auth) {
     routes: [
       GoRoute(
         path: Routes.splash,
-        builder: (context, state) => const SplashScreen(),
+        builder: (context, state) =>
+            const SplashScreen(key: ValueKey('splash')),
       ),
       GoRoute(
         path: Routes.signIn,
-        builder: (context, state) => const SignInScreen(),
+        builder: (context, state) =>
+            const SignInScreen(key: ValueKey('sign-in')),
       ),
       GoRoute(
         path: '/invite/:token',

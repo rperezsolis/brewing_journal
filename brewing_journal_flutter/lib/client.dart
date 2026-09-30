@@ -25,5 +25,25 @@ late final Client client;
 Future<void> initializeClient() async {
   client = Client(await serverUrl)
     ..connectivityMonitor = FlutterConnectivityMonitor()
-    ..authSessionManager = FlutterAuthSessionManager();
+    ..authSessionManager = createAuthSessionManager();
+}
+
+/// Session storage for this app.
+///
+/// macOS local builds are ad-hoc signed, so they cannot use the data-protection
+/// keychain. The login keychain still persists the session across restarts.
+FlutterAuthSessionManager createAuthSessionManager() {
+  return FlutterAuthSessionManager(
+    storage: SecureClientAuthSuccessStorage(
+      secureStorage: const FlutterSecureStorage(
+        iOptions: IOSOptions(
+          accessibility: KeychainAccessibility.first_unlock,
+        ),
+        mOptions: MacOsOptions(
+          accessibility: KeychainAccessibility.first_unlock_this_device,
+          usesDataProtectionKeychain: false,
+        ),
+      ),
+    ),
+  );
 }
