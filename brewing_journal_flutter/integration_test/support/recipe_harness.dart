@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
 import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
 import 'package:brewing_journal_flutter/ui/features/brew_mode/cubit/brew_timer_state.dart';
@@ -91,16 +92,27 @@ class RecipeHarness {
     expect(find.text(name), findsWidgets);
   }
 
+  /// Chooses a beverage kind on the ingredient step, before registering.
+  Future<void> selectIngredientKind(WidgetTester tester, String label) async {
+    final segment = find.descendant(
+      of: find.byType(SegmentedButton<BeverageKind>),
+      matching: find.text(label),
+    );
+    await tester.tap(segment);
+    await tester.pump();
+  }
+
   Future<void> fillBrewParameters(
     WidgetTester tester, {
     required String title,
+    String? method,
   }) async {
     await _enter(tester, const Key('extraction-title'), title);
     await _enter(tester, const Key('extraction-temp'), temperature);
     await _enter(tester, const Key('extraction-dose'), dose);
     await _enter(tester, const Key('extraction-grind'), grind);
     await _enter(tester, const Key('extraction-grinder'), grinder);
-    await _selectMethod(tester, l10n.methodV60);
+    await _selectMethod(tester, method ?? l10n.methodV60);
   }
 
   /// Types a duration the extraction step accepts (`m:ss` or plain seconds).

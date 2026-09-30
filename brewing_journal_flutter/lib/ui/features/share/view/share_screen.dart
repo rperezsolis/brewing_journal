@@ -251,18 +251,21 @@ class _SharePreviewState extends State<SharePreview> {
                         ),
                         const SizedBox(height: 8),
                       ],
-                      FilledButton.icon(
-                        key: _shareButtonKey,
-                        onPressed: busy ? null : _share,
-                        icon: busy
-                            ? const SizedBox.square(
-                                dimension: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.ios_share),
-                        label: Text(l10n.share),
+                      KeyedSubtree(
+                        key: const Key('share-submit'),
+                        child: FilledButton.icon(
+                          key: _shareButtonKey,
+                          onPressed: busy ? null : _share,
+                          icon: busy
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.ios_share),
+                          label: Text(l10n.share),
+                        ),
                       ),
                     ],
                   );
