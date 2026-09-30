@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/l10n.dart';
 import '../cubit/recipe_creation_cubit.dart';
 import '../cubit/recipe_creation_state.dart';
 import '../recipe_limits.dart';
@@ -43,6 +44,7 @@ class _StepInstructionsState extends State<StepInstructions> {
       buildWhen: (previous, current) =>
           previous.instructions != current.instructions,
       builder: (context, state) {
+        final l10n = context.l10n;
         final instructions = state.instructions;
         final full = instructions.length >= kMaxInstructions;
         return Column(
@@ -54,14 +56,14 @@ class _StepInstructionsState extends State<StepInstructions> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Extra steps',
+                      l10n.extraSteps,
                       style: theme.textTheme.titleLarge,
                     ),
                   ),
                   TextButton(
                     key: const Key('instructions-skip'),
                     onPressed: _cubit.skipInstructions,
-                    child: const Text('Skip'),
+                    child: Text(l10n.skip),
                   ),
                 ],
               ),
@@ -69,8 +71,7 @@ class _StepInstructionsState extends State<StepInstructions> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                'Optional. Anything outside the brew parameters, like '
-                '"use 150ml of whole milk" or "add cinnamon and stir".',
+                l10n.extraStepsHelp,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -86,12 +87,12 @@ class _StepInstructionsState extends State<StepInstructions> {
                 onSubmitted: (_) => _add(),
                 decoration: InputDecoration(
                   labelText: full
-                      ? 'At most $kMaxInstructions steps'
-                      : 'Add a step',
+                      ? l10n.atMostSteps(kMaxInstructions)
+                      : l10n.addAStep,
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
                     key: const Key('instruction-add'),
-                    tooltip: 'Add step',
+                    tooltip: l10n.addStep,
                     icon: const Icon(Icons.add),
                     onPressed: full ? null : _add,
                   ),
@@ -102,7 +103,7 @@ class _StepInstructionsState extends State<StepInstructions> {
               child: instructions.isEmpty
                   ? Center(
                       child: Text(
-                        'No extra steps yet.',
+                        l10n.noExtraSteps,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -119,9 +120,9 @@ class _StepInstructionsState extends State<StepInstructions> {
                           key: ValueKey('instruction-$index'),
                           leading: ReorderableDragStartListener(
                             index: index,
-                            child: const Icon(
+                            child: Icon(
                               Icons.drag_handle,
-                              semanticLabel: 'Reorder',
+                              semanticLabel: l10n.reorder,
                             ),
                           ),
                           title: Text('${index + 1}. $text'),
@@ -130,12 +131,12 @@ class _StepInstructionsState extends State<StepInstructions> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                tooltip: 'Edit step',
+                                tooltip: l10n.editStep,
                                 icon: const Icon(Icons.edit_outlined),
                                 onPressed: () => _edit(index, text),
                               ),
                               IconButton(
-                                tooltip: 'Remove step',
+                                tooltip: l10n.removeStep,
                                 icon: const Icon(Icons.delete_outline),
                                 onPressed: () =>
                                     _cubit.removeInstruction(index),
@@ -175,8 +176,9 @@ class _EditInstructionDialogState extends State<_EditInstructionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return AlertDialog(
-      title: const Text('Edit step'),
+      title: Text(l10n.editStep),
       content: TextField(
         controller: _controller,
         autofocus: true,
@@ -185,19 +187,19 @@ class _EditInstructionDialogState extends State<_EditInstructionDialog> {
         maxLines: 4,
         onChanged: (_) => setState(() {}),
         decoration: InputDecoration(
-          errorText: _valid ? null : "A step can't be empty",
+          errorText: _valid ? null : l10n.stepCantBeEmpty,
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: _valid
               ? () => Navigator.of(context).pop(_controller.text)
               : null,
-          child: const Text('Save'),
+          child: Text(l10n.save),
         ),
       ],
     );

@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:brewing_journal_client/brewing_journal_client.dart';
+import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../router.dart';
 import '../../../core/error_messages.dart';
+import '../../../core/l10n.dart';
 import '../../recipe_list/cubit/recipe_list_cubit.dart';
 import '../../teams/cubit/teams_cubit.dart';
 import '../cubit/recipe_creation_cubit.dart';
@@ -50,13 +52,14 @@ class RecipeWizardView extends StatelessWidget {
   /// after the first photo save, but Finish should still open Brew Mode.
   final bool openedAsEdit;
 
-  static const stepLabels = {
-    RecipeWizardStep.ingredient: 'Bean',
-    RecipeWizardStep.extraction: 'Brew',
-    RecipeWizardStep.flavor: 'Flavor',
-    RecipeWizardStep.instructions: 'Steps',
-    RecipeWizardStep.media: 'Photos',
-  };
+  static String stepLabel(AppLocalizations l10n, RecipeWizardStep step) =>
+      switch (step) {
+        RecipeWizardStep.ingredient => l10n.stepBean,
+        RecipeWizardStep.extraction => l10n.stepBrew,
+        RecipeWizardStep.flavor => l10n.stepFlavor,
+        RecipeWizardStep.instructions => l10n.stepSteps,
+        RecipeWizardStep.media => l10n.stepPhotos,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -93,11 +96,12 @@ class RecipeWizardView extends StatelessWidget {
             previous.step != current.step ||
             previous.isEditing != current.isEditing,
         builder: (context, state) {
+          final l10n = context.l10n;
           return Scaffold(
             appBar: AppBar(
-              title: Text(state.isEditing ? 'Edit recipe' : 'New recipe'),
+              title: Text(state.isEditing ? l10n.editRecipe : l10n.newRecipe),
               leading: IconButton(
-                tooltip: 'Close',
+                tooltip: l10n.close,
                 icon: const Icon(Icons.close),
                 onPressed: () => _close(context),
               ),
@@ -156,10 +160,10 @@ class RecipeWizardView extends StatelessWidget {
           content: Text(
             errorMessage(
               error,
+              context.l10n,
               overrides: {
                 if (teamId != null)
-                  BrewingErrorCode.forbidden:
-                      "Viewers can't change team recipes.",
+                  BrewingErrorCode.forbidden: context.l10n.viewersCantChange,
               },
             ),
             style: TextStyle(color: colors.onErrorContainer),
@@ -203,12 +207,12 @@ class _LoadFailure extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text("This recipe couldn't be loaded."),
+          Text(context.l10n.recipeCouldNotBeLoaded),
           const SizedBox(height: 16),
           if (id != null)
             FilledButton(
               onPressed: () => context.read<RecipeCreationCubit>().load(id),
-              child: const Text('Retry'),
+              child: Text(context.l10n.retry),
             ),
         ],
       ),
@@ -253,7 +257,7 @@ class _StepIndicator extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        RecipeWizardView.stepLabels[step]!,
+                        RecipeWizardView.stepLabel(context.l10n, step),
                         style: theme.textTheme.labelSmall?.copyWith(
                           fontWeight: step == current
                               ? FontWeight.bold
@@ -285,6 +289,7 @@ class _BottomBar extends StatelessWidget {
           previous.saveStatus != current.saveStatus ||
           previous.pendingUpload != current.pendingUpload,
       builder: (context, state) {
+        final l10n = context.l10n;
         final busy = state.isSaving || state.pendingUpload;
         return Material(
           elevation: 3,
@@ -294,7 +299,7 @@ class _BottomBar extends StatelessWidget {
               children: [
                 OutlinedButton(
                   onPressed: state.step.index == 0 || busy ? null : cubit.back,
-                  child: const Text('Back'),
+                  child: Text(l10n.back),
                 ),
                 const Spacer(),
                 if (state.isLastStep)
@@ -309,13 +314,13 @@ class _BottomBar extends StatelessWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.check),
-                    label: const Text('Finish'),
+                    label: Text(l10n.finish),
                   )
                 else
                   FilledButton(
                     key: const Key('wizard-next'),
                     onPressed: busy ? null : cubit.next,
-                    child: const Text('Next'),
+                    child: Text(l10n.next),
                   ),
               ],
             ),

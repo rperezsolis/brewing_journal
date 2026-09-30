@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/error_messages.dart';
+import '../../../core/l10n.dart';
 import '../cubit/teams_cubit.dart';
 import '../cubit/teams_state.dart';
 
@@ -46,7 +47,7 @@ class _InviteSheetState extends State<_InviteSheet> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                errorMessage(state.error!),
+                errorMessage(state.error!, context.l10n),
                 style: TextStyle(color: colors.onErrorContainer),
               ),
               backgroundColor: colors.errorContainer,
@@ -54,27 +55,28 @@ class _InviteSheetState extends State<_InviteSheet> {
           );
         },
         builder: (context, state) {
+          final l10n = context.l10n;
           final invite = state.lastInvite;
           return Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Invite to team',
+                l10n.inviteToTeam,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
               SegmentedButton<TeamRole>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: TeamRole.viewer,
-                    label: Text('Viewer'),
-                    icon: Icon(Icons.visibility_outlined),
+                    label: Text(l10n.roleViewer),
+                    icon: const Icon(Icons.visibility_outlined),
                   ),
                   ButtonSegment(
                     value: TeamRole.editor,
-                    label: Text('Editor'),
-                    icon: Icon(Icons.edit_outlined),
+                    label: Text(l10n.roleEditor),
+                    icon: const Icon(Icons.edit_outlined),
                   ),
                 ],
                 selected: {_role},
@@ -84,18 +86,18 @@ class _InviteSheetState extends State<_InviteSheet> {
               ),
               const SizedBox(height: 12),
               SegmentedButton<Duration>(
-                segments: const [
+                segments: [
                   ButtonSegment(
-                    value: Duration(hours: 1),
-                    label: Text('1h'),
+                    value: const Duration(hours: 1),
+                    label: Text(l10n.inviteTtlOneHour),
                   ),
                   ButtonSegment(
-                    value: Duration(hours: 24),
-                    label: Text('24h'),
+                    value: const Duration(hours: 24),
+                    label: Text(l10n.inviteTtlOneDay),
                   ),
                   ButtonSegment(
-                    value: Duration(days: 7),
-                    label: Text('7d'),
+                    value: const Duration(days: 7),
+                    label: Text(l10n.inviteTtlOneWeek),
                   ),
                 ],
                 selected: {_ttl},
@@ -117,7 +119,7 @@ class _InviteSheetState extends State<_InviteSheet> {
                         dimension: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Create'),
+                    : Text(l10n.create),
               ),
               if (invite != null) ...[
                 const SizedBox(height: 16),
@@ -128,15 +130,15 @@ class _InviteSheetState extends State<_InviteSheet> {
                     await Clipboard.setData(ClipboardData(text: invite.url));
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Invite link copied')),
+                      SnackBar(content: Text(context.l10n.inviteLinkCopied)),
                     );
                   },
                   icon: const Icon(Icons.copy),
-                  label: const Text('Copy'),
+                  label: Text(l10n.copyLink),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Single use',
+                  l10n.singleUse,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

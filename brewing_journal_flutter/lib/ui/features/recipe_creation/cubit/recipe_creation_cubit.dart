@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/repositories/ingredient_repository.dart';
 import '../../../../data/repositories/recipe_media_repository.dart';
 import '../../../../data/repositories/recipe_repository.dart';
+import '../../../core/validation_messages.dart';
 import '../recipe_limits.dart';
 import 'recipe_creation_state.dart';
 
@@ -112,7 +113,7 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
       emit(
         state.copyWith(
           error: _validation(
-            'Name must be 1 to $kIngredientNameMaxLength characters',
+            validationMessage('nameLength', [kIngredientNameMaxLength]),
           ),
         ),
       );
@@ -240,7 +241,7 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
           emit(
             state.copyWith(
               error: _validation(
-                'A tag must be at most $kTagMaxLength characters',
+                validationMessage('tagTooLong', [kTagMaxLength]),
               ),
             ),
           );
@@ -249,7 +250,11 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
         if (keys.add(trimmed.toLowerCase())) cleanTags.add(trimmed);
       }
       if (cleanTags.length > kMaxTags) {
-        emit(state.copyWith(error: _validation('At most $kMaxTags tags')));
+        emit(
+          state.copyWith(
+            error: _validation(validationMessage('tooManyTags', [kMaxTags])),
+          ),
+        );
         return;
       }
     }
@@ -272,7 +277,9 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     if (state.instructions.length >= kMaxInstructions) {
       emit(
         state.copyWith(
-          error: _validation('At most $kMaxInstructions instructions'),
+          error: _validation(
+            validationMessage('tooManyInstructions', [kMaxInstructions]),
+          ),
         ),
       );
       return false;
@@ -322,14 +329,18 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
   String? _validInstruction(String text) {
     final trimmed = text.trim();
     if (trimmed.isEmpty) {
-      emit(state.copyWith(error: _validation("An instruction can't be empty")));
+      emit(
+        state.copyWith(
+          error: _validation(validationMessage('emptyInstruction')),
+        ),
+      );
       return null;
     }
     if (trimmed.length > kInstructionMaxLength) {
       emit(
         state.copyWith(
           error: _validation(
-            'An instruction must be at most $kInstructionMaxLength characters',
+            validationMessage('instructionTooLong', [kInstructionMaxLength]),
           ),
         ),
       );
@@ -377,30 +388,42 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     switch (step) {
       case RecipeWizardStep.ingredient:
         return s.selectedIngredient == null
-            ? 'Select or register an ingredient'
+            ? validationMessage('selectIngredient')
             : null;
       case RecipeWizardStep.extraction:
         final temp = s.waterTempC;
         final dose = s.doseGrams;
         final duration = s.extractionDuration;
-        if (s.title.trim().isEmpty) return 'Add a title';
+        if (s.title.trim().isEmpty) return validationMessage('addTitle');
         if (temp == null || temp < kMinWaterTempC || temp > kMaxWaterTempC) {
-          return 'Water temperature must be between 1 and 100 °C';
+          return validationMessage('waterTemp', [
+            kMinWaterTempC.round(),
+            kMaxWaterTempC.round(),
+          ]);
         }
         if (dose == null || dose < kMinDoseGrams || dose > kMaxDoseGrams) {
-          return 'Dose must be between 0.1 and 500 g';
+          return validationMessage('dose', [
+            formatLimit(kMinDoseGrams),
+            formatLimit(kMaxDoseGrams),
+          ]);
         }
-        if (s.grindSize.trim().isEmpty) return 'Add a grind size';
-        if (s.grinderModel.trim().isEmpty) return 'Add a grinder model';
-        if (s.extractionMethod == null) return 'Choose an extraction method';
+        if (s.grindSize.trim().isEmpty) {
+          return validationMessage('addGrindSize');
+        }
+        if (s.grinderModel.trim().isEmpty) {
+          return validationMessage('addGrinder');
+        }
+        if (s.extractionMethod == null) {
+          return validationMessage('chooseMethod');
+        }
         if (s.extractionMethod == ExtractionMethod.other &&
             s.extractionMethodNote.trim().isEmpty) {
-          return 'Describe the extraction method';
+          return validationMessage('describeMethod');
         }
         if (duration != null &&
             (duration < const Duration(seconds: 1) ||
                 duration > kMaxExtractionDuration)) {
-          return 'Extraction time must be between 1 s and 2 h';
+          return validationMessage('extractionTime');
         }
         return null;
       case RecipeWizardStep.flavor:
@@ -492,7 +515,11 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
   Future<bool> addPhoto(ByteData bytes) async {
     if (state.pendingUpload) return false;
     if (state.photos.length >= kMaxPhotos) {
-      emit(state.copyWith(error: _validation('At most $kMaxPhotos photos')));
+      emit(
+        state.copyWith(
+          error: _validation(validationMessage('tooManyPhotos', [kMaxPhotos])),
+        ),
+      );
       return false;
     }
     if (state.recipeId == null && !await save()) return false;

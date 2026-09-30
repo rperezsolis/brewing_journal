@@ -1,7 +1,9 @@
 import 'package:brewing_journal_client/brewing_journal_client.dart';
+import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/brewing_labels.dart';
+import '../../../core/l10n.dart';
 import '../../../core/widgets/flavor_radar_chart.dart';
 import '../share_card_layout.dart';
 
@@ -19,6 +21,7 @@ class RecipeShareCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final colors = theme.colorScheme;
     final recipe = detail.recipe;
     final instructions = [...detail.instructions]
@@ -30,7 +33,7 @@ class RecipeShareCard extends StatelessWidget {
         recipe.extractionMethod == ExtractionMethod.other &&
             (recipe.extractionMethodNote?.isNotEmpty ?? false)
         ? recipe.extractionMethodNote!
-        : recipe.extractionMethod.label;
+        : recipe.extractionMethod.label(l10n);
     final duration = recipe.extractionDuration;
 
     return SizedBox(
@@ -60,18 +63,28 @@ class RecipeShareCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${detail.ingredient.kind.label}: ${detail.ingredient.name}',
+                          l10n.kindAndName(
+                            detail.ingredient.kind.label(l10n),
+                            detail.ingredient.name,
+                          ),
                           style: theme.textTheme.titleSmall,
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Brewing: $method · ${_formatNumber(recipe.doseGrams)} g · '
-                          '${_formatNumber(recipe.waterTempC)} °C',
+                          l10n.brewingSummary(
+                            method,
+                            _formatNumber(recipe.doseGrams),
+                            _formatNumber(recipe.waterTempC),
+                          ),
                         ),
                         Text(
-                          'Grinding: ${recipe.grindSize} · ${recipe.grinderModel}',
+                          l10n.grindingSummary(
+                            recipe.grindSize,
+                            recipe.grinderModel,
+                          ),
                         ),
-                        if (duration != null) Text(_formatTimer(duration)),
+                        if (duration != null)
+                          Text(_formatTimer(duration, l10n)),
                         const SizedBox(height: 8),
                         Center(
                           child: FlavorRadarChart(
@@ -112,7 +125,7 @@ class RecipeShareCard extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               if (preview.moreCount > 0)
-                                Text('+${preview.moreCount} more'),
+                                Text(l10n.moreCount(preview.moreCount)),
                             ],
                           ),
                         ],
@@ -130,7 +143,7 @@ class RecipeShareCard extends StatelessWidget {
                 color: colors.primaryContainer,
                 child: Center(
                   child: Text(
-                    'Made with BrewSync',
+                    l10n.madeWithBrewSync,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: colors.onPrimaryContainer,
                     ),
@@ -150,12 +163,12 @@ String _formatNumber(double value) => value == value.roundToDouble()
     : value.toString();
 
 /// `Timer: 3m 00s`, with a tenth when the duration has one (`2m 30.5s`).
-String _formatTimer(Duration duration) {
+String _formatTimer(Duration duration, AppLocalizations l10n) {
   final tenths = duration.inMilliseconds ~/ 100;
   final minutes = tenths ~/ 600;
   final seconds = (tenths ~/ 10) % 60;
   final fraction = tenths % 10 == 0 ? '' : '.${tenths % 10}';
-  return 'Timer: ${minutes}m ${_two(seconds)}${fraction}s';
+  return l10n.timerSummary('$minutes', '${_two(seconds)}$fraction');
 }
 
 String _two(int value) => value.toString().padLeft(2, '0');

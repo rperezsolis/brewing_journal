@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/l10n.dart';
 import '../../../core/widgets/flavor_radar_chart.dart';
 import '../cubit/recipe_creation_cubit.dart';
 import '../cubit/recipe_creation_state.dart';
@@ -36,25 +37,26 @@ class _StepFlavorState extends State<StepFlavor> {
     final cubit = context.read<RecipeCreationCubit>();
     return BlocBuilder<RecipeCreationCubit, RecipeCreationState>(
       builder: (context, state) {
+        final l10n = context.l10n;
         final sliders = Column(
           children: [
             _ScoreSlider(
-              label: 'Acidity',
+              label: l10n.acidity,
               value: state.acidity,
               onChanged: (v) => cubit.setFlavor(acidity: v),
             ),
             _ScoreSlider(
-              label: 'Sweetness',
+              label: l10n.sweetness,
               value: state.sweetness,
               onChanged: (v) => cubit.setFlavor(sweetness: v),
             ),
             _ScoreSlider(
-              label: 'Body',
+              label: l10n.flavorBody,
               value: state.body,
               onChanged: (v) => cubit.setFlavor(body: v),
             ),
             _ScoreSlider(
-              label: 'Bitterness',
+              label: l10n.bitterness,
               value: state.bitterness,
               onChanged: (v) => cubit.setFlavor(bitterness: v),
             ),
@@ -69,7 +71,7 @@ class _StepFlavorState extends State<StepFlavor> {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('Flavor map', style: theme.textTheme.titleLarge),
+            Text(l10n.flavorMap, style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             LayoutBuilder(
               builder: (context, constraints) => constraints.maxWidth >= 560
@@ -83,7 +85,7 @@ class _StepFlavorState extends State<StepFlavor> {
                   : Column(children: [chart, sliders]),
             ),
             const SizedBox(height: 24),
-            Text('Flavor tags', style: theme.textTheme.titleMedium),
+            Text(l10n.flavorTags, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -107,11 +109,11 @@ class _StepFlavorState extends State<StepFlavor> {
               onSubmitted: (_) => _addTag(),
               decoration: InputDecoration(
                 labelText: state.flavorTags.length < kMaxTags
-                    ? 'Add a tag (fruity, chocolate, floral…)'
-                    : 'At most $kMaxTags tags',
+                    ? l10n.addTagHint
+                    : l10n.atMostTags(kMaxTags),
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  tooltip: 'Add tag',
+                  tooltip: l10n.addTag,
                   icon: const Icon(Icons.add),
                   onPressed: state.flavorTags.length < kMaxTags
                       ? _addTag

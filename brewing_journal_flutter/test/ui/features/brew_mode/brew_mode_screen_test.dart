@@ -3,6 +3,8 @@ import 'package:brewing_journal_flutter/data/repositories/fake_ingredient_reposi
 import 'package:brewing_journal_flutter/data/repositories/fake_recipe_repository.dart';
 import 'package:brewing_journal_flutter/data/repositories/recipe_repository.dart';
 import 'package:brewing_journal_flutter/data/services/alarm_player.dart';
+import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
+import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
 import 'package:brewing_journal_flutter/ui/features/brew_mode/view/brew_mode_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -64,7 +66,12 @@ void main() {
           RepositoryProvider<RecipeRepository>.value(value: recipes),
           RepositoryProvider<AlarmPlayer>.value(value: FakeAlarmPlayer()),
         ],
-        child: MaterialApp(home: BrewModeScreen(recipeId: id)),
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          localeListResolutionCallback: resolveBrewSyncLocales,
+          home: BrewModeScreen(recipeId: id),
+        ),
       ),
     );
     // Two pumps: the first frame is loading, the second is the loaded recipe.

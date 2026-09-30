@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../router.dart';
 import '../../../core/brewing_labels.dart';
 import '../../../core/error_messages.dart';
+import '../../../core/l10n.dart';
 import '../../auth/cubit/auth_cubit.dart';
 import '../cubit/recipe_list_cubit.dart';
 import '../cubit/recipe_list_state.dart';
@@ -16,12 +17,13 @@ class RecipeListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BrewSync'),
+        title: Text(l10n.appTitle),
         actions: [
           IconButton(
-            tooltip: 'Sign out',
+            tooltip: l10n.signOut,
             icon: const Icon(Icons.logout),
             onPressed: () => context.read<AuthCubit>().signOut(),
           ),
@@ -31,7 +33,7 @@ class RecipeListScreen extends StatelessWidget {
         key: const Key('recipe-list-new'),
         onPressed: () => context.push(Routes.newRecipe),
         icon: const Icon(Icons.add),
-        label: const Text('New recipe'),
+        label: Text(l10n.newRecipe),
       ),
       body: BlocBuilder<RecipeListCubit, RecipeListState>(
         builder: (context, state) {
@@ -43,15 +45,15 @@ class RecipeListScreen extends StatelessWidget {
                 child: CircularProgressIndicator(),
               ),
               RecipeListStatus.failure => _Message(
-                text: errorMessage(state.error ?? Object()),
+                text: errorMessage(state.error ?? Object(), l10n),
                 action: FilledButton(
                   onPressed: cubit.load,
-                  child: const Text('Retry'),
+                  child: Text(l10n.retry),
                 ),
               ),
-              RecipeListStatus.success => const _Message(
-                text: 'No recipes yet',
-                detail: 'Tap New recipe to log your first brew.',
+              RecipeListStatus.success => _Message(
+                text: l10n.noRecipesYet,
+                detail: l10n.noRecipesYetDetail,
               ),
             };
           }
@@ -96,13 +98,14 @@ class _RecipeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final ingredient = recipe.ingredient;
     final subtitle = [
       if (ingredient != null) ingredient.name,
       recipe.extractionMethod == ExtractionMethod.other &&
               recipe.extractionMethodNote != null
           ? recipe.extractionMethodNote!
-          : recipe.extractionMethod.label,
+          : recipe.extractionMethod.label(l10n),
       '${_formatNumber(recipe.doseGrams)} g',
       '${_formatNumber(recipe.waterTempC)} °C',
     ].join(' · ');

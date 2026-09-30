@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/brewing_labels.dart';
+import '../../../core/l10n.dart';
 import '../../../core/duration_format.dart';
 import '../cubit/recipe_creation_cubit.dart';
 import '../cubit/recipe_creation_state.dart';
@@ -95,6 +96,7 @@ class _StepExtractionState extends State<StepExtraction> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     const gap = SizedBox(height: 16);
     return BlocListener<RecipeCreationCubit, RecipeCreationState>(
       listenWhen: (previous, current) =>
@@ -104,7 +106,7 @@ class _StepExtractionState extends State<StepExtraction> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Brew parameters', style: theme.textTheme.titleLarge),
+          Text(l10n.brewParameters, style: theme.textTheme.titleLarge),
           gap,
           TextField(
             key: const Key('extraction-title'),
@@ -112,9 +114,9 @@ class _StepExtractionState extends State<StepExtraction> {
             maxLength: kTitleMaxLength,
             onChanged: _cubit.setTitle,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Recipe title',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.recipeTitle,
+              border: const OutlineInputBorder(),
             ),
           ),
           Row(
@@ -132,10 +134,10 @@ class _StepExtractionState extends State<StepExtraction> {
                   ],
                   onChanged: (text) => _cubit.setWaterTemp(_parseNumber(text)),
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Water temperature',
+                  decoration: InputDecoration(
+                    labelText: l10n.waterTemperature,
                     suffixText: '°C',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
               ),
@@ -152,10 +154,10 @@ class _StepExtractionState extends State<StepExtraction> {
                   ],
                   onChanged: (text) => _cubit.setDose(_parseNumber(text)),
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Dose',
+                  decoration: InputDecoration(
+                    labelText: l10n.dose,
                     suffixText: 'g',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
               ),
@@ -168,10 +170,10 @@ class _StepExtractionState extends State<StepExtraction> {
             maxLength: kGrindMaxLength,
             onChanged: _cubit.setGrindSize,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Grind size',
-              hintText: 'Medium-fine, 18 clicks…',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.grindSize,
+              hintText: l10n.grindSizeHint,
+              border: const OutlineInputBorder(),
             ),
           ),
           TextField(
@@ -179,10 +181,10 @@ class _StepExtractionState extends State<StepExtraction> {
             controller: _grinder,
             maxLength: kGrindMaxLength,
             onChanged: _cubit.setGrinderModel,
-            decoration: const InputDecoration(
-              labelText: 'Grinder model',
-              hintText: 'Comandante C40, Niche Zero…',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.grinderModel,
+              hintText: l10n.grinderModelHint,
+              border: const OutlineInputBorder(),
             ),
           ),
           BlocBuilder<RecipeCreationCubit, RecipeCreationState>(
@@ -194,15 +196,15 @@ class _StepExtractionState extends State<StepExtraction> {
                 DropdownButtonFormField<ExtractionMethod>(
                   key: const Key('extraction-method'),
                   initialValue: state.extractionMethod,
-                  decoration: const InputDecoration(
-                    labelText: 'Extraction method',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.extractionMethodLabel,
+                    border: const OutlineInputBorder(),
                   ),
                   items: [
                     for (final method in ExtractionMethod.values)
                       DropdownMenuItem(
                         value: method,
-                        child: Text(method.label),
+                        child: Text(method.label(l10n)),
                       ),
                   ],
                   onChanged: _cubit.setExtractionMethod,
@@ -213,9 +215,9 @@ class _StepExtractionState extends State<StepExtraction> {
                     key: const Key('extraction-method-note'),
                     controller: _note,
                     onChanged: _cubit.setExtractionMethodNote,
-                    decoration: const InputDecoration(
-                      labelText: 'Describe the method',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.describeTheMethod,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ],
@@ -232,11 +234,11 @@ class _StepExtractionState extends State<StepExtraction> {
                 (RecipeCreationCubit c) => c.state.stopwatchRunning,
               ),
               decoration: InputDecoration(
-                labelText: 'Or enter the time (m:ss)',
+                labelText: l10n.enterTime,
                 errorText:
                     _duration.text.trim().isNotEmpty &&
                         parseDuration(_duration.text) == null
-                    ? 'Use m:ss, for example 2:30'
+                    ? l10n.timeFormatError
                     : null,
                 border: const OutlineInputBorder(),
               ),
@@ -256,6 +258,7 @@ class _StopwatchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final cubit = context.read<RecipeCreationCubit>();
     return Card(
       child: Padding(
@@ -274,7 +277,7 @@ class _StopwatchCard extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Extraction time', style: theme.textTheme.titleMedium),
+                Text(l10n.extractionTime, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Text(
                   formatStopwatch(reading),
@@ -295,14 +298,14 @@ class _StopwatchCard extends StatelessWidget {
                         key: const Key('stopwatch-stop'),
                         onPressed: cubit.stopStopwatch,
                         icon: const Icon(Icons.stop),
-                        label: const Text('Stop'),
+                        label: Text(l10n.stop),
                       )
                     else
                       FilledButton.icon(
                         key: const Key('stopwatch-start'),
                         onPressed: cubit.startStopwatch,
                         icon: const Icon(Icons.play_arrow),
-                        label: const Text('Start'),
+                        label: Text(l10n.start),
                       ),
                     OutlinedButton.icon(
                       key: const Key('stopwatch-reset'),
@@ -310,7 +313,7 @@ class _StopwatchCard extends StatelessWidget {
                           ? cubit.resetStopwatch
                           : null,
                       icon: const Icon(Icons.restart_alt),
-                      label: const Text('Reset'),
+                      label: Text(l10n.reset),
                     ),
                   ],
                 ),

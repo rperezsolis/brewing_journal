@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../data/services/share_service.dart';
 import '../../../../router.dart';
 import '../../../core/error_messages.dart';
+import '../../../core/l10n.dart';
 import '../../recipe_detail/cubit/recipe_detail_cubit.dart';
 import '../../recipe_detail/cubit/recipe_detail_state.dart';
 import '../cubit/share_cubit.dart';
@@ -69,18 +70,15 @@ class _ShareLoadError extends StatelessWidget {
   final Object error;
   final VoidCallback? onRetry;
 
-  static const _overrides = {
-    BrewingErrorCode.notFound: 'Recipe not found or no longer shared with you',
-  };
-
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final failure = error;
     final isNotFound =
         failure is BrewingException &&
         failure.code == BrewingErrorCode.notFound;
     return Scaffold(
-      appBar: AppBar(title: const Text('Share')),
+      appBar: AppBar(title: Text(l10n.share)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -88,7 +86,13 @@ class _ShareLoadError extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                errorMessage(error, overrides: _overrides),
+                errorMessage(
+                  error,
+                  l10n,
+                  overrides: {
+                    BrewingErrorCode.notFound: l10n.recipeNotFoundOrUnshared,
+                  },
+                ),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
@@ -98,10 +102,10 @@ class _ShareLoadError extends StatelessWidget {
                   onPressed: () => context.canPop()
                       ? context.pop()
                       : context.go(Routes.home),
-                  child: const Text('Back'),
+                  child: Text(l10n.back),
                 )
               else
-                FilledButton(onPressed: onRetry, child: const Text('Retry')),
+                FilledButton(onPressed: onRetry, child: Text(l10n.retry)),
             ],
           ),
         ),
@@ -139,7 +143,7 @@ class _SharePreviewState extends State<SharePreview> {
       final boundary = _cardKey.currentContext?.findRenderObject();
       if (boundary is! RenderRepaintBoundary) {
         cubit.abortRender();
-        _showMessage('Could not create the share image.');
+        _showMessage(context.l10n.couldNotCreateShareImage);
         return;
       }
       final image = await boundary.toImage(pixelRatio: 3);
@@ -148,7 +152,7 @@ class _SharePreviewState extends State<SharePreview> {
       if (!mounted) return;
       if (data == null) {
         cubit.abortRender();
-        _showMessage('Could not create the share image.');
+        _showMessage(context.l10n.couldNotCreateShareImage);
         return;
       }
       await cubit.share(
@@ -159,7 +163,7 @@ class _SharePreviewState extends State<SharePreview> {
     } catch (error) {
       if (!mounted) return;
       cubit.abortRender();
-      _showMessage('Could not create the share image.');
+      _showMessage(context.l10n.couldNotCreateShareImage);
     }
   }
 
@@ -191,12 +195,12 @@ class _SharePreviewState extends State<SharePreview> {
           ..showSnackBar(
             SnackBar(
               content: Text(
-                'Could not save the image.',
+                context.l10n.couldNotSaveImage,
                 style: TextStyle(color: colors.onErrorContainer),
               ),
               backgroundColor: colors.errorContainer,
               action: SnackBarAction(
-                label: 'Retry',
+                label: context.l10n.retry,
                 textColor: colors.onErrorContainer,
                 onPressed: () => context.read<ShareCubit>().download(),
               ),
@@ -204,7 +208,7 @@ class _SharePreviewState extends State<SharePreview> {
           );
       },
       child: Scaffold(
-        appBar: AppBar(title: const Text('Share')),
+        appBar: AppBar(title: Text(context.l10n.share)),
         body: Column(
           children: [
             Expanded(
@@ -224,6 +228,7 @@ class _SharePreviewState extends State<SharePreview> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               child: BlocBuilder<ShareCubit, ShareState>(
                 builder: (context, state) {
+                  final l10n = context.l10n;
                   final busy =
                       state.status == ShareStatus.rendering ||
                       state.status == ShareStatus.sharing;
@@ -232,7 +237,7 @@ class _SharePreviewState extends State<SharePreview> {
                     children: [
                       if (state.status == ShareStatus.unavailable) ...[
                         Text(
-                          "Sharing isn't supported here — download the image instead",
+                          l10n.sharingNotSupported,
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
@@ -242,7 +247,7 @@ class _SharePreviewState extends State<SharePreview> {
                           onPressed: () =>
                               context.read<ShareCubit>().download(),
                           icon: const Icon(Icons.download_outlined),
-                          label: const Text('Download image'),
+                          label: Text(l10n.downloadImage),
                         ),
                         const SizedBox(height: 8),
                       ],
@@ -257,7 +262,7 @@ class _SharePreviewState extends State<SharePreview> {
                                 ),
                               )
                             : const Icon(Icons.ios_share),
-                        label: const Text('Share'),
+                        label: Text(l10n.share),
                       ),
                     ],
                   );

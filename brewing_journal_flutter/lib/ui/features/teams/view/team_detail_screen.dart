@@ -9,6 +9,7 @@ import '../../../../data/repositories/auth_repository.dart';
 import '../../../../router.dart';
 import '../../../core/brewing_labels.dart';
 import '../../../core/error_messages.dart';
+import '../../../core/l10n.dart';
 import '../../recipe_list/cubit/recipe_list_cubit.dart';
 import '../../recipe_list/cubit/recipe_list_state.dart';
 import '../cubit/teams_cubit.dart';
@@ -65,8 +66,9 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
     );
     final userId = context.read<AuthRepository>().currentUserId;
     final isOwner = summary?.team.ownerId == userId;
+    final l10n = context.l10n;
     final isEditor = summary?.role == TeamRole.editor;
-    final name = summary?.team.name ?? 'Team';
+    final name = summary?.team.name ?? l10n.teamFallback;
 
     return BlocListener<TeamsCubit, TeamsState>(
       listenWhen: (previous, current) =>
@@ -83,14 +85,14 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
                 padding: const EdgeInsets.only(right: 8),
                 child: Center(
                   child: Chip(
-                    label: Text(summary.role.label),
+                    label: Text(summary.role.label(l10n)),
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
               ),
             if (isOwner)
               IconButton(
-                tooltip: 'Invite',
+                tooltip: l10n.invite,
                 icon: const Icon(Icons.person_add_outlined),
                 onPressed: () => showInviteSheet(context, teamId),
               ),
@@ -101,7 +103,7 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
                 key: const Key('team-new-recipe'),
                 onPressed: () => _openNewRecipe(context),
                 icon: const Icon(Icons.add),
-                label: const Text('New recipe'),
+                label: Text(l10n.newRecipe),
               )
             : null,
         body: BlocBuilder<RecipeListCubit, RecipeListState>(
@@ -116,11 +118,11 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
                 RecipeListStatus.failure => Center(
                   child: FilledButton(
                     onPressed: cubit.load,
-                    child: Text(errorMessage(state.error ?? Object())),
+                    child: Text(errorMessage(state.error ?? Object(), l10n)),
                   ),
                 ),
-                RecipeListStatus.success => const Center(
-                  child: Text('No recipes on this team yet.'),
+                RecipeListStatus.success => Center(
+                  child: Text(l10n.noRecipesOnTeam),
                 ),
               };
             }
@@ -134,7 +136,7 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
                   final recipe = state.recipes[index];
                   return ListTile(
                     title: Text(recipe.title),
-                    subtitle: Text(recipe.extractionMethod.label),
+                    subtitle: Text(recipe.extractionMethod.label(l10n)),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => _openRecipe(context, recipe.id!),
                   );

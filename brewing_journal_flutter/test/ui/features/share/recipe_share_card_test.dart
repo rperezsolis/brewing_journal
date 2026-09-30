@@ -1,4 +1,6 @@
 import 'package:brewing_journal_client/brewing_journal_client.dart';
+import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
+import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
 import 'package:brewing_journal_flutter/ui/core/widgets/flavor_radar_chart.dart';
 import 'package:brewing_journal_flutter/ui/features/share/view/recipe_share_card.dart';
 import 'package:flutter/material.dart';
@@ -69,6 +71,9 @@ void main() {
 
 Widget _card(List<String> instructions, {Duration? duration}) {
   return MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    localeListResolutionCallback: resolveBrewSyncLocales,
     home: RecipeShareCard(detail: _detail(instructions, duration: duration)),
   );
 }

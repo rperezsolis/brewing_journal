@@ -1,0 +1,2 @@
+NSPhotoLibraryUsageDescription = "BrewSync attaches photos of your brews to recipes.";
+NSCameraUsageDescription = "BrewSync takes photos of your brews for recipes.";

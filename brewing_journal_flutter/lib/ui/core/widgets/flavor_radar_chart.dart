@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../l10n.dart';
+
 /// The four flavor scores (0..[maxScore]) on a square radar chart: acidity at
 /// the top, then sweetness, body, and bitterness clockwise.
 ///
@@ -37,12 +39,17 @@ class FlavorRadarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final labelStyle =
         theme.textTheme.labelSmall ?? const TextStyle(fontSize: 11);
     return Semantics(
-      label:
-          'Flavor map: acidity $acidity, sweetness $sweetness, '
-          'body $body, bitterness $bitterness, out of $maxScore',
+      label: l10n.flavorMapSemantics(
+        acidity,
+        sweetness,
+        body,
+        bitterness,
+        maxScore,
+      ),
       child: showLabels
           ? _LabeledPlot(
               acidity: acidity,
@@ -90,9 +97,10 @@ class _LabeledPlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final direction = Directionality.of(context);
-    final bitternessWidth = _textWidth('Bitterness', labelStyle, direction);
-    final sweetnessWidth = _textWidth('Sweetness', labelStyle, direction);
+    final bitternessWidth = _textWidth(l10n.bitterness, labelStyle, direction);
+    final sweetnessWidth = _textWidth(l10n.sweetness, labelStyle, direction);
     final sideLabels =
         bitternessWidth + sweetnessWidth + FlavorRadarChart._gap * 2;
 
@@ -114,21 +122,21 @@ class _LabeledPlot extends StatelessWidget {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Acidity', style: labelStyle),
+            Text(l10n.acidity, style: labelStyle),
             const SizedBox(height: 2),
             Row(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text('Bitterness', style: labelStyle),
+                Text(l10n.bitterness, style: labelStyle),
                 const SizedBox(width: FlavorRadarChart._gap),
                 plot,
                 const SizedBox(width: FlavorRadarChart._gap),
-                Text('Sweetness', style: labelStyle),
+                Text(l10n.sweetness, style: labelStyle),
               ],
             ),
             const SizedBox(height: 2),
-            Text('Body', style: labelStyle),
+            Text(l10n.flavorBody, style: labelStyle),
           ],
         );
       },

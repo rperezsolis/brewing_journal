@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n.dart';
+
 /// Tab shell for My recipes and Teams. Recipe and invite routes sit on the
 /// root navigator so they cover this bar.
 class HomeShell extends StatelessWidget {
@@ -15,16 +17,16 @@ class HomeShell extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: navigationShell.goBranch,
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.coffee_outlined),
-            selectedIcon: Icon(Icons.coffee),
-            label: 'My recipes',
+            icon: const Icon(Icons.coffee_outlined),
+            selectedIcon: const Icon(Icons.coffee),
+            label: context.l10n.myRecipes,
           ),
           NavigationDestination(
-            icon: Icon(Icons.groups_outlined),
-            selectedIcon: Icon(Icons.groups),
-            label: 'Teams',
+            icon: const Icon(Icons.groups_outlined),
+            selectedIcon: const Icon(Icons.groups),
+            label: context.l10n.teams,
           ),
         ],
       ),

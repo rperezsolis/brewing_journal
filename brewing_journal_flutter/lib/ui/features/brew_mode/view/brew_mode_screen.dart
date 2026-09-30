@@ -9,6 +9,7 @@ import '../../../../router.dart';
 import '../../../core/brewing_labels.dart';
 import '../../../core/duration_format.dart';
 import '../../../core/error_messages.dart';
+import '../../../core/l10n.dart';
 import '../../../core/widgets/flavor_radar_chart.dart';
 import '../../recipe_detail/cubit/recipe_detail_cubit.dart';
 import '../../recipe_detail/cubit/recipe_detail_state.dart';
@@ -48,8 +49,8 @@ class BrewModeView extends StatefulWidget {
 class _BrewModeViewState extends State<BrewModeView> {
   late final AppLifecycleListener _lifecycle;
 
-  static const _notFoundOverride = {
-    BrewingErrorCode.notFound: 'Recipe not found or no longer shared with you',
+  Map<BrewingErrorCode, String> _notFoundOverride(BuildContext context) => {
+    BrewingErrorCode.notFound: context.l10n.recipeNotFoundOrUnshared,
   };
 
   @override
@@ -102,23 +103,24 @@ class _BrewModeViewState extends State<BrewModeView> {
   Future<void> _delete(RecipeDetail detail) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete this recipe?'),
-        content: Text(
-          '“${detail.recipe.title}” will be removed. This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            key: const Key('brew-delete-confirm'),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final l10n = context.l10n;
+        return AlertDialog(
+          title: Text(l10n.deleteRecipeTitle),
+          content: Text(l10n.deleteRecipeBody(detail.recipe.title)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              key: const Key('brew-delete-confirm'),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.delete),
+            ),
+          ],
+        );
+      },
     );
     if (confirmed != true || !mounted) return;
     final deleted = await context.read<RecipeDetailCubit>().delete();
@@ -135,9 +137,9 @@ class _BrewModeViewState extends State<BrewModeView> {
   }
 
   Map<BrewingErrorCode, String> _overrides({UuidValue? teamId}) => {
-    ..._notFoundOverride,
+    ..._notFoundOverride(context),
     if (teamId != null)
-      BrewingErrorCode.forbidden: "Viewers can't change team recipes.",
+      BrewingErrorCode.forbidden: context.l10n.viewersCantChange,
   };
 
   void _showError(Object error, {UuidValue? teamId}) {
@@ -147,7 +149,11 @@ class _BrewModeViewState extends State<BrewModeView> {
       ..showSnackBar(
         SnackBar(
           content: Text(
-            errorMessage(error, overrides: _overrides(teamId: teamId)),
+            errorMessage(
+              error,
+              context.l10n,
+              overrides: _overrides(teamId: teamId),
+            ),
             style: TextStyle(color: colors.onErrorContainer),
           ),
           backgroundColor: colors.errorContainer,
@@ -164,16 +170,14 @@ class _BrewModeViewState extends State<BrewModeView> {
         .toList();
     if (teams.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Create or join a team as an editor first.'),
-        ),
+        SnackBar(content: Text(context.l10n.createOrJoinTeam)),
       );
       return;
     }
     final teamId = await showDialog<UuidValue>(
       context: context,
       builder: (context) => SimpleDialog(
-        title: const Text('Add to team'),
+        title: Text(context.l10n.addToTeam),
         children: [
           for (final summary in teams)
             SimpleDialogOption(
@@ -230,10 +234,11 @@ class _BrewModeViewState extends State<BrewModeView> {
       },
       child: BlocBuilder<RecipeDetailCubit, RecipeDetailState>(
         builder: (context, state) {
+          final l10n = context.l10n;
           final detail = state.detail;
           return Scaffold(
             appBar: AppBar(
-              title: Text(detail?.recipe.title ?? 'Brew'),
+              title: Text(detail?.recipe.title ?? l10n.brewFallback),
               actions: [
                 if (detail != null) ...[
                   if (state.assigning)
@@ -246,7 +251,7 @@ class _BrewModeViewState extends State<BrewModeView> {
                     ),
                   IconButton(
                     key: const Key('brew-share'),
-                    tooltip: 'Share',
+                    tooltip: l10n.share,
                     icon: const Icon(Icons.ios_share),
                     onPressed: detail.recipe.id == null
                         ? null
@@ -258,7 +263,7 @@ class _BrewModeViewState extends State<BrewModeView> {
                   if (detail.access.canDelete && detail.recipe.teamId == null)
                     IconButton(
                       key: const Key('brew-add-to-team'),
-                      tooltip: 'Add to team',
+                      tooltip: l10n.addToTeam,
                       icon: const Icon(Icons.group_add_outlined),
                       onPressed: state.assigning
                           ? null
@@ -269,7 +274,7 @@ class _BrewModeViewState extends State<BrewModeView> {
                           detail.access.role == TeamRole.editor))
                     IconButton(
                       key: const Key('brew-remove-from-team'),
-                      tooltip: 'Remove from team',
+                      tooltip: l10n.removeFromTeam,
                       icon: const Icon(Icons.group_remove_outlined),
                       onPressed: state.assigning
                           ? null
@@ -278,14 +283,14 @@ class _BrewModeViewState extends State<BrewModeView> {
                   if (detail.access.canEdit)
                     IconButton(
                       key: const Key('brew-edit'),
-                      tooltip: 'Edit',
+                      tooltip: l10n.edit,
                       icon: const Icon(Icons.edit_outlined),
                       onPressed: () => _edit(detail.recipe.id!),
                     ),
                   if (detail.access.canDelete)
                     IconButton(
                       key: const Key('brew-delete'),
-                      tooltip: 'Delete',
+                      tooltip: l10n.delete,
                       icon: const Icon(Icons.delete_outline),
                       onPressed: state.deleting ? null : () => _delete(detail),
                     ),
@@ -298,7 +303,7 @@ class _BrewModeViewState extends State<BrewModeView> {
                 const Center(child: CircularProgressIndicator()),
               RecipeDetailStatus.failure when detail == null => _ErrorBody(
                 error: state.error ?? Object(),
-                overrides: _notFoundOverride,
+                overrides: _notFoundOverride(context),
                 onBack: _leave,
                 onRetry: state.recipeId == null
                     ? null
@@ -340,15 +345,15 @@ class _ErrorBody extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              errorMessage(error, overrides: overrides),
+              errorMessage(error, context.l10n, overrides: overrides),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),
             if (isNotFound || onRetry == null)
-              FilledButton(onPressed: onBack, child: const Text('Back'))
+              FilledButton(onPressed: onBack, child: Text(context.l10n.back))
             else
-              FilledButton(onPressed: onRetry, child: const Text('Retry')),
+              FilledButton(onPressed: onRetry, child: Text(context.l10n.retry)),
           ],
         ),
       ),
@@ -419,14 +424,15 @@ class _ParameterBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final recipe = detail.recipe;
     final ingredient = detail.ingredient;
     final method =
         recipe.extractionMethod == ExtractionMethod.other &&
             (recipe.extractionMethodNote?.isNotEmpty ?? false)
         ? recipe.extractionMethodNote!
-        : recipe.extractionMethod.label;
-    final details = ingredientDetails(ingredient);
+        : recipe.extractionMethod.label(l10n);
+    final details = ingredientDetails(ingredient, l10n);
 
     return Card(
       child: Padding(
@@ -437,7 +443,7 @@ class _ParameterBlock extends StatelessWidget {
             Text(ingredient.name, style: theme.textTheme.titleMedium),
             Text(
               [
-                ingredient.kind.label,
+                ingredient.kind.label(l10n),
                 if (details.isNotEmpty) details,
               ].join(' · '),
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -527,7 +533,10 @@ class _InstructionsBlock extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Prep & extra steps', style: theme.textTheme.titleMedium),
+            Text(
+              context.l10n.prepAndExtraSteps,
+              style: theme.textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             for (final step in instructions)
               ListTile(
@@ -623,7 +632,7 @@ class _NoTimerMessage extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Text(
-          'No extraction time recorded',
+          context.l10n.noExtractionTime,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -644,6 +653,7 @@ class _TimerPanel extends StatelessWidget {
     final cubit = context.read<BrewTimerCubit>();
     return BlocBuilder<BrewTimerCubit, BrewTimerState>(
       builder: (context, state) {
+        final l10n = context.l10n;
         final finished = state.phase == BrewTimerPhase.finished;
         return Card(
           key: const Key('brew-timer'),
@@ -653,7 +663,7 @@ class _TimerPanel extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Extraction timer', style: theme.textTheme.titleMedium),
+                Text(l10n.extractionTimer, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Text(
                   formatStopwatch(state.display),
@@ -667,7 +677,7 @@ class _TimerPanel extends StatelessWidget {
                 ),
                 if (state.target != null)
                   Text(
-                    'Target ${formatDuration(state.target!)}',
+                    l10n.targetDuration(formatDuration(state.target!)),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: finished
@@ -678,16 +688,16 @@ class _TimerPanel extends StatelessWidget {
                 const SizedBox(height: 12),
                 if (state.phase == BrewTimerPhase.idle)
                   SegmentedButton<BrewTimerMode>(
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                         value: BrewTimerMode.countDown,
-                        label: Text('Count down'),
-                        icon: Icon(Icons.timer_outlined),
+                        label: Text(l10n.countDown),
+                        icon: const Icon(Icons.timer_outlined),
                       ),
                       ButtonSegment(
                         value: BrewTimerMode.countUp,
-                        label: Text('Count up'),
-                        icon: Icon(Icons.timelapse),
+                        label: Text(l10n.countUp),
+                        icon: const Icon(Icons.timelapse),
                       ),
                     ],
                     selected: {state.mode},
@@ -705,7 +715,7 @@ class _TimerPanel extends StatelessWidget {
                         key: const Key('brew-stop-alarm'),
                         onPressed: cubit.stop,
                         icon: const Icon(Icons.notifications_off_outlined),
-                        label: const Text('Stop alarm'),
+                        label: Text(l10n.stopAlarm),
                       )
                     else ...[
                       if (state.phase == BrewTimerPhase.idle)
@@ -713,28 +723,28 @@ class _TimerPanel extends StatelessWidget {
                           key: const Key('brew-start'),
                           onPressed: cubit.start,
                           icon: const Icon(Icons.play_arrow),
-                          label: const Text('Start'),
+                          label: Text(l10n.start),
                         ),
                       if (state.phase == BrewTimerPhase.running)
                         FilledButton.icon(
                           key: const Key('brew-pause'),
                           onPressed: cubit.pause,
                           icon: const Icon(Icons.pause),
-                          label: const Text('Pause'),
+                          label: Text(l10n.pause),
                         ),
                       if (state.phase == BrewTimerPhase.paused)
                         FilledButton.icon(
                           key: const Key('brew-resume'),
                           onPressed: cubit.resume,
                           icon: const Icon(Icons.play_arrow),
-                          label: const Text('Resume'),
+                          label: Text(l10n.resume),
                         ),
                       if (state.phase != BrewTimerPhase.idle)
                         OutlinedButton.icon(
                           key: const Key('brew-stop'),
                           onPressed: cubit.stop,
                           icon: const Icon(Icons.stop),
-                          label: const Text('Stop'),
+                          label: Text(l10n.stop),
                         ),
                     ],
                   ],

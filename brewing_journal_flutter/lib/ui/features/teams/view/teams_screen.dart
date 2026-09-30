@@ -6,6 +6,7 @@ import '../../../../data/repositories/auth_repository.dart';
 import '../../../../router.dart';
 import '../../../core/brewing_labels.dart';
 import '../../../core/error_messages.dart';
+import '../../../core/l10n.dart';
 import '../../auth/cubit/auth_cubit.dart';
 import '../../invite/invite_token.dart';
 import '../cubit/teams_cubit.dart';
@@ -16,17 +17,18 @@ class TeamsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Teams'),
+        title: Text(l10n.teams),
         actions: [
           IconButton(
-            tooltip: 'Join with invite',
+            tooltip: l10n.joinWithInvite,
             icon: const Icon(Icons.mail_outline),
             onPressed: () => _joinWithInvite(context),
           ),
           IconButton(
-            tooltip: 'Sign out',
+            tooltip: l10n.signOut,
             icon: const Icon(Icons.logout),
             onPressed: () => context.read<AuthCubit>().signOut(),
           ),
@@ -36,7 +38,7 @@ class TeamsScreen extends StatelessWidget {
         key: const Key('teams-create'),
         onPressed: () => _createTeam(context),
         icon: const Icon(Icons.add),
-        label: const Text('Create team'),
+        label: Text(l10n.createTeam),
       ),
       body: BlocConsumer<TeamsCubit, TeamsState>(
         listenWhen: (previous, current) =>
@@ -48,7 +50,7 @@ class TeamsScreen extends StatelessWidget {
             ..showSnackBar(
               SnackBar(
                 content: Text(
-                  errorMessage(state.error!),
+                  errorMessage(state.error!, context.l10n),
                   style: TextStyle(color: colors.onErrorContainer),
                 ),
                 backgroundColor: colors.errorContainer,
@@ -65,15 +67,16 @@ class TeamsScreen extends StatelessWidget {
               TeamsStatus.failure => Center(
                 child: FilledButton(
                   onPressed: cubit.load,
-                  child: const Text('Retry'),
+                  child: Text(context.l10n.retry),
                 ),
               ),
-              TeamsStatus.success => const Center(
-                child: Text('No teams yet. Create one or join with an invite.'),
+              TeamsStatus.success => Center(
+                child: Text(context.l10n.noTeamsYet),
               ),
             };
           }
           final userId = context.read<AuthRepository>().currentUserId;
+          final l10n = context.l10n;
           return RefreshIndicator(
             onRefresh: cubit.load,
             child: ListView.separated(
@@ -90,8 +93,8 @@ class TeamsScreen extends StatelessWidget {
                   title: Text(summary.team.name),
                   subtitle: Text(
                     owned
-                        ? 'Owner · ${summary.role.label}'
-                        : summary.role.label,
+                        ? l10n.ownerRole(summary.role.label(l10n))
+                        : summary.role.label(l10n),
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push(Routes.team(summary.team.id!)),
@@ -143,23 +146,24 @@ class _CreateTeamDialogState extends State<_CreateTeamDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return AlertDialog(
-      title: const Text('Create team'),
+      title: Text(l10n.createTeam),
       content: TextField(
         controller: _controller,
         autofocus: true,
         maxLength: 80,
-        decoration: const InputDecoration(labelText: 'Name'),
+        decoration: InputDecoration(labelText: l10n.nameLabel),
         onSubmitted: (value) => Navigator.of(context).pop(value.trim()),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
-          child: const Text('Create'),
+          child: Text(l10n.create),
         ),
       ],
     );
@@ -184,26 +188,25 @@ class _JoinInviteDialogState extends State<_JoinInviteDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return AlertDialog(
-      title: const Text('Join with invite'),
+      title: Text(l10n.joinWithInvite),
       content: TextField(
         controller: _controller,
         autofocus: true,
-        decoration: const InputDecoration(
-          labelText: 'Invite URL or token',
-        ),
+        decoration: InputDecoration(labelText: l10n.inviteUrlOrToken),
         onSubmitted: (value) =>
             Navigator.of(context).pop(inviteTokenFromInput(value)),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: () =>
               Navigator.of(context).pop(inviteTokenFromInput(_controller.text)),
-          child: const Text('Join'),
+          child: Text(l10n.join),
         ),
       ],
     );

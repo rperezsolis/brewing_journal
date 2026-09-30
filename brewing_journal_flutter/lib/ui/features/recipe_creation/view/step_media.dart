@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/l10n.dart';
+import '../../../core/validation_messages.dart';
 import '../cubit/recipe_creation_cubit.dart';
 import '../cubit/recipe_creation_state.dart';
 import '../photo_encoder.dart';
@@ -39,7 +41,7 @@ class _StepMediaState extends State<StepMedia> {
       cubit.reportError(
         BrewingException(
           code: BrewingErrorCode.validation,
-          message: "This image format isn't supported. Choose a JPEG or PNG.",
+          message: validationMessage('photoFormat'),
         ),
       );
       return;
@@ -75,6 +77,7 @@ class _StepMediaState extends State<StepMedia> {
           previous.pendingUpload != current.pendingUpload ||
           previous.saveStatus != current.saveStatus,
       builder: (context, state) {
+        final l10n = context.l10n;
         final canAdd =
             state.photos.length < kMaxPhotos &&
             !state.pendingUpload &&
@@ -85,11 +88,10 @@ class _StepMediaState extends State<StepMedia> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               sliver: SliverList.list(
                 children: [
-                  Text('Photos', style: theme.textTheme.titleLarge),
+                  Text(l10n.photos, style: theme.textTheme.titleLarge),
                   const SizedBox(height: 4),
                   Text(
-                    'Optional. Add up to $kMaxPhotos photos of the cup, the '
-                    'crema, or the packaging, or tap Finish to save without.',
+                    l10n.photosHelp(kMaxPhotos),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -163,7 +165,7 @@ class _PhotoTile extends StatelessWidget {
             top: 4,
             right: 4,
             child: IconButton.filledTonal(
-              tooltip: 'Remove photo',
+              tooltip: context.l10n.removePhoto,
               icon: const Icon(Icons.close, size: 18),
               onPressed: onRemove,
             ),
@@ -216,7 +218,7 @@ class _AddTile extends StatelessWidget {
           children: [
             Icon(Icons.add_a_photo_outlined, color: colors.primary, size: 32),
             const SizedBox(height: 8),
-            const Text('Add photo'),
+            Text(context.l10n.addPhoto),
           ],
         ),
       ),

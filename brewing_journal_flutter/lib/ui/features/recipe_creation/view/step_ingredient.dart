@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/brewing_labels.dart';
+import '../../../core/l10n.dart';
 import '../cubit/recipe_creation_cubit.dart';
 import '../cubit/recipe_creation_state.dart';
 import '../recipe_limits.dart';
@@ -70,16 +71,18 @@ class _StepIngredientState extends State<StepIngredient> {
     final theme = Theme.of(context);
     return BlocBuilder<RecipeCreationCubit, RecipeCreationState>(
       builder: (context, state) {
+        final l10n = context.l10n;
         final selected = state.selectedIngredient;
+        final kindName = state.ingredientKind.label(l10n).toLowerCase();
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('What are you brewing?', style: theme.textTheme.titleLarge),
+            Text(l10n.whatAreYouBrewing, style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             SegmentedButton<BeverageKind>(
               segments: [
                 for (final kind in BeverageKind.values)
-                  ButtonSegment(value: kind, label: Text(kind.label)),
+                  ButtonSegment(value: kind, label: Text(kind.label(l10n))),
               ],
               selected: {state.ingredientKind},
               onSelectionChanged: (kinds) {
@@ -96,8 +99,8 @@ class _StepIngredientState extends State<StepIngredient> {
                   title: Text(selected.name),
                   subtitle: Text(
                     [
-                      selected.kind.label,
-                      ingredientDetails(selected),
+                      selected.kind.label(l10n),
+                      ingredientDetails(selected, l10n),
                     ].where((s) => s.isNotEmpty).join(' · '),
                   ),
                 ),
@@ -110,8 +113,7 @@ class _StepIngredientState extends State<StepIngredient> {
               onChanged: _onQueryChanged,
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
-                labelText:
-                    'Search your ${state.ingredientKind.label.toLowerCase()}',
+                labelText: l10n.searchIngredient(kindName),
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: state.searchingIngredients
                     ? const Padding(
@@ -130,9 +132,9 @@ class _StepIngredientState extends State<StepIngredient> {
               ListTile(
                 key: ValueKey(ingredient.id),
                 title: Text(ingredient.name),
-                subtitle: ingredientDetails(ingredient).isEmpty
+                subtitle: ingredientDetails(ingredient, l10n).isEmpty
                     ? null
-                    : Text(ingredientDetails(ingredient)),
+                    : Text(ingredientDetails(ingredient, l10n)),
                 trailing: ingredient.id == selected?.id
                     ? Icon(Icons.check, color: theme.colorScheme.primary)
                     : null,
@@ -144,8 +146,8 @@ class _StepIngredientState extends State<StepIngredient> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Text(
                   state.ingredientQuery.trim().isEmpty
-                      ? 'Nothing registered yet.'
-                      : 'No matches for "${state.ingredientQuery.trim()}".',
+                      ? l10n.nothingRegistered
+                      : l10n.noMatches(state.ingredientQuery.trim()),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -158,9 +160,7 @@ class _StepIngredientState extends State<StepIngredient> {
                 key: const Key('ingredient-register-open'),
                 onPressed: _openRegisterSheet,
                 icon: const Icon(Icons.add),
-                label: Text(
-                  'Register new ${state.ingredientKind.label.toLowerCase()}',
-                ),
+                label: Text(l10n.registerNewKind(kindName)),
               ),
             ),
           ],
@@ -221,6 +221,7 @@ class _RegisterIngredientSheetState extends State<RegisterIngredientSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final busy = context.select(
       (RecipeCreationCubit c) => c.state.registeringIngredient,
     );
@@ -236,7 +237,7 @@ class _RegisterIngredientSheetState extends State<RegisterIngredientSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Register new ${widget.kind.label.toLowerCase()}',
+              l10n.registerNewKind(widget.kind.label(l10n).toLowerCase()),
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
@@ -245,48 +246,51 @@ class _RegisterIngredientSheetState extends State<RegisterIngredientSheet> {
               controller: _name,
               autofocus: widget.initialName.isEmpty,
               maxLength: kIngredientNameMaxLength,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.nameLabel,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _origin,
-              decoration: const InputDecoration(
-                labelText: 'Origin (optional)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.originOptional,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _roaster,
-              decoration: const InputDecoration(
-                labelText: 'Roaster or producer (optional)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.roasterOptional,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<RoastLevel?>(
               initialValue: _roastLevel,
-              decoration: const InputDecoration(
-                labelText: 'Roast level (optional)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.roastLevelOptional,
+                border: const OutlineInputBorder(),
               ),
               items: [
-                const DropdownMenuItem(value: null, child: Text('Not set')),
+                DropdownMenuItem(value: null, child: Text(l10n.notSet)),
                 for (final level in RoastLevel.values)
-                  DropdownMenuItem(value: level, child: Text(level.label)),
+                  DropdownMenuItem(
+                    value: level,
+                    child: Text(level.label(l10n)),
+                  ),
               ],
               onChanged: (level) => setState(() => _roastLevel = level),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _processing,
-              decoration: const InputDecoration(
-                labelText: 'Processing (optional)',
-                hintText: 'Washed, natural, shade-grown…',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.processingOptional,
+                hintText: l10n.processingHint,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 24),
@@ -298,7 +302,7 @@ class _RegisterIngredientSheetState extends State<RegisterIngredientSheet> {
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Register'),
+                  : Text(l10n.register),
             ),
           ],
         ),

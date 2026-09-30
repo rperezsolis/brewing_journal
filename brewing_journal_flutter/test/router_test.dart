@@ -1,4 +1,6 @@
 import 'package:brewing_journal_flutter/app_scope.dart';
+import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
+import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
 import 'package:brewing_journal_flutter/data/repositories/fake_auth_repository.dart';
 import 'package:brewing_journal_flutter/router.dart';
 import 'package:brewing_journal_flutter/ui/features/auth/cubit/auth_cubit.dart';
@@ -86,7 +88,12 @@ void main() {
         AppScope(
           repositories: AppRepositories.fake(auth: repository),
           authCubit: cubit,
-          child: MaterialApp.router(routerConfig: createRouter(cubit)),
+          child: MaterialApp.router(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            localeListResolutionCallback: resolveBrewSyncLocales,
+            routerConfig: createRouter(cubit),
+          ),
         ),
       );
     }

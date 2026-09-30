@@ -1,6 +1,8 @@
 import 'package:brewing_journal_flutter/data/repositories/fake_ingredient_repository.dart';
 import 'package:brewing_journal_flutter/data/repositories/fake_recipe_media_repository.dart';
 import 'package:brewing_journal_flutter/data/repositories/fake_recipe_repository.dart';
+import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
+import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_creation/cubit/recipe_creation_cubit.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_creation/view/step_instructions.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +26,9 @@ void main() {
   Future<void> pump(WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localeListResolutionCallback: resolveBrewSyncLocales,
         home: Scaffold(
           body: BlocProvider.value(
             value: cubit,

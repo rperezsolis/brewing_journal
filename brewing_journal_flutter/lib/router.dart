@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'ui/features/auth/cubit/auth_cubit.dart';
 import 'ui/features/auth/cubit/auth_state.dart';
 import 'ui/features/auth/view/sign_in_screen.dart';
+import 'ui/core/l10n.dart';
 import 'ui/features/auth/view/splash_screen.dart';
 import 'ui/features/brew_mode/view/brew_mode_screen.dart';
 import 'ui/features/home/view/home_shell.dart';
@@ -196,17 +197,18 @@ class _NotFoundScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('BrewSync')),
+      appBar: AppBar(title: Text(l10n.appTitle)),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('This page does not exist.'),
+            Text(l10n.pageNotFound),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () => context.go(Routes.home),
-              child: const Text('Go home'),
+              child: Text(l10n.goHome),
             ),
           ],
         ),

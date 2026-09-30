@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../router.dart';
 import '../../../core/brewing_labels.dart';
 import '../../../core/error_messages.dart';
+import '../../../core/l10n.dart';
 import '../../teams/cubit/teams_cubit.dart';
 import '../cubit/invite_accept_cubit.dart';
 import '../cubit/invite_accept_state.dart';
@@ -15,18 +16,15 @@ class InviteAcceptScreen extends StatelessWidget {
 
   final String token;
 
-  static const _notFoundOverride = {
-    BrewingErrorCode.notFound: 'Invite not found.',
-  };
-
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return BlocProvider(
       create: (context) => InviteAcceptCubit(context.read())..accept(token),
       child: BlocBuilder<InviteAcceptCubit, InviteAcceptState>(
         builder: (context, state) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Team invite')),
+            appBar: AppBar(title: Text(l10n.teamInvite)),
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -34,14 +32,19 @@ class InviteAcceptScreen extends StatelessWidget {
                   InviteAcceptStatus.accepting =>
                     const CircularProgressIndicator(),
                   InviteAcceptStatus.success => _Result(
-                    title:
-                        'You joined ${state.team!.team.name} as ${state.team!.role.label}.',
+                    title: l10n.youJoined(
+                      state.team!.team.name,
+                      state.team!.role.label(l10n),
+                    ),
                     teamId: state.team!.team.id,
                   ),
                   InviteAcceptStatus.failure => _Result(
                     title: errorMessage(
                       state.error ?? Object(),
-                      overrides: _notFoundOverride,
+                      l10n,
+                      overrides: {
+                        BrewingErrorCode.notFound: l10n.inviteNotFound,
+                      },
                     ),
                     teamId: state.errorCode == BrewingErrorCode.alreadyMember
                         ? state.team?.team.id
@@ -93,12 +96,12 @@ class _Result extends StatelessWidget {
                 context.go(Routes.teams);
               }
             },
-            child: const Text('Open team'),
+            child: Text(context.l10n.openTeam),
           )
         else
           FilledButton(
             onPressed: () => context.go(Routes.home),
-            child: const Text('Go home'),
+            child: Text(context.l10n.goHome),
           ),
       ],
     );
