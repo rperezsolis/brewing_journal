@@ -1,4 +1,5 @@
 import 'package:brewing_journal_client/brewing_journal_client.dart';
+import 'package:brewing_journal_flutter/ui/core/widgets/flavor_radar_chart.dart';
 import 'package:brewing_journal_flutter/ui/features/share/view/recipe_share_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,6 +34,19 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byKey(const Key('share-instructions')), findsOneWidget);
     expect(find.text('Made with BrewSync'), findsOneWidget);
+  });
+
+  testWidgets('sweetness and bitterness sit beside the radar', (tester) async {
+    await tester.pumpWidget(_card(const ['bloom']));
+
+    final chart = tester.getRect(find.byKey(FlavorRadarChart.plotKey));
+    final bitterness = tester.getRect(find.text('Bitterness'));
+    final sweetness = tester.getRect(find.text('Sweetness'));
+
+    expect(bitterness.right, lessThanOrEqualTo(chart.left));
+    expect(sweetness.left, greaterThanOrEqualTo(chart.right));
+    expect(bitterness.overlaps(chart), isFalse);
+    expect(sweetness.overlaps(chart), isFalse);
   });
 
   testWidgets('the footer is present when the recipe has a duration', (

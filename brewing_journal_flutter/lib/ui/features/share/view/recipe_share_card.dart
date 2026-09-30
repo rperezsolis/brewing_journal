@@ -84,7 +84,7 @@ class RecipeShareCard extends StatelessWidget {
                             sweetness: recipe.sweetness,
                             body: recipe.body,
                             bitterness: recipe.bitterness,
-                            size: 120,
+                            size: 112,
                           ),
                         ),
                         if (detail.flavorTags.isNotEmpty) ...[
