@@ -61,4 +61,4 @@ serverpod:
       path: ../brewing_journal_flutter
       displayName: "Brewing journal app"
       auto_launch: true
-      target: lib/driver.dart
+      target: lib/main.dart

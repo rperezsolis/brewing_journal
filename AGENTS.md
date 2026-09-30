@@ -47,8 +47,8 @@ If the user asks you to test the app:
 
 1. Use `get_flutter_app_dtd` (`serverpod` MCP) to get the Flutter app's DTD
 2. Pass the DTD to `connect_dart_tooling_daemon` (`dart` MCP) to connect to the app
-3. Use `flutter_driver` (`dart` MCP) to navigate through the app
+3. Use `widget_inspector` (`dart` MCP) to inspect the running app
 
-The app is launched from `brewing_journal_flutter/lib/driver.dart`, which starts the Flutter driver extension with text entry emulation turned off so the app stays usable by hand. To let the driver type, set `enableTextEntryEmulation: true` there and `hot_restart` the app.
+The app is launched from `brewing_journal_flutter/lib/main.dart`. Flutter UI integration tests live in `brewing_journal_flutter/integration_test` and use `package:integration_test` with `WidgetTester`. Run them from that package on macOS or a mobile device with `flutter test integration_test -d macos`.
 
 IMPORTANT: After building the first version of the app, update this AGENTS.md file with information about the app we're building. KEEP the info about the MCP server and the checklist. Remove this paragraph.

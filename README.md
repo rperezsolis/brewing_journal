@@ -28,7 +28,7 @@ Local development and tests use Serverpod's embedded PostgreSQL (`database.dataP
 
 ## Run
 
-From the server package, start the server. It also launches the Flutter app (`brewing_journal_flutter`, entrypoint `lib/driver.dart`):
+From the server package, start the server. It also launches the Flutter app (`brewing_journal_flutter`, entrypoint `lib/main.dart`):
 
 ```bash
 cd brewing_journal_server
@@ -63,6 +63,13 @@ Flutter widget and cubit tests:
 ```bash
 cd brewing_journal_flutter
 flutter test
+```
+
+Flutter UI integration tests use `package:integration_test` and live in `integration_test/`. Run them on macOS or a mobile device:
+
+```bash
+cd brewing_journal_flutter
+flutter test integration_test -d macos
 ```
 
 Continuous integration (`.github/workflows/tests.yml`) runs `serverpod generate` and `dart test` in the server package on pushes and pull requests to `main`.

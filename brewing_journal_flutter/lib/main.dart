@@ -13,7 +13,7 @@ import 'ui/core/locale_resolution.dart';
 import 'ui/core/theme/app_theme.dart';
 import 'ui/features/auth/cubit/auth_cubit.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
   await initializeClient();
