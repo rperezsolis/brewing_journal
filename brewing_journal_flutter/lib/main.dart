@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'app_scope.dart';
 import 'client.dart';
 import 'router.dart';
+import 'ui/core/theme/app_theme.dart';
 import 'ui/features/auth/cubit/auth_cubit.dart';
 
 void main() async {
@@ -27,16 +28,6 @@ void main() async {
   );
 }
 
-/// Builds a theme for the given [brightness].
-ThemeData _buildTheme(Brightness brightness) {
-  return ThemeData(
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.blue,
-      brightness: brightness,
-    ),
-  );
-}
-
 class BrewSyncApp extends StatelessWidget {
   const BrewSyncApp({super.key, required this.router});
 
@@ -46,8 +37,8 @@ class BrewSyncApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'BrewSync',
-      theme: _buildTheme(Brightness.light),
-      darkTheme: _buildTheme(Brightness.dark),
+      theme: buildAppTheme(Brightness.light),
+      darkTheme: buildAppTheme(Brightness.dark),
       themeMode: ThemeMode.system,
       routerConfig: router,
     );
