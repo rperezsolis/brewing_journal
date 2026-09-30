@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
 import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
+import 'package:brewing_journal_flutter/ui/features/brew_mode/cubit/brew_timer_state.dart';
 import 'package:brewing_journal_flutter/ui/features/brew_mode/view/brew_mode_screen.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_creation/view/recipe_wizard_screen.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_list/view/recipe_list_screen.dart';
@@ -18,7 +19,8 @@ import 'auth_harness.dart';
 /// Meets the email form's length, case, digit, and symbol rules.
 const integrationPassword = 'Brewjournal1!';
 
-/// Drives the 5-step recipe wizard against the development server.
+/// Drives the 5-step recipe wizard and Brew Mode against the development
+/// server.
 class RecipeHarness {
   RecipeHarness(this.auth);
 
@@ -99,6 +101,20 @@ class RecipeHarness {
     await _enter(tester, const Key('extraction-grind'), grind);
     await _enter(tester, const Key('extraction-grinder'), grinder);
     await _selectMethod(tester, l10n.methodV60);
+  }
+
+  /// Types a duration the extraction step accepts (`m:ss` or plain seconds).
+  Future<void> setExtractionDuration(
+    WidgetTester tester,
+    String value,
+  ) async {
+    await _enter(tester, const Key('extraction-duration'), value);
+    expect(
+      _fieldText(tester, const Key('extraction-duration')),
+      value,
+      reason: 'The duration field did not keep "$value".',
+    );
+    expect(find.text(l10n.timeFormatError), findsNothing);
   }
 
   /// Starts the stopwatch, stops it, and checks the reading was kept.
@@ -381,6 +397,170 @@ class RecipeHarness {
       isTrue,
       reason: 'Brew mode has no extraction timer.',
     );
+  }
+
+  /// A recipe with no extraction time: parameters can still render, and the
+  /// timer controls are absent.
+  Future<void> expectNoBrewTimer(WidgetTester tester) async {
+    await _waitForBrew(tester);
+    final timer = find.descendant(
+      of: find.byType(BrewModeScreen),
+      matching: find.byKey(const Key('brew-timer')),
+    );
+    final scrollable = _brewScrollable();
+    expect(
+      await _scan(tester, scrollable, timer),
+      isFalse,
+      reason: 'A recipe with no extraction time still shows the timer.',
+    );
+    expect(find.byKey(const Key('brew-start')), findsNothing);
+    expect(find.byKey(const Key('brew-pause')), findsNothing);
+    expect(find.byKey(const Key('brew-stop-alarm')), findsNothing);
+    expect(
+      await _scan(tester, scrollable, find.text(l10n.noExtractionTime)),
+      isTrue,
+      reason: 'Brew mode did not say that no extraction time was recorded.',
+    );
+  }
+
+  String brewTimerReadout(WidgetTester tester) {
+    return tester
+        .widget<Text>(find.byKey(const Key('brew-timer-readout')))
+        .data!;
+  }
+
+  Future<void> selectBrewMode(
+    WidgetTester tester,
+    BrewTimerMode mode,
+  ) async {
+    final label = find.text(
+      mode == BrewTimerMode.countUp ? l10n.countUp : l10n.countDown,
+    );
+    await _reveal(tester, _brewScrollable(), label);
+    await tester.tap(label);
+    await tester.pump();
+    expect(brewTimerSelection(tester), {mode});
+  }
+
+  Set<BrewTimerMode> brewTimerSelection(WidgetTester tester) {
+    return tester
+        .widget<SegmentedButton<BrewTimerMode>>(
+          find.byType(SegmentedButton<BrewTimerMode>),
+        )
+        .selected;
+  }
+
+  /// Waits until Start has prepared the alarm and the ticker is running.
+  Future<void> startBrewTimer(WidgetTester tester) async {
+    final start = find.byKey(const Key('brew-start'));
+    await _reveal(tester, _brewScrollable(), start);
+    await tester.tap(start);
+    await tester.pump();
+    await _waitFor(
+      tester,
+      find.byKey(const Key('brew-pause')),
+      'the running timer',
+      timeout: const Duration(seconds: 15),
+    );
+    expect(find.byType(SegmentedButton<BrewTimerMode>), findsNothing);
+    expect(find.byKey(const Key('brew-stop-alarm')), findsNothing);
+  }
+
+  /// Pauses and returns the readout, which must stay put while paused.
+  Future<String> pauseBrewTimer(WidgetTester tester) async {
+    final pause = find.byKey(const Key('brew-pause'));
+    await _reveal(tester, _brewScrollable(), pause);
+    await tester.tap(pause);
+    await tester.pump();
+    await _waitFor(
+      tester,
+      find.byKey(const Key('brew-resume')),
+      'the paused timer',
+    );
+    expect(find.byKey(const Key('brew-pause')), findsNothing);
+    return brewTimerReadout(tester);
+  }
+
+  Future<void> resumeBrewTimer(WidgetTester tester) async {
+    final resume = find.byKey(const Key('brew-resume'));
+    await _reveal(tester, _brewScrollable(), resume);
+    await tester.tap(resume);
+    await tester.pump();
+    await _waitFor(
+      tester,
+      find.byKey(const Key('brew-pause')),
+      'the resumed timer',
+    );
+  }
+
+  Future<void> stopBrewTimer(WidgetTester tester) async {
+    final stop = find.byKey(const Key('brew-stop'));
+    await _reveal(tester, _brewScrollable(), stop);
+    await tester.tap(stop);
+    await tester.pump();
+    await _waitFor(
+      tester,
+      find.byKey(const Key('brew-start')),
+      'the idle timer',
+    );
+    expect(find.byKey(const Key('brew-stop-alarm')), findsNothing);
+  }
+
+  Future<void> waitForBrewAlarm(
+    WidgetTester tester, {
+    Duration timeout = const Duration(seconds: 20),
+  }) {
+    return _waitFor(
+      tester,
+      find.byKey(const Key('brew-stop-alarm')),
+      'the finished alarm',
+      timeout: timeout,
+    );
+  }
+
+  /// The highlighted finished readout. Count-down clamps at zero; count-up
+  /// shows the elapsed time, which has reached [target].
+  void expectBrewFinished(
+    WidgetTester tester, {
+    required Duration target,
+    required bool countDown,
+  }) {
+    final timer = find.byKey(const Key('brew-timer'));
+    final card = tester.widget<Card>(timer);
+    final theme = Theme.of(tester.element(timer));
+    expect(card.color, theme.colorScheme.tertiaryContainer);
+    final readout = tester.widget<Text>(
+      find.byKey(const Key('brew-timer-readout')),
+    );
+    expect(readout.style?.fontWeight, FontWeight.bold);
+    expect(readout.style?.color, theme.colorScheme.onTertiaryContainer);
+    expect(find.byKey(const Key('brew-stop-alarm')), findsOneWidget);
+    expect(find.byKey(const Key('brew-start')), findsNothing);
+    expect(find.byType(SegmentedButton<BrewTimerMode>), findsNothing);
+    final shown = _parseStopwatch(readout.data!);
+    if (countDown) {
+      expect(shown, Duration.zero);
+    } else {
+      expect(shown, greaterThanOrEqualTo(target));
+    }
+  }
+
+  Future<void> stopBrewAlarm(WidgetTester tester) async {
+    final button = find.byKey(const Key('brew-stop-alarm'));
+    await _reveal(tester, _brewScrollable(), button);
+    await tester.tap(button);
+    await tester.pump();
+    await _waitFor(
+      tester,
+      find.byKey(const Key('brew-start')),
+      'the timer after the alarm stops',
+    );
+    expect(
+      tester.widget<Card>(find.byKey(const Key('brew-timer'))).color,
+      isNull,
+    );
+    expect(find.byKey(const Key('brew-stop-alarm')), findsNothing);
+    expect(find.byType(SegmentedButton<BrewTimerMode>), findsOneWidget);
   }
 
   /// Polls until Brew Mode is showing [steps], including while a reload
@@ -738,6 +918,16 @@ class RecipeHarness {
         .where((text) => text.isNotEmpty)
         .join(' | ');
   }
+}
+
+Duration _parseStopwatch(String text) {
+  final match = RegExp(r'^(\d+):(\d{2})\.(\d)$').firstMatch(text);
+  expect(match, isNotNull, reason: 'Not a timer readout: $text');
+  return Duration(
+    minutes: int.parse(match![1]!),
+    seconds: int.parse(match[2]!),
+    milliseconds: int.parse(match[3]!) * 100,
+  );
 }
 
 /// Returns a real JPEG whose file is larger than [minBytes].
