@@ -168,7 +168,13 @@ void main() {
             recipe.recipe.ingredientId,
           ).copyWith(id: recipe.recipe.id, teamId: other.team.id),
         );
+        expect(updated.recipe.id, isNot(recipe.recipe.id));
         expect(updated.recipe.teamId, team.team.id);
+        final source = await endpoints.recipe.get(
+          owner.sessionBuilder,
+          recipe.recipe.id!,
+        );
+        expect(source.recipe.teamId, team.team.id);
       },
     );
 

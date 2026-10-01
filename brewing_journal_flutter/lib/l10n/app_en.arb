@@ -16,6 +16,16 @@
   "@noRecipesYet": { "description": "Empty state title on the recipe list" },
   "noRecipesYetDetail": "Tap New recipe to log your first brew.",
   "@noRecipesYetDetail": { "description": "Empty state detail on the recipe list" },
+  "recipeByline": "{author} · {updated}",
+  "@recipeByline": {
+    "description": "Recipe tile line with the author and the time the recipe was saved",
+    "placeholders": {
+      "author": { "type": "String", "example": "Ada Lovelace" },
+      "updated": { "type": "String", "example": "Sep 30, 2026, 6:19 PM" }
+    }
+  },
+  "unknownAuthor": "Unknown author",
+  "@unknownAuthor": { "description": "Recipe tile author when the profile has no name or email" },
   "pageNotFound": "This page does not exist.",
   "@pageNotFound": { "description": "Message on the unknown-route screen" },
   "goHome": "Go home",

@@ -309,8 +309,9 @@ class EndpointRecipe extends EndpointAuthenticated {
   @override
   String get name => 'recipe';
 
-  /// Inserts (`draft.id == null`) or updates a recipe. Instructions and flavor
-  /// tags are replaced in full, in the same transaction as the recipe row.
+  /// Inserts a recipe. When [draft.id] is set, that recipe is the source of a
+  /// new version: the caller must be allowed to edit it, the new row keeps
+  /// its team and photos, and the source row is left unchanged.
   _ida.Future<_io43huzj.RecipeDetail> save(_ii9ba79p.RecipeDraft draft) =>
       caller.callServerEndpoint<_io43huzj.RecipeDetail>(
         'recipe',

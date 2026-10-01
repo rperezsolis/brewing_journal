@@ -12,6 +12,7 @@ import '../../../core/error_messages.dart';
 import '../../../core/l10n.dart';
 import '../../recipe_list/cubit/recipe_list_cubit.dart';
 import '../../recipe_list/cubit/recipe_list_state.dart';
+import '../../recipe_list/view/recipe_tile.dart';
 import '../cubit/teams_cubit.dart';
 import '../cubit/teams_state.dart';
 import 'invite_sheet.dart';
@@ -135,16 +136,9 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
                 itemCount: state.recipes.length,
                 itemBuilder: (context, index) {
                   final recipe = state.recipes[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    clipBehavior: Clip.antiAlias,
-                    color: Theme.of(context).colorScheme.surfaceContainer,
-                    child: ListTile(
-                      title: Text(recipe.title),
-                      subtitle: Text(recipe.extractionMethod.label(l10n)),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _openRecipe(context, recipe.id!),
-                    ),
+                  return RecipeTile(
+                    recipe: recipe,
+                    onTap: () => _openRecipe(context, recipe.id!),
                   );
                 },
               ),

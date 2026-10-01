@@ -150,6 +150,18 @@ abstract class AppLocalizations {
   /// **'Tap New recipe to log your first brew.'**
   String get noRecipesYetDetail;
 
+  /// Recipe tile line with the author and the time the recipe was saved
+  ///
+  /// In en, this message translates to:
+  /// **'{author} · {updated}'**
+  String recipeByline(String author, String updated);
+
+  /// Recipe tile author when the profile has no name or email
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown author'**
+  String get unknownAuthor;
+
   /// Message on the unknown-route screen
   ///
   /// In en, this message translates to:

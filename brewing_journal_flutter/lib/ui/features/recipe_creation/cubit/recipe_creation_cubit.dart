@@ -455,6 +455,8 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     final s = state;
     final note = s.extractionMethodNote.trim();
     final draft = RecipeDraft(
+      // An existing id is the source of a new version. The server inserts a
+      // new recipe and leaves that one unchanged.
       id: s.recipeId,
       teamId: s.recipeId == null ? s.teamId : null,
       ingredientId: s.selectedIngredient!.id!,

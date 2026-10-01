@@ -22,6 +22,55 @@ Future<List<RecipePhoto>> withPublicUrls(
   ];
 }
 
+/// Copies every photo of [fromRecipeId] into new files for [toRecipeId].
+///
+/// The source rows are not changed. The returned rows are not inserted; the
+/// caller inserts them after the destination recipe exists. Files already
+/// stored are deleted if a later copy fails.
+Future<List<RecipePhoto>> copyRecipePhotos(
+  Session session, {
+  required UuidValue fromRecipeId,
+  required UuidValue toRecipeId,
+}) async {
+  final photos = await RecipePhoto.db.find(
+    session,
+    where: (t) => t.recipeId.equals(fromRecipeId),
+    orderBy: (t) => t.sortOrder,
+  );
+  final copies = <RecipePhoto>[];
+  final stored = <String>[];
+  try {
+    for (final photo in photos) {
+      final bytes = await session.storage.retrieveFile(
+        storageId: kPhotoStorageId,
+        path: photo.storagePath,
+      );
+      final path = 'recipes/${toRecipeId.uuid}/${const Uuid().v4()}.jpg';
+      await session.storage.storeFile(
+        storageId: kPhotoStorageId,
+        path: path,
+        byteData: bytes,
+        options: const StoreFileOptions(
+          preventOverwrite: true,
+          metadata: FileMetadata(contentType: 'image/jpeg'),
+        ),
+      );
+      stored.add(path);
+      copies.add(
+        RecipePhoto(
+          recipeId: toRecipeId,
+          storagePath: path,
+          sortOrder: photo.sortOrder,
+        ),
+      );
+    }
+  } catch (error) {
+    await deletePhotoFiles(session, stored);
+    rethrow;
+  }
+  return copies;
+}
+
 /// Deletes stored photo files after their rows are gone. Failures are logged,
 /// not thrown: the rows are already committed, so an orphaned file is the
 /// only possible leftover.

@@ -48,8 +48,8 @@ class RecipeWizardScreen extends StatelessWidget {
 class RecipeWizardView extends StatelessWidget {
   const RecipeWizardView({super.key, this.openedAsEdit = false});
 
-  /// True when the route was `/recipes/:id/edit`. A new recipe may get an id
-  /// after the first photo save, but Finish should still open Brew Mode.
+  /// True when the route was `/recipes/:id/edit`, so Finish replaces the
+  /// recipe underneath instead of leaving it on the back stack.
   final bool openedAsEdit;
 
   static String stepLabel(AppLocalizations l10n, RecipeWizardStep step) =>
@@ -336,12 +336,16 @@ class _BottomBar extends StatelessWidget {
     if (!saved || !context.mounted) return;
     _refreshRecipeLists(context);
     final id = cubit.state.recipeId;
+    if (id == null) {
+      _close(context, refreshList: false);
+      return;
+    }
+    final router = GoRouter.of(context);
     if (openedAsEdit) {
-      _close(context, refreshList: false);
-    } else if (id != null) {
-      context.pushReplacement(Routes.recipe(id));
+      router.pop();
+      router.pushReplacement(Routes.recipe(id));
     } else {
-      _close(context, refreshList: false);
+      router.pushReplacement(Routes.recipe(id));
     }
   }
 }

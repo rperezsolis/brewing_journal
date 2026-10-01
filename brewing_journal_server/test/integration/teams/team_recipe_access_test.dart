@@ -49,16 +49,25 @@ void main() {
     });
 
     test(
-      'when an editor saves then instructions are replaced in full',
+      'when an editor saves then a new recipe keeps the team',
       () async {
-        final updated = await endpoints.recipe.save(
+        final saved = await endpoints.recipe.save(
           editor.sessionBuilder,
           sampleDraft(
             recipe.recipe.ingredientId,
             instructions: ['stir'],
           ).copyWith(id: recipe.recipe.id, title: recipe.recipe.title),
         );
-        expect(updated.instructions.map((i) => i.text), ['stir']);
+        expect(saved.recipe.id, isNot(recipe.recipe.id));
+        expect(saved.recipe.ownerId, editor.authUserId);
+        expect(saved.recipe.teamId, recipe.recipe.teamId);
+        expect(saved.instructions.map((i) => i.text), ['stir']);
+
+        final source = await endpoints.recipe.get(
+          owner.sessionBuilder,
+          recipe.recipe.id!,
+        );
+        expect(source.instructions.map((i) => i.text), ['bloom', 'pour']);
       },
     );
 

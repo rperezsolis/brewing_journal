@@ -45,6 +45,7 @@ abstract class Recipe
     required this.bitterness,
     DateTime? createdAt,
     DateTime? updatedAt,
+    this.authorName,
     this.instructions,
     this.photos,
     this.flavorTags,
@@ -73,6 +74,7 @@ abstract class Recipe
     required int bitterness,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? authorName,
     List<_i1t6etiy.RecipeInstruction>? instructions,
     List<_iir54vf2.RecipePhoto>? photos,
     List<_i55exiaf.RecipeFlavorTag>? flavorTags,
@@ -132,6 +134,7 @@ abstract class Recipe
       updatedAt: jsonSerialization['updatedAt'] == null
           ? null
           : _isc.DateTimeJsonExtension.fromJson(jsonSerialization['updatedAt']),
+      authorName: jsonSerialization['authorName'] as String?,
       instructions: jsonSerialization['instructions'] == null
           ? null
           : _ibcyqwbp.Protocol().deserialize<List<_i1t6etiy.RecipeInstruction>>(
@@ -195,6 +198,9 @@ abstract class Recipe
 
   DateTime updatedAt;
 
+  /// Display name of the owner, filled when a recipe is read. Not stored.
+  String? authorName;
+
   List<_i1t6etiy.RecipeInstruction>? instructions;
 
   List<_iir54vf2.RecipePhoto>? photos;
@@ -226,6 +232,7 @@ abstract class Recipe
     int? bitterness,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? authorName,
     List<_i1t6etiy.RecipeInstruction>? instructions,
     List<_iir54vf2.RecipePhoto>? photos,
     List<_i55exiaf.RecipeFlavorTag>? flavorTags,
@@ -257,6 +264,7 @@ abstract class Recipe
       'bitterness': bitterness,
       'createdAt': createdAt.toJson(),
       'updatedAt': updatedAt.toJson(),
+      if (authorName != null) 'authorName': authorName,
       if (instructions != null)
         'instructions': instructions?.toJson(valueToJson: (v) => v.toJson()),
       if (photos != null)
@@ -293,6 +301,7 @@ abstract class Recipe
       'bitterness': bitterness,
       'createdAt': createdAt.toJson(),
       'updatedAt': updatedAt.toJson(),
+      if (authorName != null) 'authorName': authorName,
       if (instructions != null)
         'instructions': instructions?.toJson(
           valueToJson: (v) => v.toJsonForProtocol(),
@@ -337,6 +346,7 @@ class _RecipeImpl extends Recipe {
     required int bitterness,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? authorName,
     List<_i1t6etiy.RecipeInstruction>? instructions,
     List<_iir54vf2.RecipePhoto>? photos,
     List<_i55exiaf.RecipeFlavorTag>? flavorTags,
@@ -362,6 +372,7 @@ class _RecipeImpl extends Recipe {
          bitterness: bitterness,
          createdAt: createdAt,
          updatedAt: updatedAt,
+         authorName: authorName,
          instructions: instructions,
          photos: photos,
          flavorTags: flavorTags,
@@ -393,6 +404,7 @@ class _RecipeImpl extends Recipe {
     int? bitterness,
     DateTime? createdAt,
     DateTime? updatedAt,
+    Object? authorName = _Undefined,
     Object? instructions = _Undefined,
     Object? photos = _Undefined,
     Object? flavorTags = _Undefined,
@@ -425,6 +437,7 @@ class _RecipeImpl extends Recipe {
       bitterness: bitterness ?? this.bitterness,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      authorName: authorName is String? ? authorName : this.authorName,
       instructions: instructions is List<_i1t6etiy.RecipeInstruction>?
           ? instructions
           : this.instructions?.map((e0) => e0.copyWith()).toList(),

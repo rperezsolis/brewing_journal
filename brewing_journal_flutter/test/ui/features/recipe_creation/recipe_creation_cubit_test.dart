@@ -304,15 +304,20 @@ void main() {
       expect(recipes.savedDrafts.single.id, isNull);
     });
 
-    test('a second save updates the same recipe', () async {
+    test('a second save stores a new recipe and keeps the source', () async {
       await fillRequired(cubit);
+      cubit.addInstruction('stir');
       await cubit.save();
-      final id = cubit.state.recipeId;
+      final id = cubit.state.recipeId!;
       cubit.removeInstruction(0);
       await cubit.save();
 
       expect(recipes.savedDrafts.last.id, id);
       expect(recipes.savedDrafts.last.instructions, isEmpty);
+      final savedId = cubit.state.recipeId!;
+      expect(savedId, isNot(id));
+      expect(recipes.details[id]!.instructions.map((i) => i.text), ['stir']);
+      expect(recipes.details[savedId]!.instructions, isEmpty);
     });
 
     test('refreshAccess stores canEdit from getAccess', () async {

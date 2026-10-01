@@ -25,13 +25,14 @@ class FakeRecipeRepository implements RecipeRepository {
       (i) => i.id == draft.ingredientId,
       orElse: () => throw _notFound(),
     );
-    final id = draft.id ?? const Uuid().v7obj();
-    final previous = details[id];
+    final source = draft.id == null ? null : details[draft.id];
+    if (draft.id != null && source == null) throw _notFound();
+    final id = const Uuid().v7obj();
     final now = DateTime.now().toUtc();
     final recipe = Recipe(
       id: id,
       ownerId: ingredient.ownerId,
-      teamId: previous?.recipe.teamId ?? draft.teamId,
+      teamId: source?.recipe.teamId ?? draft.teamId,
       ingredientId: ingredient.id!,
       ingredient: ingredient,
       title: draft.title.trim(),
@@ -46,8 +47,9 @@ class FakeRecipeRepository implements RecipeRepository {
       sweetness: draft.sweetness,
       body: draft.body,
       bitterness: draft.bitterness,
-      createdAt: previous?.recipe.createdAt ?? now,
+      createdAt: now,
       updatedAt: now,
+      authorName: source?.recipe.authorName,
     );
     final detail = RecipeDetail(
       recipe: recipe,
@@ -64,7 +66,10 @@ class FakeRecipeRepository implements RecipeRepository {
             tagKey: tag.trim().toLowerCase(),
           ),
       ],
-      photos: previous?.photos ?? [],
+      photos: [
+        for (final photo in source?.photos ?? const <RecipePhoto>[])
+          photo.copyWith(id: const Uuid().v7obj(), recipeId: id),
+      ],
       access: RecipeAccess(canEdit: true, canDelete: true),
     );
     details[id] = detail;
@@ -84,7 +89,7 @@ class FakeRecipeRepository implements RecipeRepository {
   }) async {
     _throwIfFailing();
     final recipes = details.values.map((d) => d.recipe).toList()
-      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      ..sort(_newestFirst);
     return recipes.skip(offset).take(limit).toList();
   }
 
@@ -100,7 +105,7 @@ class FakeRecipeRepository implements RecipeRepository {
             .map((d) => d.recipe)
             .where((r) => r.teamId == teamId)
             .toList()
-          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+          ..sort(_newestFirst);
     return recipes.skip(offset).take(limit).toList();
   }
 
@@ -143,6 +148,12 @@ class FakeRecipeRepository implements RecipeRepository {
   Future<void> delete(UuidValue id) async {
     _throwIfFailing();
     if (details.remove(id) == null) throw _notFound();
+  }
+
+  static int _newestFirst(Recipe a, Recipe b) {
+    final byTime = b.updatedAt.compareTo(a.updatedAt);
+    if (byTime != 0) return byTime;
+    return (b.id?.uuid ?? '').compareTo(a.id?.uuid ?? '');
   }
 
   BrewingException _notFound() => BrewingException(

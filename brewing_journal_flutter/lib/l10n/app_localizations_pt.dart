@@ -34,6 +34,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Toque em Nova receita para registrar seu primeiro preparo.';
 
   @override
+  String recipeByline(String author, String updated) {
+    return '$author · $updated';
+  }
+
+  @override
+  String get unknownAuthor => 'Autor desconhecido';
+
+  @override
   String get pageNotFound => 'Esta página não existe.';
 
   @override
@@ -617,6 +625,14 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get noRecipesYetDetail =>
       'Toque em Nova receita para registrar seu primeiro preparo.';
+
+  @override
+  String recipeByline(String author, String updated) {
+    return '$author · $updated';
+  }
+
+  @override
+  String get unknownAuthor => 'Autor desconhecido';
 
   @override
   String get pageNotFound => 'Esta página não existe.';

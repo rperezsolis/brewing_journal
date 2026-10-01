@@ -10,7 +10,8 @@ import 'support/team_harness.dart';
 /// US-4.1 create a team and put a recipe on it, US-4.2 a viewer invite,
 /// US-4.3 an editor invite, US-4.4 a viewer can read steps but not change
 /// them, US-4.5 used, unknown, and expired invites, US-4.6 an editor's save
-/// replaces the instruction list and the owner's later save replaces it again.
+/// stores a new version and the owner's later save stores another. Brew Mode
+/// opens the version that was just saved.
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 

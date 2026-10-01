@@ -33,6 +33,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noRecipesYetDetail => 'Tap New recipe to log your first brew.';
 
   @override
+  String recipeByline(String author, String updated) {
+    return '$author · $updated';
+  }
+
+  @override
+  String get unknownAuthor => 'Unknown author';
+
+  @override
   String get pageNotFound => 'This page does not exist.';
 
   @override

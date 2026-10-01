@@ -8,6 +8,8 @@
   "retry": "Tentar novamente",
   "noRecipesYet": "Ainda não há receitas",
   "noRecipesYetDetail": "Toque em Nova receita para registrar seu primeiro preparo.",
+  "recipeByline": "{author} · {updated}",
+  "unknownAuthor": "Autor desconhecido",
   "pageNotFound": "Esta página não existe.",
   "goHome": "Ir para o início",
   "connectionError": "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",

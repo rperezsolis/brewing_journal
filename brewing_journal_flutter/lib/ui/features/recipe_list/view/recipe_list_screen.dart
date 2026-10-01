@@ -1,15 +1,14 @@
-import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../router.dart';
-import '../../../core/brewing_labels.dart';
 import '../../../core/error_messages.dart';
 import '../../../core/l10n.dart';
 import '../../auth/cubit/auth_cubit.dart';
 import '../cubit/recipe_list_cubit.dart';
 import '../cubit/recipe_list_state.dart';
+import 'recipe_tile.dart';
 
 /// Home: the signed-in user's recipes.
 class RecipeListScreen extends StatelessWidget {
@@ -77,7 +76,7 @@ class RecipeListScreen extends StatelessWidget {
                     );
                   }
                   final recipe = state.recipes[index];
-                  return _RecipeTile(
+                  return RecipeTile(
                     recipe: recipe,
                     onTap: () => context.push(Routes.recipe(recipe.id!)),
                   );
@@ -89,50 +88,6 @@ class RecipeListScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-class _RecipeTile extends StatelessWidget {
-  const _RecipeTile({required this.recipe, required this.onTap});
-
-  final Recipe recipe;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final ingredient = recipe.ingredient;
-    final subtitle = [
-      if (ingredient != null) ingredient.name,
-      recipe.extractionMethod == ExtractionMethod.other &&
-              recipe.extractionMethodNote != null
-          ? recipe.extractionMethodNote!
-          : recipe.extractionMethod.label(l10n),
-      '${_formatNumber(recipe.doseGrams)} g',
-      '${_formatNumber(recipe.waterTempC)} °C',
-    ].join(' · ');
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      clipBehavior: Clip.antiAlias,
-      color: Theme.of(context).colorScheme.surfaceContainer,
-      child: ListTile(
-        leading: CircleAvatar(
-          child: Icon(switch (ingredient?.kind) {
-            BeverageKind.tea => Icons.emoji_food_beverage_outlined,
-            BeverageKind.matcha => Icons.eco_outlined,
-            _ => Icons.coffee_outlined,
-          }),
-        ),
-        title: Text(recipe.title),
-        subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
-      ),
-    );
-  }
-
-  static String _formatNumber(double value) => value == value.roundToDouble()
-      ? value.toStringAsFixed(0)
-      : value.toString();
 }
 
 class _Message extends StatelessWidget {

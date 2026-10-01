@@ -355,8 +355,9 @@ class RecipeHarness {
       matching: find.text(title),
     );
     await _waitFor(tester, tile, title);
-    await tester.ensureVisible(tile);
-    await tester.tap(tile);
+    // Versions share a title. The list is newest first.
+    await tester.ensureVisible(tile.first);
+    await tester.tap(tile.first);
     await tester.pump();
     await _waitForBrew(tester);
   }
