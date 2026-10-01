@@ -66,10 +66,9 @@ class RecipeListScreen extends StatelessWidget {
                 if (notification.metrics.extentAfter < 300) cubit.loadMore();
                 return false;
               },
-              child: ListView.separated(
-                padding: const EdgeInsets.only(bottom: 96),
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
                 itemCount: state.recipes.length + (state.hasMore ? 1 : 0),
-                separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   if (index == state.recipes.length) {
                     return const Padding(
@@ -111,18 +110,23 @@ class _RecipeTile extends StatelessWidget {
       '${_formatNumber(recipe.doseGrams)} g',
       '${_formatNumber(recipe.waterTempC)} °C',
     ].join(' · ');
-    return ListTile(
-      leading: CircleAvatar(
-        child: Icon(switch (ingredient?.kind) {
-          BeverageKind.tea => Icons.emoji_food_beverage_outlined,
-          BeverageKind.matcha => Icons.eco_outlined,
-          _ => Icons.coffee_outlined,
-        }),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      clipBehavior: Clip.antiAlias,
+      color: Theme.of(context).colorScheme.surfaceContainer,
+      child: ListTile(
+        leading: CircleAvatar(
+          child: Icon(switch (ingredient?.kind) {
+            BeverageKind.tea => Icons.emoji_food_beverage_outlined,
+            BeverageKind.matcha => Icons.eco_outlined,
+            _ => Icons.coffee_outlined,
+          }),
+        ),
+        title: Text(recipe.title),
+        subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
       ),
-      title: Text(recipe.title),
-      subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: onTap,
     );
   }
 

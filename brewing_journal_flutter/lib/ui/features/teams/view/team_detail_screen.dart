@@ -130,17 +130,21 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
             }
             return RefreshIndicator(
               onRefresh: cubit.load,
-              child: ListView.separated(
-                padding: const EdgeInsets.only(bottom: 96),
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
                 itemCount: state.recipes.length,
-                separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final recipe = state.recipes[index];
-                  return ListTile(
-                    title: Text(recipe.title),
-                    subtitle: Text(recipe.extractionMethod.label(l10n)),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => _openRecipe(context, recipe.id!),
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    clipBehavior: Clip.antiAlias,
+                    color: Theme.of(context).colorScheme.surfaceContainer,
+                    child: ListTile(
+                      title: Text(recipe.title),
+                      subtitle: Text(recipe.extractionMethod.label(l10n)),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _openRecipe(context, recipe.id!),
+                    ),
                   );
                 },
               ),

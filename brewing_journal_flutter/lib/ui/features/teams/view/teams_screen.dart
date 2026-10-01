@@ -81,25 +81,29 @@ class TeamsScreen extends StatelessWidget {
           final l10n = context.l10n;
           return RefreshIndicator(
             onRefresh: cubit.load,
-            child: ListView.separated(
-              padding: const EdgeInsets.only(bottom: 96),
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
               itemCount: state.teams.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final summary = state.teams[index];
                 final owned = summary.team.ownerId == userId;
-                return ListTile(
-                  leading: const CircleAvatar(
-                    child: Icon(Icons.groups_outlined),
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  clipBehavior: Clip.antiAlias,
+                  color: Theme.of(context).colorScheme.surfaceContainer,
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                      child: Icon(Icons.groups_outlined),
+                    ),
+                    title: Text(summary.team.name),
+                    subtitle: Text(
+                      owned
+                          ? l10n.ownerRole(summary.role.label(l10n))
+                          : summary.role.label(l10n),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push(Routes.team(summary.team.id!)),
                   ),
-                  title: Text(summary.team.name),
-                  subtitle: Text(
-                    owned
-                        ? l10n.ownerRole(summary.role.label(l10n))
-                        : summary.role.label(l10n),
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push(Routes.team(summary.team.id!)),
                 );
               },
             ),
