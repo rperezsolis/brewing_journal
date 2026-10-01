@@ -35,6 +35,7 @@ class RecipeTile extends StatelessWidget {
       color: Theme.of(context).colorScheme.surfaceContainer,
       child: ListTile(
         isThreeLine: true,
+        titleAlignment: ListTileTitleAlignment.center,
         leading: CircleAvatar(
           child: Icon(switch (ingredient?.kind) {
             BeverageKind.tea => Icons.emoji_food_beverage_outlined,
@@ -44,6 +45,7 @@ class RecipeTile extends StatelessWidget {
         ),
         title: Text(recipe.title),
         subtitle: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(

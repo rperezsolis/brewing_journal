@@ -47,7 +47,7 @@ void main() {
         localeListResolutionCallback: resolveBrewSyncLocales,
         locale: const Locale('en'),
         home: Scaffold(
-          body: RecipeTile(recipe: recipe, onTap: () {}),
+          body: ListView(children: [RecipeTile(recipe: recipe, onTap: () {})]),
         ),
       ),
     );
@@ -62,6 +62,10 @@ void main() {
     expect(find.text('Morning V60'), findsOneWidget);
     expect(find.text('Ada Lovelace · $updated'), findsOneWidget);
     expect(find.textContaining('Kenya AA'), findsOneWidget);
+
+    final tile = tester.getRect(find.byType(ListTile));
+    final caret = tester.getCenter(find.byIcon(Icons.chevron_right));
+    expect(caret.dy, closeTo(tile.center.dy, 0.5));
   });
 
   testWidgets('uses a fallback when the author is missing', (tester) async {
