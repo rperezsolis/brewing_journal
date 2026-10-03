@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
 import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
+import 'package:brewing_journal_flutter/ui/core/widgets/favorite_icon_button.dart';
 import 'package:brewing_journal_flutter/ui/features/brew_mode/cubit/brew_timer_state.dart';
 import 'package:brewing_journal_flutter/ui/features/brew_mode/view/brew_mode_screen.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_creation/view/recipe_wizard_screen.dart';
@@ -383,6 +384,152 @@ class RecipeHarness {
     );
   }
 
+  /// [marker] is text that appears on one tile only, such as the bean name.
+  Future<void> tapTileFavorite(
+    WidgetTester tester, {
+    required Type scope,
+    required String marker,
+  }) async {
+    final heart = _tileFavorite(scope, marker);
+    await _waitFor(tester, heart, 'the favorite heart for $marker');
+    await _waitUntil(
+      tester,
+      () => _heartEnabled(tester, heart),
+      'the favorite heart for $marker to accept a tap',
+    );
+    await tester.ensureVisible(heart);
+    await tester.tap(heart);
+    await tester.pump();
+  }
+
+  Future<void> expectTileFavorite(
+    WidgetTester tester, {
+    required Type scope,
+    required String marker,
+    required bool selected,
+  }) async {
+    await _waitUntil(
+      tester,
+      () {
+        final heart = _tileFavorite(scope, marker);
+        if (heart.evaluate().isEmpty) return false;
+        return tester.widget<FavoriteIconButton>(heart).selected == selected;
+      },
+      selected ? '$marker to be a favorite' : '$marker to be off the favorites',
+    );
+  }
+
+  Future<void> expectReplaceFavoriteDialog(WidgetTester tester) async {
+    await _waitFor(
+      tester,
+      find.text(l10n.favoriteNameTakenTitle).hitTestable(),
+      'the replace-favorite dialog',
+    );
+    expect(find.text(l10n.favoriteNameTakenBody).hitTestable(), findsOneWidget);
+    expect(
+      find.byKey(const Key('favorite-conflict-close')).hitTestable(),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('favorite-conflict-cancel')).hitTestable(),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('favorite-conflict-accept')).hitTestable(),
+      findsOneWidget,
+    );
+  }
+
+  Future<void> closeReplaceFavoriteDialog(WidgetTester tester) {
+    return _dismissReplaceFavoriteDialog(
+      tester,
+      const Key('favorite-conflict-close'),
+    );
+  }
+
+  Future<void> cancelReplaceFavoriteDialog(WidgetTester tester) {
+    return _dismissReplaceFavoriteDialog(
+      tester,
+      const Key('favorite-conflict-cancel'),
+    );
+  }
+
+  Future<void> acceptReplaceFavoriteDialog(WidgetTester tester) {
+    return _dismissReplaceFavoriteDialog(
+      tester,
+      const Key('favorite-conflict-accept'),
+    );
+  }
+
+  /// The home app-bar heart. On shows only this account's favorite recipes.
+  Future<void> setHomeFavoritesOnly(WidgetTester tester, bool only) async {
+    final button = find.byKey(const Key('recipe-list-favorites')).hitTestable();
+    await _waitFor(tester, button, 'the home favorites filter');
+    if (tester.widget<FavoriteIconButton>(button).selected == only) return;
+    await tester.tap(button);
+    await tester.pump();
+    await _waitUntil(
+      tester,
+      () =>
+          find
+              .byKey(const Key('recipe-list-favorites'))
+              .hitTestable()
+              .evaluate()
+              .isNotEmpty &&
+          tester
+                  .widget<FavoriteIconButton>(
+                    find
+                        .byKey(const Key('recipe-list-favorites'))
+                        .hitTestable(),
+                  )
+                  .selected ==
+              only,
+      only
+          ? 'the home list to show favorites'
+          : 'the home list to show every recipe',
+    );
+  }
+
+  Future<void> expectHomeMessage(WidgetTester tester, String message) async {
+    await _waitFor(
+      tester,
+      find.text(message).hitTestable(),
+      message,
+    );
+  }
+
+  Future<void> expectBrewFavorite(
+    WidgetTester tester, {
+    required bool selected,
+  }) async {
+    await _waitForBrew(tester);
+    await _waitUntil(
+      tester,
+      () {
+        final heart = find.byKey(const Key('brew-favorite')).hitTestable();
+        if (heart.evaluate().isEmpty) return false;
+        return tester.widget<FavoriteIconButton>(heart).selected == selected;
+      },
+      selected
+          ? 'the brew-mode heart to be filled'
+          : 'the brew-mode heart to be an outline',
+    );
+  }
+
+  Future<void> toggleBrewFavorite(WidgetTester tester) async {
+    final heart = find.byKey(const Key('brew-favorite')).hitTestable();
+    await _waitFor(tester, heart, 'the brew-mode favorite heart');
+    await _waitUntil(
+      tester,
+      () => _heartEnabled(tester, heart),
+      'the brew-mode heart to accept a tap',
+    );
+    final wasSelected = tester.widget<FavoriteIconButton>(heart).selected;
+    await tester.tap(heart);
+    await tester.pump();
+    await expectBrewFavorite(tester, selected: !wasSelected);
+  }
+
   Future<void> expectBrewText(WidgetTester tester, String text) async {
     await _waitUntil(
       tester,
@@ -757,6 +904,43 @@ class RecipeHarness {
     await gesture.up();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
+  }
+
+  Finder _tileFavorite(Type scope, String marker) {
+    final tile = find.ancestor(
+      of: find.descendant(
+        of: find.byType(scope),
+        matching: find.textContaining(marker).hitTestable(),
+      ),
+      matching: find.byType(ListTile),
+    );
+    return find
+        .descendant(of: tile, matching: find.byType(FavoriteIconButton))
+        .hitTestable();
+  }
+
+  bool _heartEnabled(WidgetTester tester, Finder heart) {
+    if (heart.evaluate().isEmpty) return false;
+    final icon = find.descendant(of: heart, matching: find.byType(IconButton));
+    if (icon.evaluate().isEmpty) return false;
+    return tester.widget<IconButton>(icon).onPressed != null;
+  }
+
+  Future<void> _dismissReplaceFavoriteDialog(
+    WidgetTester tester,
+    Key key,
+  ) async {
+    await tester.tap(find.byKey(key).hitTestable());
+    await tester.pump();
+    await _waitUntil(
+      tester,
+      () => find
+          .text(l10n.favoriteNameTakenTitle)
+          .hitTestable()
+          .evaluate()
+          .isEmpty,
+      'the replace-favorite dialog to close',
+    );
   }
 
   /// Share is on every loaded recipe, including one a viewer cannot edit.

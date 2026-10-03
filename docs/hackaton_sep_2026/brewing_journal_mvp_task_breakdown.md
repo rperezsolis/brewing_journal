@@ -704,13 +704,13 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 - [x] `ServerpodRecipeRepository.listMine`: `favoritesOnly` calls `client.recipe.listFavorites(limit, offset)`; otherwise `listMine`. `saveFavorite(id, replace)` and `removeFavorite(id)` are positional client calls.
 - [x] The existing `ServerpodRecipeRepository` in `app_scope.dart` already wraps `client.recipe`, so these methods need no extra registration.
 - [x] A failed save or remove uses the existing `errorMessage` snackbar. `favoriteBusy` / `favoriteBusyIds` disable that heart while the request is in flight.
-- [ ] End-to-end check in the browser (the password field did not accept the automated sign-up, so this pass was not finished):
-  - [ ] Save two recipes with the same name, star the first from the tile, and confirm the second opens the dialog.
-  - [ ] Cancel leaves the first heart filled. Accept fills the second and clears the first.
-  - [ ] The home app-bar heart shows only the winning recipe, and turning it off shows both.
-  - [ ] The Brew Mode heart adds and removes the same recipe.
-  - [ ] A team viewer stars a shared recipe. The owner's team list does not show that heart as filled, and the viewer's home filter stays empty.
-- [x] Run the post-phase checklist for the code that landed. Server `recipe_favorite_test.dart` passed, and the Flutter tests listed in 6.3 passed. `dart analyze` is clean in the server and Flutter packages.
+- [x] End-to-end check (`integration_test/favorites_test.dart`, `flutter test integration_test/favorites_test.dart -d macos` against `serverpod start`):
+  - [x] Save two recipes with the same name, star the first from the tile, and confirm the second opens the dialog. Close leaves the first heart filled.
+  - [x] Cancel leaves the first heart filled. Accept fills the second and clears the first.
+  - [x] The home app-bar heart shows only the winning recipe, and turning it off shows both. With nothing starred, it shows "No favorite recipes".
+  - [x] The Brew Mode heart removes and adds that same recipe, and the journal tile follows.
+  - [x] A team viewer stars a shared recipe. The owner's team list does not show that heart as filled, and the viewer's home filter stays empty.
+- [x] Run the post-phase checklist for the code that landed. Server `recipe_favorite_test.dart` passed, and the Flutter tests listed in 6.3 passed. `favorites_test.dart` passed (2). `dart analyze` is clean in the server and Flutter packages.
 
 ---
 
