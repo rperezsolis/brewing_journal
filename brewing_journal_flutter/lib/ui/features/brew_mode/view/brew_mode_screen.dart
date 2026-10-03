@@ -10,10 +10,12 @@ import '../../../core/brewing_labels.dart';
 import '../../../core/duration_format.dart';
 import '../../../core/error_messages.dart';
 import '../../../core/l10n.dart';
+import '../../../core/widgets/favorite_icon_button.dart';
 import '../../../core/widgets/flavor_radar_chart.dart';
 import '../../recipe_detail/cubit/recipe_detail_cubit.dart';
 import '../../recipe_detail/cubit/recipe_detail_state.dart';
 import '../../recipe_list/cubit/recipe_list_cubit.dart';
+import '../../recipe_list/view/favorite_actions.dart';
 import '../../teams/cubit/teams_cubit.dart';
 import '../cubit/brew_timer_cubit.dart';
 import '../cubit/brew_timer_state.dart';
@@ -204,6 +206,28 @@ class _BrewModeViewState extends State<BrewModeView> {
     }
   }
 
+  Future<void> _toggleFavorite(Recipe recipe) async {
+    final detailCubit = context.read<RecipeDetailCubit>();
+    final listCubit = context.read<RecipeListCubit>();
+    final id = recipe.id;
+    if (id == null) return;
+    await toggleRecipeFavorite(
+      context: context,
+      recipe: recipe,
+      save: ({required replace}) => detailCubit.saveFavorite(replace: replace),
+      remove: detailCubit.removeFavorite,
+      onChanged: ({required isFavorite, replacedRecipeId}) {
+        listCubit.noteFavorite(
+          recipeId: id,
+          isFavorite: isFavorite,
+          replacedRecipeId: replacedRecipeId,
+        );
+      },
+      onError: _showError,
+      readError: () => detailCubit.state.error,
+    );
+  }
+
   Future<void> _removeFromTeam(RecipeDetail detail) async {
     final ok = await context.read<RecipeDetailCubit>().removeFromTeam();
     if (!mounted) return;
@@ -241,6 +265,13 @@ class _BrewModeViewState extends State<BrewModeView> {
               title: Text(detail?.recipe.title ?? l10n.brewFallback),
               actions: [
                 if (detail != null) ...[
+                  FavoriteIconButton(
+                    key: const Key('brew-favorite'),
+                    selected: detail.recipe.isFavorite,
+                    onPressed: state.favoriteBusy
+                        ? null
+                        : () => _toggleFavorite(detail.recipe),
+                  ),
                   if (state.assigning)
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),

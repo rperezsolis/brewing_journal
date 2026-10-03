@@ -89,6 +89,8 @@ void main() {
     expect(find.text('Ethiopia Guji'), findsOneWidget);
     expect(find.text('Prep & extra steps'), findsNothing);
     expect(find.byKey(const Key('brew-instructions')), findsNothing);
+    expect(find.byKey(const Key('brew-favorite')), findsOneWidget);
+    expect(find.byIcon(Icons.favorite_border), findsOneWidget);
   });
 
   testWidgets('omits the photos section when there are no photos', (

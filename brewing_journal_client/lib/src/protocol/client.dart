@@ -13,6 +13,8 @@
 import 'dart:async' as _ida;
 import 'package:brewing_journal_client/src/protocol/brewing/beverage_kind.dart'
     as _i4erj0ra;
+import 'package:brewing_journal_client/src/protocol/brewing/favorite_save_result.dart'
+    as _i6y9w12f;
 import 'package:brewing_journal_client/src/protocol/brewing/ingredient.dart'
     as _ifm45unr;
 import 'package:brewing_journal_client/src/protocol/brewing/ingredient_draft.dart'
@@ -340,6 +342,43 @@ class EndpointRecipe extends EndpointAuthenticated {
       'offset': offset,
     },
   );
+
+  /// The caller's own recipes that are in favorites, most recently updated first.
+  _ida.Future<List<_i261jxz0.Recipe>> listFavorites(
+    int limit,
+    int offset,
+  ) => caller.callServerEndpoint<List<_i261jxz0.Recipe>>(
+    'recipe',
+    'listFavorites',
+    {
+      'limit': limit,
+      'offset': offset,
+    },
+  );
+
+  /// Saves [recipeId] as the caller's favorite for its title.
+  ///
+  /// When another favorite already uses that title and [replace] is false,
+  /// nothing changes and [FavoriteSaveResult.saved] is false.
+  _ida.Future<_i6y9w12f.FavoriteSaveResult> saveFavorite(
+    _isc.UuidValue recipeId,
+    bool replace,
+  ) => caller.callServerEndpoint<_i6y9w12f.FavoriteSaveResult>(
+    'recipe',
+    'saveFavorite',
+    {
+      'recipeId': recipeId,
+      'replace': replace,
+    },
+  );
+
+  /// Removes [recipeId] from the caller's favorites.
+  _ida.Future<void> removeFavorite(_isc.UuidValue recipeId) =>
+      caller.callServerEndpoint<void>(
+        'recipe',
+        'removeFavorite',
+        {'recipeId': recipeId},
+      );
 
   _ida.Future<_i6vleds3.RecipeAccess> getAccess(_isc.UuidValue id) =>
       caller.callServerEndpoint<_i6vleds3.RecipeAccess>(

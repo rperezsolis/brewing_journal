@@ -4,7 +4,7 @@
 **Target Audience:** Coffee, Tea, and Matcha enthusiasts, home brewers, and professional baristas.
 
 ## 1. Introduction
-BrewSync is a collaborative brewing journal application designed to help users track, perfect, and share their coffee, tea, and matcha extraction recipes. Built for a Serverpod hackathon, this MVP focuses on robust data modeling, email authentication, in-app brewing timers, team collaboration, and sharing from the device.
+BrewSync is a collaborative brewing journal application designed to help users track, perfect, and share their coffee, tea, and matcha extraction recipes. Built for a Serverpod hackathon, this MVP focuses on robust data modeling, email authentication, in-app brewing timers, team collaboration, favorites, and sharing from the device.
 
 ## 2. Technical Stack
 *   **Frontend:** Flutter (Dart) with `serverpod_flutter` 4.0.2 and `serverpod_auth_idp_flutter` 4.0.2 (iOS, Android, and Web)
@@ -57,6 +57,14 @@ BrewSync is a collaborative brewing journal application designed to help users t
 *   Generate a shareable graphic in the Flutter app (a summary card of the recipe parameters, flavor map, and extra instructions when the recipe has them). When there are no extra instructions, that block is omitted. When the list does not fit on the card, the card shows the leading instructions and notes that more exist. Every card ends with a "Made with BrewSync" line, so people who see a shared post know where it came from.
 *   Open the platform share sheet with that image only, so the user can send it to whichever apps are installed (for example Instagram, X, Pinterest, or Messages). No link to the recipe is attached: recipes are private to their owner and team, so a link would not open for most recipients. Where the browser cannot share files, the user can download the image instead. Anyone who can read a recipe, including a team viewer, can share its image.
 
+### Feature 6: Favorites
+**Description:** Let the user mark the winning version of a recipe, then find it again among the trials that share its name.
+**Requirements:**
+*   A heart toggle on every recipe tile and on the Brew Mode app bar adds that recipe to the user's favorites or removes it. Any recipe the user can read can be saved, including a team recipe, and a viewer can save one. The favorite belongs to the signed-in user: another member starring the same shared recipe does not change this user's list.
+*   A user may keep only one favorite per recipe name. The comparison trims the title and ignores capitalization, so "V60" and "v60" are the same name. Different names can all be favorites at once.
+*   When the user tries to save a recipe whose name is already a favorite, a dialog says a recipe with that name is already in favorites and asks whether to replace it. A close icon in the top-right and a Cancel action dismiss the dialog and leave the existing favorite in place. Accept removes that favorite and saves the recipe the user just chose.
+*   A heart toggle in the home recipe list's app bar filters that list. On, the list shows only the user's own recipes that are favorites. Off, it shows all of the user's recipes. A team recipe the user does not own can still be starred on the team list and in Brew Mode; the home filter does not pull it into My recipes.
+
 ---
 
 ## 4. User Stories
@@ -101,3 +109,10 @@ BrewSync is a collaborative brewing journal application designed to help users t
 *   **US-5.1:** As a coffee influencer, I want to generate a summary image of my V60 recipe and send it through the device share sheet so I can post it from whichever app I choose.
 *   **US-5.2:** As a creator, I want to share an image of my matcha recipe through the device share sheet so I can pass it to X, Pinterest, or another installed app.
 *   **US-5.3:** As a creator, I want the summary card to include extra instructions when the recipe has them, to leave that block off when it has none, and to show the leading instructions plus a note when the list does not fit, so the shared image matches the recipe and still fits on one card.
+
+### Favorites
+*   **US-6.1:** As a brewer refining a recipe, I want to save one version as a favorite so I can tell the winning parameters apart from the trials that share its name.
+*   **US-6.2:** As a brewer, I want a heart on the recipe tile and in Brew Mode so I can add or remove that recipe from favorites without leaving the list or the brew screen.
+*   **US-6.3:** As a brewer, I want a dialog when a favorite already uses that name, with Accept to replace it and with Cancel or close to keep the existing favorite.
+*   **US-6.4:** As a brewer, I want the home list to show only my favorite recipes when the app-bar heart is on, and all of my recipes when it is off.
+*   **US-6.5:** As a team member, including a viewer, I want to favorite a shared recipe I can read, and I want that choice to be mine alone so another member's favorite does not change my list.

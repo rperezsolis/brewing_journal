@@ -1,0 +1,18 @@
+class: RecipeFavorite
+table: recipe_favorite
+serverOnly: true
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  user: module:serverpod_auth_core:AuthUser?, relation(onDelete=Cascade)
+  recipe: Recipe?, relation(onDelete=Cascade)
+  ### Trimmed, lower-case title. One favorite per user per title.
+  titleKey: String
+  createdAt: DateTime, default=now
+
+indexes:
+  recipe_favorite_user_recipe_idx:
+    fields: userId, recipeId
+    unique: true
+  recipe_favorite_user_title_idx:
+    fields: userId, titleKey
+    unique: true

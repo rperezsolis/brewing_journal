@@ -400,6 +400,75 @@ class Endpoints extends _is.EndpointDispatch {
                     params['offset'],
                   ),
         ),
+        'listFavorites': _is.MethodConnector(
+          name: 'listFavorites',
+          params: {
+            'limit': _is.ParameterDescription(
+              name: 'limit',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'offset': _is.ParameterDescription(
+              name: 'offset',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint)
+                  .listFavorites(
+                    session,
+                    params['limit'],
+                    params['offset'],
+                  ),
+        ),
+        'saveFavorite': _is.MethodConnector(
+          name: 'saveFavorite',
+          params: {
+            'recipeId': _is.ParameterDescription(
+              name: 'recipeId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+            'replace': _is.ParameterDescription(
+              name: 'replace',
+              type: _is.getType<bool>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint)
+                  .saveFavorite(
+                    session,
+                    params['recipeId'],
+                    params['replace'],
+                  ),
+        ),
+        'removeFavorite': _is.MethodConnector(
+          name: 'removeFavorite',
+          params: {
+            'recipeId': _is.ParameterDescription(
+              name: 'recipeId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint)
+                  .removeFavorite(
+                    session,
+                    params['recipeId'],
+                  ),
+        ),
         'getAccess': _is.MethodConnector(
           name: 'getAccess',
           params: {

@@ -15,7 +15,7 @@ Each feature follows the same four phases in this order. Finish a phase before s
 3. **Flutter UI & State Management:** screens, widgets, and Cubits, backed by fake repositories.
 4. **Integration Layer:** real repositories on the generated client, loading states, and error mapping.
 
-Features are ordered so each one depends only on the features before it. The one deviation from the final schema in the system design is that **Feature 2 builds personal recipes only**. `Recipe.team`, `RecipeDraft.teamId`, `RecipeAccess.role`, and the `recipe_team_updated_idx` index are added in **Feature 4**. That migration creates the three team tables and adds one nullable column to `recipe`, so no existing data is lost. When Feature 4 is done, the schema matches the system design exactly.
+Features are ordered so each one depends only on the features before it. The one deviation from the final schema in the system design is that **Feature 2 builds personal recipes only**. `Recipe.team`, `RecipeDraft.teamId`, `RecipeAccess.role`, and the `recipe_team_updated_idx` index are added in **Feature 4**. That migration creates the three team tables and adds one nullable column to `recipe`, so no existing data is lost. When Feature 4 is done, the recipe and team tables match the system design. **Feature 6** adds the `recipe_favorite` table afterward. `Recipe.isFavorite` is not stored, so that migration does not change `recipe`.
 
 The one exception to phase isolation is the Feature 1 `requireLogin` test: it needs a domain endpoint, so it is written in Feature 1 and first run after Feature 2's endpoints exist.
 
@@ -621,11 +621,106 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 
 
 
+## Feature 6 — Favorites
+
+**Stories:** US-6.1 through US-6.5. A favorite is a row per signed-in user and recipe, not a column on `recipe`. The home filter shows the caller's own favorite recipes. A team recipe the caller does not own can still be starred on the team list and in Brew Mode, and it stays off the home list.
+
+
+
+### 6.1 Backend Schemas & Database
+
+- [x] `lib/src/brewing/recipe.spy.yaml`: add `isFavorite: bool, default=false, !persist` after `updatedAt`. Reads fill it for the caller. It is not a database column.
+- [x] `lib/src/brewing/recipe_favorite.spy.yaml`: `serverOnly: true` table `recipe_favorite`:
+  - [x] `user` and `recipe` relations, both `onDelete=Cascade`
+  - [x] `titleKey: String` — `title.trim().toLowerCase()`, the same folding as an ingredient `nameKey`
+  - [x] `createdAt: DateTime, default=now`
+  - [x] Unique indexes `recipe_favorite_user_recipe_idx` (`userId`, `recipeId`) and `recipe_favorite_user_title_idx` (`userId`, `titleKey`)
+- [x] `lib/src/brewing/favorite_save_result.spy.yaml` (no table): `saved: bool` and `replacedRecipeId: UuidValue?`. `saved` false means another favorite already uses that title and nothing was written.
+- [x] No reverse relation on `Recipe`. The client never sees `RecipeFavorite` rows.
+- [x] Code generation ran from the watching `serverpod start`. Do not edit `lib/src/generated/` or `brewing_journal_client`.
+- [x] Migration. MCP `create_migration` was not in the tool catalog, so the CLI wrote it: `serverpod create-migration --tag favorites` in `brewing_journal_server/`.
+  - [x] Review `migrations/20261003044223103-favorites/migration.sql`: one `CREATE TABLE recipe_favorite`, the two unique indexes, and foreign keys `ON DELETE CASCADE` to `serverpod_auth_core_user` and `recipe`. No change to `recipe`.
+  - [x] Applied through the running server's MCP `apply_migrations`, then `hot_restart`. The restart log says "Latest database migration already applied." `migrations/migration_registry.txt` lists `20261003044223103-favorites`.
+- [x] Run the post-phase checklist. `dart analyze` in the server package is clean.
+
+
+
+### 6.2 Backend API Endpoints
+
+- [x] `lib/src/brewing/recipe_favorites.dart`:
+  - [x] `recipeTitleKey`
+  - [x] `withFavoriteFlags` loads the caller's rows for the recipe ids on the page and sets `isFavorite`. An empty page returns immediately.
+  - [x] `saveRecipeFavorite` follows the system-design transaction: already saved returns `saved: true`; the same `titleKey` with `replace: false` returns `saved: false` and writes nothing; `replace: true` deletes the conflicting row and inserts the new one, setting `replacedRecipeId`. A `DatabaseUniqueViolationException` returns `saved: true` when this recipe is now the favorite, and `saved: false` otherwise.
+  - [x] `removeRecipeFavorite` deletes the caller's row. A missing row is a no-op.
+  - [x] Both methods call `RecipeAccessPolicy.load`. Read access is enough, so a viewer can favorite. No read access throws `notFound`.
+- [x] `RecipeEndpoint`: `get`, `listMine`, `listForTeam`, `assignToTeam`, and `removeFromTeam` set `isFavorite` after author names. Add `listFavorites`, `saveFavorite`, and `removeFavorite`.
+  - [x] `listFavorites(limit, offset)`: the caller's favorites among recipes they own (`ownerId = caller`), `orderBy updatedAt desc, id desc`, `limit` clamped to 1..50. An empty favorite set returns `[]` without a recipe query.
+- [x] Server tests in `test/integration/brewing/recipe_favorite_test.dart` (9 tests, all passed):
+  - [x] Saving a recipe sets `isFavorite` on `get` and `listMine`
+  - [x] A second recipe titled `  v60 ` does not replace a favorite titled `V60` when `replace` is false
+  - [x] `replace: true` swaps them, and `listFavorites` returns only the new one
+  - [x] Different titles are both kept, newest `updatedAt` first
+  - [x] `removeFavorite` clears the flag, and `listFavorites` is empty
+  - [x] Two users can each favorite a recipe with the same title
+  - [x] Saving a recipe the caller cannot read throws `BrewingErrorCode.notFound`
+  - [x] A team viewer can favorite a shared recipe; only that viewer's `listForTeam` row has `isFavorite`, and their `listFavorites` is empty because they do not own it
+  - [x] `listFavorites` honors `limit` and `offset`
+- [x] Run the post-phase checklist, then `dart test` for `recipe_favorite_test.dart`.
+
+
+
+### 6.3 Flutter UI & State Management
+
+- [x] `RecipeRepository.listMine` takes `favoritesOnly`. Add `saveFavorite(id, {replace})` and `removeFavorite(id)`. The fake applies the same title-key rule as the server.
+- [x] `RecipeListCubit` / `RecipeListState`:
+  - [x] `favoritesOnly` and `favoriteBusyIds`
+  - [x] `setFavoritesOnly` clears the loaded page and reloads
+  - [x] `saveFavorite` applies the flag only when `saved` is true, and clears `isFavorite` on `replacedRecipeId`
+  - [x] `removeFavorite`
+  - [x] `noteFavorite` updates rows already in memory. While the filter is on, unfavoriting drops the row, and favoriting a recipe that is not in the loaded page reloads
+- [x] `RecipeDetailCubit`: `saveFavorite({replace})`, `removeFavorite`, and `favoriteBusy`. A blocked save leaves the loaded recipe unchanged.
+- [x] `lib/ui/core/widgets/favorite_icon_button.dart`: an `IconButton.isSelected` heart (`Icons.favorite` / `Icons.favorite_border`). Tooltips come from `addToFavorites` and `removeFromFavorites`, unless the caller passes one.
+- [x] `lib/ui/features/recipe_list/view/replace_favorite_dialog.dart`: title "Already in favorites", body "A recipe with this name is already in your favorites. Replace it with this one?" Close (`favorite-conflict-close`) and Cancel (`favorite-conflict-cancel`) pop false. Accept (`favorite-conflict-accept`) pops true.
+- [x] `lib/ui/features/recipe_list/favorite_actions.dart`: `toggleRecipeFavorite` coordinates the save, the dialog, an optional `onChanged` for the other list cubit, and the error snackbar.
+- [x] `RecipeTile`: trailing heart with `ValueKey('recipe-favorite-${id}')`, then the chevron. The heart does not open the recipe.
+- [x] Home `RecipeListScreen` app bar: heart with `Key('recipe-list-favorites')`. On calls `setFavoritesOnly(true)` and the empty state uses `noFavoriteRecipes` / `noFavoriteRecipesDetail`. Off shows every recipe the user owns. The team list has no filter.
+- [x] Brew Mode app bar: the favorite heart (`Key('brew-favorite')`) is the first action. It calls the detail cubit, then `noteFavorite` on the session `RecipeListCubit`.
+- [x] `TeamDetailScreen` captures the session `RecipeListCubit` above its nested provider and calls `noteFavorite` after the team cubit writes. Returning from Brew Mode still reloads the team list.
+- [x] Localization in `app_en.arb`, `app_es.arb`, `app_es_419.arb`, `app_pt.arb`, and `app_pt_BR.arb`: `accept`, `addToFavorites`, `removeFromFavorites`, `showFavorites`, `showAllRecipes`, `favoriteNameTakenTitle`, `favoriteNameTakenBody`, `noFavoriteRecipes`, `noFavoriteRecipesDetail`. Then `flutter gen-l10n`.
+- [x] Tests:
+  - [x] `recipe_list_cubit_test.dart`: the filter reloads through `listMine(favoritesOnly: true)`; a same-name save is blocked until `replace: true`; `noteFavorite` updates the home rows
+  - [x] `recipe_list_screen_test.dart`: the app-bar heart shows only favorites; Accept replaces; Cancel leaves the existing favorite
+  - [x] `recipe_tile_test.dart`: the heart toggles and does not open the recipe
+  - [x] `replace_favorite_dialog_test.dart`: close, Cancel, and Accept
+  - [x] `recipe_detail_cubit_test.dart`: save, a blocked same-name save, and replace
+  - [x] `brew_mode_screen_test.dart`: the `brew-favorite` heart is present
+  - [x] `team_detail_screen_test.dart`: the screen is wrapped in a parent `RecipeListCubit`, because `build` reads that cubit before creating the team one
+- [x] Run the post-phase checklist, then `hot_restart`. `dart analyze` and `flutter test` for the files above are clean.
+
+
+
+### 6.4 Integration Layer
+
+- [x] `ServerpodRecipeRepository.listMine`: `favoritesOnly` calls `client.recipe.listFavorites(limit, offset)`; otherwise `listMine`. `saveFavorite(id, replace)` and `removeFavorite(id)` are positional client calls.
+- [x] The existing `ServerpodRecipeRepository` in `app_scope.dart` already wraps `client.recipe`, so these methods need no extra registration.
+- [x] A failed save or remove uses the existing `errorMessage` snackbar. `favoriteBusy` / `favoriteBusyIds` disable that heart while the request is in flight.
+- [ ] End-to-end check in the browser (the password field did not accept the automated sign-up, so this pass was not finished):
+  - [ ] Save two recipes with the same name, star the first from the tile, and confirm the second opens the dialog.
+  - [ ] Cancel leaves the first heart filled. Accept fills the second and clears the first.
+  - [ ] The home app-bar heart shows only the winning recipe, and turning it off shows both.
+  - [ ] The Brew Mode heart adds and removes the same recipe.
+  - [ ] A team viewer stars a shared recipe. The owner's team list does not show that heart as filled, and the viewer's home filter stays empty.
+- [x] Run the post-phase checklist for the code that landed. Server `recipe_favorite_test.dart` passed, and the Flutter tests listed in 6.3 passed. `dart analyze` is clean in the server and Flutter packages.
+
+---
+
+
+
 ## Wrap-up
 
-- [ ] Full regression with `flutter_driver`: sign up, create a recipe (all 5 steps), open Brew Mode and let the timer finish, create a team and invite a viewer, accept as a second user, share from the viewer account.
+- [ ] Full regression with `flutter_driver`: sign up, create a recipe (all 5 steps), open Brew Mode and let the timer finish, star that recipe, create a team and invite a viewer, accept as a second user, share from the viewer account.
 - [ ] `dart test` in `brewing_journal_server/` and `flutter test` in `brewing_journal_flutter/` both pass.
 - [ ] `dart analyze` is clean in all three packages; run `dart format .`.
-- [ ] Confirm `migrations/migration_registry.txt` lists: initial, `recipes`, `teams`. `create_migration` reports no pending changes.
+- [ ] Confirm `migrations/migration_registry.txt` lists: initial, `recipes`, `teams`, `favorites`. `create_migration` reports no pending changes.
 - [ ] Update `AGENTS.md` with a description of BrewSync (features, folder layout, `RecipeAccessPolicy`, the invite URL format, and the known limit that invites open in the web app). Keep the MCP section and the checklist, and remove the "After building the first version…" paragraph.
 - [ ] Set `enableTextEntryEmulation` in `lib/driver.dart` back to `false`.

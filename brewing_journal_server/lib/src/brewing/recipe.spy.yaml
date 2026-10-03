@@ -21,6 +21,8 @@ fields:
   updatedAt: DateTime, default=now
   ### Display name of the owner, filled when a recipe is read. Not stored.
   authorName: String?, !persist
+  ### Whether the caller has saved this recipe to favorites. Not stored.
+  isFavorite: bool, default=false, !persist
   instructions: List<RecipeInstruction>?, relation(name=recipe_instructions)
   photos: List<RecipePhoto>?, relation(name=recipe_photos)
   flavorTags: List<RecipeFlavorTag>?, relation(name=recipe_flavor_tags)

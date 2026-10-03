@@ -171,5 +171,14 @@
   "validationChooseMethod": "Escolha um método de extração",
   "validationDescribeMethod": "Descreva o método de extração",
   "validationExtractionTime": "O tempo de extração deve estar entre 1 s e 2 h",
-  "validationTooManyPhotos": "No máximo {max} fotos"
+  "validationTooManyPhotos": "No máximo {max} fotos",
+  "accept": "Aceitar",
+  "addToFavorites": "Adicionar aos favoritos",
+  "removeFromFavorites": "Remover dos favoritos",
+  "showFavorites": "Mostrar favoritos",
+  "showAllRecipes": "Mostrar todas as receitas",
+  "favoriteNameTakenTitle": "Já está nos favoritos",
+  "favoriteNameTakenBody": "Já existe uma receita com esse nome nos seus favoritos. Deseja substituí-la por esta?",
+  "noFavoriteRecipes": "Nenhuma receita favorita",
+  "noFavoriteRecipesDetail": "Salve uma receita para guardar a versão que você quer preparar."
 }

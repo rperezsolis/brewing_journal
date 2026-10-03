@@ -7,6 +7,7 @@ import 'package:brewing_journal_flutter/data/repositories/fake_team_repository.d
 import 'package:brewing_journal_flutter/data/repositories/recipe_repository.dart';
 import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
 import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
+import 'package:brewing_journal_flutter/ui/features/recipe_list/cubit/recipe_list_cubit.dart';
 import 'package:brewing_journal_flutter/ui/features/teams/cubit/teams_cubit.dart';
 import 'package:brewing_journal_flutter/ui/features/teams/view/team_detail_screen.dart';
 import 'package:flutter/material.dart';
@@ -64,21 +65,24 @@ void main() {
         ],
         child: BlocProvider<TeamsCubit>.value(
           value: teamsCubit,
-          child: MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            localeListResolutionCallback: resolveBrewSyncLocales,
-            home: ValueListenableBuilder<int>(
-              valueListenable: tab,
-              builder: (context, index, _) {
-                return IndexedStack(
-                  index: index,
-                  children: [
-                    const SizedBox.shrink(),
-                    TeamDetailScreen(teamId: team.team.id!),
-                  ],
-                );
-              },
+          child: BlocProvider(
+            create: (_) => RecipeListCubit(recipes),
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              localeListResolutionCallback: resolveBrewSyncLocales,
+              home: ValueListenableBuilder<int>(
+                valueListenable: tab,
+                builder: (context, index, _) {
+                  return IndexedStack(
+                    index: index,
+                    children: [
+                      const SizedBox.shrink(),
+                      TeamDetailScreen(teamId: team.team.id!),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),

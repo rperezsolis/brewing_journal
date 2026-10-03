@@ -12,6 +12,7 @@ import '../../../core/error_messages.dart';
 import '../../../core/l10n.dart';
 import '../../recipe_list/cubit/recipe_list_cubit.dart';
 import '../../recipe_list/cubit/recipe_list_state.dart';
+import '../../recipe_list/view/favorite_actions.dart';
 import '../../recipe_list/view/recipe_tile.dart';
 import '../cubit/teams_cubit.dart';
 import '../cubit/teams_state.dart';
@@ -24,17 +25,21 @@ class TeamDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final personalList = context.read<RecipeListCubit>();
     return BlocProvider(
       create: (context) => RecipeListCubit(context.read(), teamId: teamId),
-      child: _TeamDetailView(teamId: teamId),
+      child: _TeamDetailView(teamId: teamId, personalList: personalList),
     );
   }
 }
 
 class _TeamDetailView extends StatefulWidget {
-  const _TeamDetailView({required this.teamId});
+  const _TeamDetailView({required this.teamId, required this.personalList});
 
   final UuidValue teamId;
+
+  /// The home list, captured above this screen's own [RecipeListCubit].
+  final RecipeListCubit personalList;
 
   @override
   State<_TeamDetailView> createState() => _TeamDetailViewState();
@@ -138,7 +143,11 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
                   final recipe = state.recipes[index];
                   return RecipeTile(
                     recipe: recipe,
+                    favoriteBusy: state.favoriteBusyIds.contains(recipe.id),
                     onTap: () => _openRecipe(context, recipe.id!),
+                    onFavorite: () {
+                      unawaited(_toggleFavorite(context, recipe));
+                    },
                   );
                 },
               ),
@@ -146,6 +155,26 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
           },
         ),
       ),
+    );
+  }
+
+  Future<void> _toggleFavorite(BuildContext context, Recipe recipe) {
+    final cubit = context.read<RecipeListCubit>();
+    return toggleRecipeFavorite(
+      context: context,
+      recipe: recipe,
+      save: ({required replace}) =>
+          cubit.saveFavorite(recipe.id!, replace: replace),
+      remove: () => cubit.removeFavorite(recipe.id!),
+      onChanged: ({required isFavorite, replacedRecipeId}) {
+        widget.personalList.noteFavorite(
+          recipeId: recipe.id!,
+          isFavorite: isFavorite,
+          replacedRecipeId: replacedRecipeId,
+        );
+      },
+      onError: (error) => showFavoriteError(context, error),
+      readError: () => cubit.state.error,
     );
   }
 

@@ -587,4 +587,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String validationTooManyPhotos(int max) {
     return 'At most $max photos';
   }
+
+  @override
+  String get accept => 'Accept';
+
+  @override
+  String get addToFavorites => 'Add to favorites';
+
+  @override
+  String get removeFromFavorites => 'Remove from favorites';
+
+  @override
+  String get showFavorites => 'Show favorites';
+
+  @override
+  String get showAllRecipes => 'Show all recipes';
+
+  @override
+  String get favoriteNameTakenTitle => 'Already in favorites';
+
+  @override
+  String get favoriteNameTakenBody =>
+      'A recipe with this name is already in your favorites. Replace it with this one?';
+
+  @override
+  String get noFavoriteRecipes => 'No favorite recipes';
+
+  @override
+  String get noFavoriteRecipesDetail =>
+      'Save a recipe to keep the version you want to brew.';
 }

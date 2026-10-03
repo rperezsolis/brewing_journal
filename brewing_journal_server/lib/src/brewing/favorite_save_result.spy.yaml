@@ -1,0 +1,6 @@
+class: FavoriteSaveResult
+fields:
+  ### True when the recipe is now the caller's favorite for that title.
+  saved: bool
+  ### The favorite this save replaced, when [saved] is true and one was removed.
+  replacedRecipeId: UuidValue?

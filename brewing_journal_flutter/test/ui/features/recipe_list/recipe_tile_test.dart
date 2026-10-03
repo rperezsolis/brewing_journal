@@ -47,7 +47,11 @@ void main() {
         localeListResolutionCallback: resolveBrewSyncLocales,
         locale: const Locale('en'),
         home: Scaffold(
-          body: ListView(children: [RecipeTile(recipe: recipe, onTap: () {})]),
+          body: ListView(
+            children: [
+              RecipeTile(recipe: recipe, onTap: () {}, onFavorite: () {}),
+            ],
+          ),
         ),
       ),
     );
@@ -72,5 +76,37 @@ void main() {
     await pump(tester, recipe());
 
     expect(find.textContaining('Unknown author'), findsOneWidget);
+  });
+
+  testWidgets('the favorite button toggles without opening the recipe', (
+    tester,
+  ) async {
+    var opened = false;
+    var favorited = false;
+    final item = recipe()..isFavorite = true;
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localeListResolutionCallback: resolveBrewSyncLocales,
+        locale: const Locale('en'),
+        home: Scaffold(
+          body: ListView(
+            children: [
+              RecipeTile(
+                recipe: item,
+                onTap: () => opened = true,
+                onFavorite: () => favorited = true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.favorite), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.favorite));
+    expect(favorited, isTrue);
+    expect(opened, isFalse);
   });
 }

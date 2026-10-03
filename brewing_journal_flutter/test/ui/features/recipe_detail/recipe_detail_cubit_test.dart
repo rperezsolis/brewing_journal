@@ -76,4 +76,46 @@ void main() {
     expect(await cubit.delete(), isFalse);
     expect(recipes.details.containsKey(id), isTrue);
   });
+
+  test('saveFavorite marks the loaded recipe', () async {
+    final saved = await seed();
+    await cubit.load(saved.recipe.id!);
+
+    final result = await cubit.saveFavorite();
+
+    expect(result?.saved, isTrue);
+    expect(cubit.state.detail!.recipe.isFavorite, isTrue);
+  });
+
+  test('a same-name favorite is left in place until replace', () async {
+    final first = await seed();
+    final second = await recipes.save(
+      RecipeDraft(
+        ingredientId: first.ingredient.id!,
+        title: 'Morning V60',
+        waterTempC: 90,
+        doseGrams: 18,
+        grindSize: 'fine',
+        grinderModel: 'Niche',
+        extractionMethod: ExtractionMethod.v60,
+        acidity: 0,
+        sweetness: 0,
+        body: 0,
+        bitterness: 0,
+        flavorTags: const [],
+        instructions: const [],
+      ),
+    );
+    await recipes.saveFavorite(first.recipe.id!, replace: false);
+    await cubit.load(second.recipe.id!);
+
+    final blocked = await cubit.saveFavorite();
+    expect(blocked?.saved, isFalse);
+    expect(cubit.state.detail!.recipe.isFavorite, isFalse);
+
+    final replaced = await cubit.saveFavorite(replace: true);
+    expect(replaced?.replacedRecipeId, first.recipe.id);
+    expect(cubit.state.detail!.recipe.isFavorite, isTrue);
+    expect(recipes.details[first.recipe.id]!.recipe.isFavorite, isFalse);
+  });
 }

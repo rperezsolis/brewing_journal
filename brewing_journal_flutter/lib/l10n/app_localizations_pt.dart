@@ -595,6 +595,35 @@ class AppLocalizationsPt extends AppLocalizations {
   String validationTooManyPhotos(int max) {
     return 'No máximo $max fotos';
   }
+
+  @override
+  String get accept => 'Aceitar';
+
+  @override
+  String get addToFavorites => 'Adicionar aos favoritos';
+
+  @override
+  String get removeFromFavorites => 'Remover dos favoritos';
+
+  @override
+  String get showFavorites => 'Mostrar favoritos';
+
+  @override
+  String get showAllRecipes => 'Mostrar todas as receitas';
+
+  @override
+  String get favoriteNameTakenTitle => 'Já está nos favoritos';
+
+  @override
+  String get favoriteNameTakenBody =>
+      'Já existe uma receita com esse nome nos seus favoritos. Deseja substituí-la por esta?';
+
+  @override
+  String get noFavoriteRecipes => 'Nenhuma receita favorita';
+
+  @override
+  String get noFavoriteRecipesDetail =>
+      'Salve uma receita para guardar a versão que você quer preparar.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1188,4 +1217,33 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String validationTooManyPhotos(int max) {
     return 'No máximo $max fotos';
   }
+
+  @override
+  String get accept => 'Aceitar';
+
+  @override
+  String get addToFavorites => 'Adicionar aos favoritos';
+
+  @override
+  String get removeFromFavorites => 'Remover dos favoritos';
+
+  @override
+  String get showFavorites => 'Mostrar favoritos';
+
+  @override
+  String get showAllRecipes => 'Mostrar todas as receitas';
+
+  @override
+  String get favoriteNameTakenTitle => 'Já está nos favoritos';
+
+  @override
+  String get favoriteNameTakenBody =>
+      'Já existe uma receita com esse nome nos seus favoritos. Deseja substituí-la por esta?';
+
+  @override
+  String get noFavoriteRecipes => 'Nenhuma receita favorita';
+
+  @override
+  String get noFavoriteRecipesDetail =>
+      'Salve uma receita para guardar a versão que você quer preparar.';
 }

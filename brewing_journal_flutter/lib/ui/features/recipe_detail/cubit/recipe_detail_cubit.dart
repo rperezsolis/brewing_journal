@@ -94,4 +94,59 @@ class RecipeDetailCubit extends Cubit<RecipeDetailState> {
       return false;
     }
   }
+
+  /// Saves the loaded recipe as a favorite for its name.
+  ///
+  /// When another favorite already uses that name and [replace] is false,
+  /// nothing changes and [FavoriteSaveResult.saved] is false.
+  Future<FavoriteSaveResult?> saveFavorite({bool replace = false}) async {
+    final id = state.recipeId;
+    final detail = state.detail;
+    if (id == null || detail == null || state.favoriteBusy) return null;
+    emit(state.copyWith(favoriteBusy: true));
+    try {
+      final result = await _recipes.saveFavorite(id, replace: replace);
+      if (isClosed) return null;
+      emit(
+        state.copyWith(
+          favoriteBusy: false,
+          detail: result.saved ? _withFavorite(detail, true) : state.detail,
+        ),
+      );
+      return result;
+    } catch (error) {
+      if (isClosed) return null;
+      emit(state.copyWith(favoriteBusy: false, error: error));
+      return null;
+    }
+  }
+
+  /// Removes the loaded recipe from favorites. Returns false on failure.
+  Future<bool> removeFavorite() async {
+    final id = state.recipeId;
+    final detail = state.detail;
+    if (id == null || detail == null || state.favoriteBusy) return false;
+    emit(state.copyWith(favoriteBusy: true));
+    try {
+      await _recipes.removeFavorite(id);
+      if (isClosed) return false;
+      emit(
+        state.copyWith(
+          favoriteBusy: false,
+          detail: _withFavorite(detail, false),
+        ),
+      );
+      return true;
+    } catch (error) {
+      if (isClosed) return false;
+      emit(state.copyWith(favoriteBusy: false, error: error));
+      return false;
+    }
+  }
+}
+
+RecipeDetail _withFavorite(RecipeDetail detail, bool isFavorite) {
+  return detail.copyWith(
+    recipe: detail.recipe.copyWith(isFavorite: isFavorite),
+  );
 }

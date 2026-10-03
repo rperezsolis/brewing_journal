@@ -469,5 +469,23 @@
   "@validationTooManyPhotos": {
     "description": "Too many photos",
     "placeholders": { "max": { "type": "int", "example": "6" } }
-  }
+  },
+  "accept": "Accept",
+  "@accept": { "description": "Button that replaces the favorite recipe of the same name" },
+  "addToFavorites": "Add to favorites",
+  "@addToFavorites": { "description": "Tooltip for saving a recipe to favorites" },
+  "removeFromFavorites": "Remove from favorites",
+  "@removeFromFavorites": { "description": "Tooltip for removing a recipe from favorites" },
+  "showFavorites": "Show favorites",
+  "@showFavorites": { "description": "Tooltip for filtering the home list to favorite recipes" },
+  "showAllRecipes": "Show all recipes",
+  "@showAllRecipes": { "description": "Tooltip for clearing the favorites filter" },
+  "favoriteNameTakenTitle": "Already in favorites",
+  "@favoriteNameTakenTitle": { "description": "Title of the dialog shown when a favorite already uses this recipe name" },
+  "favoriteNameTakenBody": "A recipe with this name is already in your favorites. Replace it with this one?",
+  "@favoriteNameTakenBody": { "description": "Body of the dialog that asks to replace the favorite with the same name" },
+  "noFavoriteRecipes": "No favorite recipes",
+  "@noFavoriteRecipes": { "description": "Empty state title when the home list is filtered to favorites" },
+  "noFavoriteRecipesDetail": "Save a recipe to keep the version you want to brew.",
+  "@noFavoriteRecipesDetail": { "description": "Empty state detail when the home list is filtered to favorites" }
 }

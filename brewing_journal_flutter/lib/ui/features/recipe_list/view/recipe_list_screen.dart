@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -5,9 +8,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../router.dart';
 import '../../../core/error_messages.dart';
 import '../../../core/l10n.dart';
+import '../../../core/widgets/favorite_icon_button.dart';
 import '../../auth/cubit/auth_cubit.dart';
 import '../cubit/recipe_list_cubit.dart';
 import '../cubit/recipe_list_state.dart';
+import 'favorite_actions.dart';
 import 'recipe_tile.dart';
 
 /// Home: the signed-in user's recipes.
@@ -21,6 +26,22 @@ class RecipeListScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
+          BlocBuilder<RecipeListCubit, RecipeListState>(
+            buildWhen: (previous, current) =>
+                previous.favoritesOnly != current.favoritesOnly,
+            builder: (context, state) {
+              return FavoriteIconButton(
+                key: const Key('recipe-list-favorites'),
+                selected: state.favoritesOnly,
+                tooltip: state.favoritesOnly
+                    ? l10n.showAllRecipes
+                    : l10n.showFavorites,
+                onPressed: () => context
+                    .read<RecipeListCubit>()
+                    .setFavoritesOnly(!state.favoritesOnly),
+              );
+            },
+          ),
           IconButton(
             key: const ValueKey('sign-out'),
             tooltip: l10n.signOut,
@@ -53,8 +74,12 @@ class RecipeListScreen extends StatelessWidget {
                 ),
               ),
               RecipeListStatus.success => _Message(
-                text: l10n.noRecipesYet,
-                detail: l10n.noRecipesYetDetail,
+                text: state.favoritesOnly
+                    ? l10n.noFavoriteRecipes
+                    : l10n.noRecipesYet,
+                detail: state.favoritesOnly
+                    ? l10n.noFavoriteRecipesDetail
+                    : l10n.noRecipesYetDetail,
               ),
             };
           }
@@ -78,7 +103,11 @@ class RecipeListScreen extends StatelessWidget {
                   final recipe = state.recipes[index];
                   return RecipeTile(
                     recipe: recipe,
+                    favoriteBusy: state.favoriteBusyIds.contains(recipe.id),
                     onTap: () => context.push(Routes.recipe(recipe.id!)),
+                    onFavorite: () {
+                      unawaited(_toggleFavorite(context, recipe));
+                    },
                   );
                 },
               ),
@@ -88,6 +117,19 @@ class RecipeListScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _toggleFavorite(BuildContext context, Recipe recipe) {
+  final cubit = context.read<RecipeListCubit>();
+  return toggleRecipeFavorite(
+    context: context,
+    recipe: recipe,
+    save: ({required replace}) =>
+        cubit.saveFavorite(recipe.id!, replace: replace),
+    remove: () => cubit.removeFavorite(recipe.id!),
+    onError: (error) => showFavoriteError(context, error),
+    readError: () => cubit.state.error,
+  );
 }
 
 class _Message extends StatelessWidget {

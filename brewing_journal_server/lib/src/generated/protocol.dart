@@ -27,12 +27,14 @@ import 'brewing/beverage_kind.dart' as _ino7p0mu;
 import 'brewing/brewing_error_code.dart' as _ioc3dgt7;
 import 'brewing/brewing_exception.dart' as _iim692ik;
 import 'brewing/extraction_method.dart' as _i54p6pxa;
+import 'brewing/favorite_save_result.dart' as _i73spzup;
 import 'brewing/ingredient.dart' as _ihnk7xbr;
 import 'brewing/ingredient_draft.dart' as _idpdlwt4;
 import 'brewing/recipe.dart' as _izkawori;
 import 'brewing/recipe_access.dart' as _i99euqmx;
 import 'brewing/recipe_detail.dart' as _ijpoq8bv;
 import 'brewing/recipe_draft.dart' as _iy437pkv;
+import 'brewing/recipe_favorite.dart' as _i76c0bzt;
 import 'brewing/recipe_flavor_tag.dart' as _ij3iqvmk;
 import 'brewing/recipe_instruction.dart' as _id0mij74;
 import 'brewing/recipe_photo.dart' as _i9xtdqqg;
@@ -48,12 +50,14 @@ export 'brewing/beverage_kind.dart';
 export 'brewing/brewing_error_code.dart';
 export 'brewing/brewing_exception.dart';
 export 'brewing/extraction_method.dart';
+export 'brewing/favorite_save_result.dart';
 export 'brewing/ingredient.dart';
 export 'brewing/ingredient_draft.dart';
 export 'brewing/recipe.dart';
 export 'brewing/recipe_access.dart';
 export 'brewing/recipe_detail.dart';
 export 'brewing/recipe_draft.dart';
+export 'brewing/recipe_favorite.dart';
 export 'brewing/recipe_flavor_tag.dart';
 export 'brewing/recipe_instruction.dart';
 export 'brewing/recipe_photo.dart';
@@ -376,6 +380,105 @@ class Protocol extends _is.DatabaseSerializationManager {
           ],
           type: 'btree',
           isUnique: false,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'recipe_favorite',
+      dartName: 'RecipeFavorite',
+      schema: 'public',
+      module: 'brewing_journal',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'userId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'recipeId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'titleKey',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'recipe_favorite_fk_0',
+          columns: ['userId'],
+          referenceTable: 'serverpod_auth_core_user',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+        _isp.ForeignKeyDefinition(
+          constraintName: 'recipe_favorite_fk_1',
+          columns: ['recipeId'],
+          referenceTable: 'recipe',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'recipe_favorite_user_recipe_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'recipeId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+        _isp.IndexDefinition(
+          indexName: 'recipe_favorite_user_title_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'titleKey',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
           isPrimary: false,
         ),
       ],
@@ -939,6 +1042,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _i54p6pxa.ExtractionMethod) {
       return _i54p6pxa.ExtractionMethod.fromJson(data) as T;
     }
+    if (t == _i73spzup.FavoriteSaveResult) {
+      return _i73spzup.FavoriteSaveResult.fromJson(data) as T;
+    }
     if (t == _ihnk7xbr.Ingredient) {
       return _ihnk7xbr.Ingredient.fromJson(data) as T;
     }
@@ -956,6 +1062,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _iy437pkv.RecipeDraft) {
       return _iy437pkv.RecipeDraft.fromJson(data) as T;
+    }
+    if (t == _i76c0bzt.RecipeFavorite) {
+      return _i76c0bzt.RecipeFavorite.fromJson(data) as T;
     }
     if (t == _ij3iqvmk.RecipeFlavorTag) {
       return _ij3iqvmk.RecipeFlavorTag.fromJson(data) as T;
@@ -1005,6 +1114,10 @@ class Protocol extends _is.DatabaseSerializationManager {
       return (data != null ? _i54p6pxa.ExtractionMethod.fromJson(data) : null)
           as T;
     }
+    if (t == _is.getType<_i73spzup.FavoriteSaveResult?>()) {
+      return (data != null ? _i73spzup.FavoriteSaveResult.fromJson(data) : null)
+          as T;
+    }
     if (t == _is.getType<_ihnk7xbr.Ingredient?>()) {
       return (data != null ? _ihnk7xbr.Ingredient.fromJson(data) : null) as T;
     }
@@ -1023,6 +1136,10 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _is.getType<_iy437pkv.RecipeDraft?>()) {
       return (data != null ? _iy437pkv.RecipeDraft.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_i76c0bzt.RecipeFavorite?>()) {
+      return (data != null ? _i76c0bzt.RecipeFavorite.fromJson(data) : null)
+          as T;
     }
     if (t == _is.getType<_ij3iqvmk.RecipeFlavorTag?>()) {
       return (data != null ? _ij3iqvmk.RecipeFlavorTag.fromJson(data) : null)
@@ -1183,12 +1300,14 @@ class Protocol extends _is.DatabaseSerializationManager {
       _ioc3dgt7.BrewingErrorCode => 'BrewingErrorCode',
       _iim692ik.BrewingException => 'BrewingException',
       _i54p6pxa.ExtractionMethod => 'ExtractionMethod',
+      _i73spzup.FavoriteSaveResult => 'FavoriteSaveResult',
       _ihnk7xbr.Ingredient => 'Ingredient',
       _idpdlwt4.IngredientDraft => 'IngredientDraft',
       _izkawori.Recipe => 'Recipe',
       _i99euqmx.RecipeAccess => 'RecipeAccess',
       _ijpoq8bv.RecipeDetail => 'RecipeDetail',
       _iy437pkv.RecipeDraft => 'RecipeDraft',
+      _i76c0bzt.RecipeFavorite => 'RecipeFavorite',
       _ij3iqvmk.RecipeFlavorTag => 'RecipeFlavorTag',
       _id0mij74.RecipeInstruction => 'RecipeInstruction',
       _i9xtdqqg.RecipePhoto => 'RecipePhoto',
@@ -1225,6 +1344,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'BrewingException';
       case _i54p6pxa.ExtractionMethod():
         return 'ExtractionMethod';
+      case _i73spzup.FavoriteSaveResult():
+        return 'FavoriteSaveResult';
       case _ihnk7xbr.Ingredient():
         return 'Ingredient';
       case _idpdlwt4.IngredientDraft():
@@ -1237,6 +1358,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'RecipeDetail';
       case _iy437pkv.RecipeDraft():
         return 'RecipeDraft';
+      case _i76c0bzt.RecipeFavorite():
+        return 'RecipeFavorite';
       case _ij3iqvmk.RecipeFlavorTag():
         return 'RecipeFlavorTag';
       case _id0mij74.RecipeInstruction():
@@ -1297,6 +1420,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName == 'ExtractionMethod') {
       return deserialize<_i54p6pxa.ExtractionMethod>(data['data']);
     }
+    if (dataClassName == 'FavoriteSaveResult') {
+      return deserialize<_i73spzup.FavoriteSaveResult>(data['data']);
+    }
     if (dataClassName == 'Ingredient') {
       return deserialize<_ihnk7xbr.Ingredient>(data['data']);
     }
@@ -1314,6 +1440,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'RecipeDraft') {
       return deserialize<_iy437pkv.RecipeDraft>(data['data']);
+    }
+    if (dataClassName == 'RecipeFavorite') {
+      return deserialize<_i76c0bzt.RecipeFavorite>(data['data']);
     }
     if (dataClassName == 'RecipeFlavorTag') {
       return deserialize<_ij3iqvmk.RecipeFlavorTag>(data['data']);
@@ -1393,6 +1522,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return _ihnk7xbr.Ingredient.t;
       case _izkawori.Recipe:
         return _izkawori.Recipe.t;
+      case _i76c0bzt.RecipeFavorite:
+        return _i76c0bzt.RecipeFavorite.t;
       case _ij3iqvmk.RecipeFlavorTag:
         return _ij3iqvmk.RecipeFlavorTag.t;
       case _id0mij74.RecipeInstruction:

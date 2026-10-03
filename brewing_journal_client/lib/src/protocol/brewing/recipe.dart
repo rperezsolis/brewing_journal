@@ -46,11 +46,13 @@ abstract class Recipe
     DateTime? createdAt,
     DateTime? updatedAt,
     this.authorName,
+    bool? isFavorite,
     this.instructions,
     this.photos,
     this.flavorTags,
   }) : createdAt = createdAt ?? DateTime.now(),
-       updatedAt = updatedAt ?? DateTime.now();
+       updatedAt = updatedAt ?? DateTime.now(),
+       isFavorite = isFavorite ?? false;
 
   factory Recipe({
     _isc.UuidValue? id,
@@ -75,6 +77,7 @@ abstract class Recipe
     DateTime? createdAt,
     DateTime? updatedAt,
     String? authorName,
+    bool? isFavorite,
     List<_i1t6etiy.RecipeInstruction>? instructions,
     List<_iir54vf2.RecipePhoto>? photos,
     List<_i55exiaf.RecipeFlavorTag>? flavorTags,
@@ -135,6 +138,9 @@ abstract class Recipe
           ? null
           : _isc.DateTimeJsonExtension.fromJson(jsonSerialization['updatedAt']),
       authorName: jsonSerialization['authorName'] as String?,
+      isFavorite: jsonSerialization['isFavorite'] == null
+          ? null
+          : _isc.BoolJsonExtension.fromJson(jsonSerialization['isFavorite']),
       instructions: jsonSerialization['instructions'] == null
           ? null
           : _ibcyqwbp.Protocol().deserialize<List<_i1t6etiy.RecipeInstruction>>(
@@ -201,6 +207,9 @@ abstract class Recipe
   /// Display name of the owner, filled when a recipe is read. Not stored.
   String? authorName;
 
+  /// Whether the caller has saved this recipe to favorites. Not stored.
+  bool isFavorite;
+
   List<_i1t6etiy.RecipeInstruction>? instructions;
 
   List<_iir54vf2.RecipePhoto>? photos;
@@ -233,6 +242,7 @@ abstract class Recipe
     DateTime? createdAt,
     DateTime? updatedAt,
     String? authorName,
+    bool? isFavorite,
     List<_i1t6etiy.RecipeInstruction>? instructions,
     List<_iir54vf2.RecipePhoto>? photos,
     List<_i55exiaf.RecipeFlavorTag>? flavorTags,
@@ -265,6 +275,7 @@ abstract class Recipe
       'createdAt': createdAt.toJson(),
       'updatedAt': updatedAt.toJson(),
       if (authorName != null) 'authorName': authorName,
+      'isFavorite': isFavorite,
       if (instructions != null)
         'instructions': instructions?.toJson(valueToJson: (v) => v.toJson()),
       if (photos != null)
@@ -302,6 +313,7 @@ abstract class Recipe
       'createdAt': createdAt.toJson(),
       'updatedAt': updatedAt.toJson(),
       if (authorName != null) 'authorName': authorName,
+      'isFavorite': isFavorite,
       if (instructions != null)
         'instructions': instructions?.toJson(
           valueToJson: (v) => v.toJsonForProtocol(),
@@ -347,6 +359,7 @@ class _RecipeImpl extends Recipe {
     DateTime? createdAt,
     DateTime? updatedAt,
     String? authorName,
+    bool? isFavorite,
     List<_i1t6etiy.RecipeInstruction>? instructions,
     List<_iir54vf2.RecipePhoto>? photos,
     List<_i55exiaf.RecipeFlavorTag>? flavorTags,
@@ -373,6 +386,7 @@ class _RecipeImpl extends Recipe {
          createdAt: createdAt,
          updatedAt: updatedAt,
          authorName: authorName,
+         isFavorite: isFavorite,
          instructions: instructions,
          photos: photos,
          flavorTags: flavorTags,
@@ -405,6 +419,7 @@ class _RecipeImpl extends Recipe {
     DateTime? createdAt,
     DateTime? updatedAt,
     Object? authorName = _Undefined,
+    bool? isFavorite,
     Object? instructions = _Undefined,
     Object? photos = _Undefined,
     Object? flavorTags = _Undefined,
@@ -438,6 +453,7 @@ class _RecipeImpl extends Recipe {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       authorName: authorName is String? ? authorName : this.authorName,
+      isFavorite: isFavorite ?? this.isFavorite,
       instructions: instructions is List<_i1t6etiy.RecipeInstruction>?
           ? instructions
           : this.instructions?.map((e0) => e0.copyWith()).toList(),

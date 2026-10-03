@@ -9,6 +9,8 @@ class RecipeListState extends Equatable {
     this.recipes = const [],
     this.hasMore = false,
     this.loadingMore = false,
+    this.favoritesOnly = false,
+    this.favoriteBusyIds = const <UuidValue>{},
     this.error,
   });
 
@@ -16,6 +18,12 @@ class RecipeListState extends Equatable {
   final List<Recipe> recipes;
   final bool hasMore;
   final bool loadingMore;
+
+  /// When true, [recipes] is the caller's favorite recipes only.
+  final bool favoritesOnly;
+
+  /// Recipes whose favorite toggle is waiting on the server.
+  final Set<UuidValue> favoriteBusyIds;
   final Object? error;
 
   RecipeListState copyWith({
@@ -23,6 +31,8 @@ class RecipeListState extends Equatable {
     List<Recipe>? recipes,
     bool? hasMore,
     bool? loadingMore,
+    bool? favoritesOnly,
+    Set<UuidValue>? favoriteBusyIds,
     Object? error,
   }) {
     return RecipeListState(
@@ -30,10 +40,20 @@ class RecipeListState extends Equatable {
       recipes: recipes ?? this.recipes,
       hasMore: hasMore ?? this.hasMore,
       loadingMore: loadingMore ?? this.loadingMore,
+      favoritesOnly: favoritesOnly ?? this.favoritesOnly,
+      favoriteBusyIds: favoriteBusyIds ?? this.favoriteBusyIds,
       error: error,
     );
   }
 
   @override
-  List<Object?> get props => [status, recipes, hasMore, loadingMore, error];
+  List<Object?> get props => [
+    status,
+    recipes,
+    hasMore,
+    loadingMore,
+    favoritesOnly,
+    favoriteBusyIds,
+    error,
+  ];
 }

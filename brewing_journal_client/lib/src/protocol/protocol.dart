@@ -26,6 +26,7 @@ import 'brewing/beverage_kind.dart' as _ino7p0mu;
 import 'brewing/brewing_error_code.dart' as _ioc3dgt7;
 import 'brewing/brewing_exception.dart' as _iim692ik;
 import 'brewing/extraction_method.dart' as _i54p6pxa;
+import 'brewing/favorite_save_result.dart' as _i73spzup;
 import 'brewing/ingredient.dart' as _ihnk7xbr;
 import 'brewing/ingredient_draft.dart' as _idpdlwt4;
 import 'brewing/recipe.dart' as _izkawori;
@@ -47,6 +48,7 @@ export 'brewing/beverage_kind.dart';
 export 'brewing/brewing_error_code.dart';
 export 'brewing/brewing_exception.dart';
 export 'brewing/extraction_method.dart';
+export 'brewing/favorite_save_result.dart';
 export 'brewing/ingredient.dart';
 export 'brewing/ingredient_draft.dart';
 export 'brewing/recipe.dart';
@@ -112,6 +114,9 @@ class Protocol extends _isc.SerializationManager {
     if (t == _i54p6pxa.ExtractionMethod) {
       return _i54p6pxa.ExtractionMethod.fromJson(data) as T;
     }
+    if (t == _i73spzup.FavoriteSaveResult) {
+      return _i73spzup.FavoriteSaveResult.fromJson(data) as T;
+    }
     if (t == _ihnk7xbr.Ingredient) {
       return _ihnk7xbr.Ingredient.fromJson(data) as T;
     }
@@ -176,6 +181,10 @@ class Protocol extends _isc.SerializationManager {
     }
     if (t == _isc.getType<_i54p6pxa.ExtractionMethod?>()) {
       return (data != null ? _i54p6pxa.ExtractionMethod.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_i73spzup.FavoriteSaveResult?>()) {
+      return (data != null ? _i73spzup.FavoriteSaveResult.fromJson(data) : null)
           as T;
     }
     if (t == _isc.getType<_ihnk7xbr.Ingredient?>()) {
@@ -353,6 +362,7 @@ class Protocol extends _isc.SerializationManager {
       _ioc3dgt7.BrewingErrorCode => 'BrewingErrorCode',
       _iim692ik.BrewingException => 'BrewingException',
       _i54p6pxa.ExtractionMethod => 'ExtractionMethod',
+      _i73spzup.FavoriteSaveResult => 'FavoriteSaveResult',
       _ihnk7xbr.Ingredient => 'Ingredient',
       _idpdlwt4.IngredientDraft => 'IngredientDraft',
       _izkawori.Recipe => 'Recipe',
@@ -395,6 +405,8 @@ class Protocol extends _isc.SerializationManager {
         return 'BrewingException';
       case _i54p6pxa.ExtractionMethod():
         return 'ExtractionMethod';
+      case _i73spzup.FavoriteSaveResult():
+        return 'FavoriteSaveResult';
       case _ihnk7xbr.Ingredient():
         return 'Ingredient';
       case _idpdlwt4.IngredientDraft():
@@ -462,6 +474,9 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'ExtractionMethod') {
       return deserialize<_i54p6pxa.ExtractionMethod>(data['data']);
+    }
+    if (dataClassName == 'FavoriteSaveResult') {
+      return deserialize<_i73spzup.FavoriteSaveResult>(data['data']);
     }
     if (dataClassName == 'Ingredient') {
       return deserialize<_ihnk7xbr.Ingredient>(data['data']);

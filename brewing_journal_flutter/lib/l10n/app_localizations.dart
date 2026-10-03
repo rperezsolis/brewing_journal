@@ -1139,6 +1139,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'At most {max} photos'**
   String validationTooManyPhotos(int max);
+
+  /// Button that replaces the favorite recipe of the same name
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get accept;
+
+  /// Tooltip for saving a recipe to favorites
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get addToFavorites;
+
+  /// Tooltip for removing a recipe from favorites
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get removeFromFavorites;
+
+  /// Tooltip for filtering the home list to favorite recipes
+  ///
+  /// In en, this message translates to:
+  /// **'Show favorites'**
+  String get showFavorites;
+
+  /// Tooltip for clearing the favorites filter
+  ///
+  /// In en, this message translates to:
+  /// **'Show all recipes'**
+  String get showAllRecipes;
+
+  /// Title of the dialog shown when a favorite already uses this recipe name
+  ///
+  /// In en, this message translates to:
+  /// **'Already in favorites'**
+  String get favoriteNameTakenTitle;
+
+  /// Body of the dialog that asks to replace the favorite with the same name
+  ///
+  /// In en, this message translates to:
+  /// **'A recipe with this name is already in your favorites. Replace it with this one?'**
+  String get favoriteNameTakenBody;
+
+  /// Empty state title when the home list is filtered to favorites
+  ///
+  /// In en, this message translates to:
+  /// **'No favorite recipes'**
+  String get noFavoriteRecipes;
+
+  /// Empty state detail when the home list is filtered to favorites
+  ///
+  /// In en, this message translates to:
+  /// **'Save a recipe to keep the version you want to brew.'**
+  String get noFavoriteRecipesDetail;
 }
 
 class _AppLocalizationsDelegate

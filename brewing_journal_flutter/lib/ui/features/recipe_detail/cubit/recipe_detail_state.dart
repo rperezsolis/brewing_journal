@@ -11,6 +11,7 @@ class RecipeDetailState extends Equatable {
     this.error,
     this.deleting = false,
     this.assigning = false,
+    this.favoriteBusy = false,
   });
 
   final RecipeDetailStatus status;
@@ -19,6 +20,7 @@ class RecipeDetailState extends Equatable {
   final Object? error;
   final bool deleting;
   final bool assigning;
+  final bool favoriteBusy;
 
   RecipeDetailState copyWith({
     RecipeDetailStatus? status,
@@ -27,6 +29,7 @@ class RecipeDetailState extends Equatable {
     Object? error,
     bool? deleting,
     bool? assigning,
+    bool? favoriteBusy,
   }) {
     return RecipeDetailState(
       status: status ?? this.status,
@@ -35,6 +38,7 @@ class RecipeDetailState extends Equatable {
       error: error,
       deleting: deleting ?? this.deleting,
       assigning: assigning ?? this.assigning,
+      favoriteBusy: favoriteBusy ?? this.favoriteBusy,
     );
   }
 
@@ -46,5 +50,6 @@ class RecipeDetailState extends Equatable {
     error,
     deleting,
     assigning,
+    favoriteBusy,
   ];
 }

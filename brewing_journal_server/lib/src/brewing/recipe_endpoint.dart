@@ -6,6 +6,7 @@ import '../generated/protocol.dart';
 import '../teams/team_membership_lookup.dart';
 import 'recipe_access_policy.dart';
 import 'recipe_authors.dart';
+import 'recipe_favorites.dart';
 import 'recipe_storage.dart';
 import 'recipe_validator.dart';
 
@@ -150,15 +151,16 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
     final access = await RecipeAccessPolicy.resolve(session, recipe);
 
     final named = (await withAuthorNames(session, [recipe])).single;
+    final flagged = (await withFavoriteFlags(session, [named])).single;
     final detail = RecipeDetail(
-      recipe: named,
+      recipe: flagged,
       ingredient: recipe.ingredient!,
       instructions: recipe.instructions ?? [],
       flavorTags: recipe.flavorTags ?? [],
       photos: await withPublicUrls(session, recipe.photos ?? []),
       access: access,
     );
-    named
+    flagged
       ..ingredient = null
       ..instructions = null
       ..flavorTags = null
@@ -176,8 +178,47 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
       offset: offset < 0 ? 0 : offset,
       include: Recipe.include(ingredient: Ingredient.include()),
     );
-    return withAuthorNames(session, recipes);
+    return _withListFields(session, recipes);
   }
+
+  /// The caller's own recipes that are in favorites, most recently updated first.
+  Future<List<Recipe>> listFavorites(
+    Session session,
+    int limit,
+    int offset,
+  ) async {
+    final callerId = session.callerId;
+    final marks = await RecipeFavorite.db.find(
+      session,
+      where: (t) => t.userId.equals(callerId),
+    );
+    if (marks.isEmpty) return [];
+    final recipes = await Recipe.db.find(
+      session,
+      where: (t) =>
+          t.ownerId.equals(callerId) &
+          t.id.inSet(marks.map((mark) => mark.recipeId).toSet()),
+      orderByList: (t) => [t.updatedAt.desc(), t.id.desc()],
+      limit: limit.clamp(1, 50),
+      offset: offset < 0 ? 0 : offset,
+      include: Recipe.include(ingredient: Ingredient.include()),
+    );
+    return _withListFields(session, recipes);
+  }
+
+  /// Saves [recipeId] as the caller's favorite for its title.
+  ///
+  /// When another favorite already uses that title and [replace] is false,
+  /// nothing changes and [FavoriteSaveResult.saved] is false.
+  Future<FavoriteSaveResult> saveFavorite(
+    Session session,
+    UuidValue recipeId,
+    bool replace,
+  ) => saveRecipeFavorite(session, recipeId, replace);
+
+  /// Removes [recipeId] from the caller's favorites.
+  Future<void> removeFavorite(Session session, UuidValue recipeId) =>
+      removeRecipeFavorite(session, recipeId);
 
   Future<RecipeAccess> getAccess(Session session, UuidValue id) async {
     final (_, access) = await RecipeAccessPolicy.load(session, id);
@@ -201,7 +242,7 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
       offset: offset < 0 ? 0 : offset,
       include: Recipe.include(ingredient: Ingredient.include()),
     );
-    return withAuthorNames(session, recipes);
+    return _withListFields(session, recipes);
   }
 
   /// Moves a personal recipe the caller owns onto a team they edit.
@@ -216,10 +257,11 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
     if (membership?.role != TeamRole.editor) {
       throw recipeForbidden("You can't add a recipe to this team");
     }
-    return Recipe.db.updateRow(
+    final updated = await Recipe.db.updateRow(
       session,
       recipe.copyWith(teamId: teamId, updatedAt: DateTime.now().toUtc()),
     );
+    return (await withFavoriteFlags(session, [updated])).single;
   }
 
   /// Clears `teamId`. The recipe owner or a team editor may do this.
@@ -230,10 +272,11 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
     if (!isOwner && !isTeamEditor) {
       throw recipeForbidden("You can't remove this recipe from the team");
     }
-    return Recipe.db.updateRow(
+    final updated = await Recipe.db.updateRow(
       session,
       recipe.copyWith(teamId: null, updatedAt: DateTime.now().toUtc()),
     );
+    return (await withFavoriteFlags(session, [updated])).single;
   }
 
   /// Deletes the recipe and its child rows; photo files are removed
@@ -260,5 +303,13 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
       return [for (final photo in photos) photo.storagePath];
     });
     await deletePhotoFiles(session, paths);
+  }
+
+  Future<List<Recipe>> _withListFields(
+    Session session,
+    List<Recipe> recipes,
+  ) async {
+    final named = await withAuthorNames(session, recipes);
+    return withFavoriteFlags(session, named);
   }
 }

@@ -594,6 +594,35 @@ class AppLocalizationsEs extends AppLocalizations {
   String validationTooManyPhotos(int max) {
     return 'Máximo $max fotos';
   }
+
+  @override
+  String get accept => 'Aceptar';
+
+  @override
+  String get addToFavorites => 'Agregar a favoritos';
+
+  @override
+  String get removeFromFavorites => 'Quitar de favoritos';
+
+  @override
+  String get showFavorites => 'Mostrar favoritos';
+
+  @override
+  String get showAllRecipes => 'Mostrar todas las recetas';
+
+  @override
+  String get favoriteNameTakenTitle => 'Ya está en favoritos';
+
+  @override
+  String get favoriteNameTakenBody =>
+      'Ya hay una receta con ese nombre en tus favoritos. ¿Quieres reemplazarla por esta?';
+
+  @override
+  String get noFavoriteRecipes => 'No hay recetas favoritas';
+
+  @override
+  String get noFavoriteRecipesDetail =>
+      'Guarda una receta para conservar la versión que quieres preparar.';
 }
 
 /// The translations for Spanish Castilian, as used in Latin America and the Caribbean (`es_419`).
@@ -1186,4 +1215,33 @@ class AppLocalizationsEs419 extends AppLocalizationsEs {
   String validationTooManyPhotos(int max) {
     return 'Máximo $max fotos';
   }
+
+  @override
+  String get accept => 'Aceptar';
+
+  @override
+  String get addToFavorites => 'Agregar a favoritos';
+
+  @override
+  String get removeFromFavorites => 'Quitar de favoritos';
+
+  @override
+  String get showFavorites => 'Mostrar favoritos';
+
+  @override
+  String get showAllRecipes => 'Mostrar todas las recetas';
+
+  @override
+  String get favoriteNameTakenTitle => 'Ya está en favoritos';
+
+  @override
+  String get favoriteNameTakenBody =>
+      'Ya hay una receta con ese nombre en tus favoritos. ¿Quieres reemplazarla por esta?';
+
+  @override
+  String get noFavoriteRecipes => 'No hay recetas favoritas';
+
+  @override
+  String get noFavoriteRecipesDetail =>
+      'Guarda una receta para conservar la versión que quieres preparar.';
 }

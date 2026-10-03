@@ -78,4 +78,61 @@ void main() {
     expect(cubit.state.status, RecipeListStatus.failure);
     expect(cubit.state.error, isA<ServerpodClientNetworkException>());
   });
+
+  test('setFavoritesOnly reloads with only favorites', () async {
+    await cubit.load();
+    final kept = cubit.state.recipes.first;
+    await recipes.saveFavorite(kept.id!, replace: false);
+
+    await cubit.setFavoritesOnly(true);
+
+    expect(cubit.state.favoritesOnly, isTrue);
+    expect(cubit.state.recipes.map((r) => r.id), [kept.id]);
+    expect(cubit.state.recipes.single.isFavorite, isTrue);
+
+    expect(await cubit.removeFavorite(kept.id!), isTrue);
+    expect(cubit.state.recipes, isEmpty);
+  });
+
+  test('saveFavorite replaces the other recipe with the same name', () async {
+    final ingredients = FakeIngredientRepository();
+    final store = FakeRecipeRepository(ingredients);
+    final bean = await ingredients.register(
+      IngredientDraft(kind: BeverageKind.coffee, name: 'Kenya AA'),
+    );
+    RecipeDraft draft(double dose) => RecipeDraft(
+      ingredientId: bean.id!,
+      title: 'V60',
+      waterTempC: 93,
+      doseGrams: dose,
+      grindSize: 'fine',
+      grinderModel: 'Niche',
+      extractionMethod: ExtractionMethod.v60,
+      acidity: 0,
+      sweetness: 0,
+      body: 0,
+      bitterness: 0,
+      flavorTags: const [],
+      instructions: const [],
+    );
+    final first = await store.save(draft(15));
+    await Future<void>.delayed(const Duration(milliseconds: 2));
+    final second = await store.save(draft(18));
+    final list = RecipeListCubit(store);
+    addTearDown(list.close);
+    await list.load();
+
+    final saved = await list.saveFavorite(first.recipe.id!);
+    expect(saved?.saved, isTrue);
+
+    final blocked = await list.saveFavorite(second.recipe.id!);
+    expect(blocked?.saved, isFalse);
+    expect(list.state.recipes.map((r) => r.isFavorite), [isFalse, isTrue]);
+
+    final replaced = await list.saveFavorite(second.recipe.id!, replace: true);
+
+    expect(replaced?.saved, isTrue);
+    expect(replaced?.replacedRecipeId, first.recipe.id);
+    expect(list.state.recipes.map((r) => r.isFavorite), [isTrue, isFalse]);
+  });
 }

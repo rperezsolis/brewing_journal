@@ -86,11 +86,48 @@ class FakeRecipeRepository implements RecipeRepository {
   Future<List<Recipe>> listMine({
     required int limit,
     required int offset,
+    bool favoritesOnly = false,
   }) async {
     _throwIfFailing();
-    final recipes = details.values.map((d) => d.recipe).toList()
-      ..sort(_newestFirst);
+    final recipes = details.values.map((d) => d.recipe).where((recipe) {
+      return !favoritesOnly || recipe.isFavorite;
+    }).toList()..sort(_newestFirst);
     return recipes.skip(offset).take(limit).toList();
+  }
+
+  @override
+  Future<FavoriteSaveResult> saveFavorite(
+    UuidValue id, {
+    required bool replace,
+  }) async {
+    _throwIfFailing();
+    final detail = details[id] ?? (throw _notFound());
+    if (detail.recipe.isFavorite) return FavoriteSaveResult(saved: true);
+
+    final key = _titleKey(detail.recipe.title);
+    UuidValue? conflictId;
+    for (final entry in details.entries) {
+      final recipe = entry.value.recipe;
+      if (recipe.isFavorite &&
+          entry.key != id &&
+          _titleKey(recipe.title) == key) {
+        conflictId = entry.key;
+        break;
+      }
+    }
+    if (conflictId != null && !replace) {
+      return FavoriteSaveResult(saved: false);
+    }
+    if (conflictId != null) _setFavorite(conflictId, false);
+    _setFavorite(id, true);
+    return FavoriteSaveResult(saved: true, replacedRecipeId: conflictId);
+  }
+
+  @override
+  Future<void> removeFavorite(UuidValue id) async {
+    _throwIfFailing();
+    if (!details.containsKey(id)) throw _notFound();
+    _setFavorite(id, false);
   }
 
   @override
@@ -149,6 +186,16 @@ class FakeRecipeRepository implements RecipeRepository {
     _throwIfFailing();
     if (details.remove(id) == null) throw _notFound();
   }
+
+  void _setFavorite(UuidValue id, bool isFavorite) {
+    final detail = details[id];
+    if (detail == null || detail.recipe.isFavorite == isFavorite) return;
+    details[id] = detail.copyWith(
+      recipe: detail.recipe.copyWith(isFavorite: isFavorite),
+    );
+  }
+
+  static String _titleKey(String title) => title.trim().toLowerCase();
 
   static int _newestFirst(Recipe a, Recipe b) {
     final byTime = b.updatedAt.compareTo(a.updatedAt);

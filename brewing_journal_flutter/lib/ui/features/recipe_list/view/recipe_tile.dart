@@ -4,13 +4,22 @@ import 'package:intl/intl.dart';
 
 import '../../../core/brewing_labels.dart';
 import '../../../core/l10n.dart';
+import '../../../core/widgets/favorite_icon_button.dart';
 
 /// One recipe in a list: title, author, save time, and brew summary.
 class RecipeTile extends StatelessWidget {
-  const RecipeTile({super.key, required this.recipe, required this.onTap});
+  const RecipeTile({
+    super.key,
+    required this.recipe,
+    required this.onTap,
+    required this.onFavorite,
+    this.favoriteBusy = false,
+  });
 
   final Recipe recipe;
   final VoidCallback onTap;
+  final VoidCallback onFavorite;
+  final bool favoriteBusy;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +68,17 @@ class RecipeTile extends StatelessWidget {
             Text(summary, maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
         ),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FavoriteIconButton(
+              key: ValueKey('recipe-favorite-${recipe.id?.uuid}'),
+              selected: recipe.isFavorite,
+              onPressed: favoriteBusy ? null : onFavorite,
+            ),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
         onTap: onTap,
       ),
     );
