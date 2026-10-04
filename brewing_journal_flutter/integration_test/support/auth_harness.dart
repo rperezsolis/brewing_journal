@@ -190,6 +190,29 @@ class AuthHarness {
     expect(find.byType(RecipeListScreen), findsNothing);
   }
 
+  /// Makes every editor on [teamName] a viewer.
+  ///
+  /// Invites never demote an editor, and the recipe owner still has
+  /// `canEdit` after this. The teams list reloads on the next sign-in.
+  Future<void> demoteTeamEditors(String teamName) async {
+    final db = await _database();
+    final rows = await db.execute(
+      Sql.named(
+        'UPDATE team_membership AS membership '
+        "SET role = 'viewer' "
+        'FROM team '
+        'WHERE membership."teamId" = team.id '
+        'AND team.name = @name:text '
+        "AND membership.role = 'editor' "
+        'RETURNING membership.id',
+      ),
+      parameters: {'name': teamName},
+    );
+    if (rows.isEmpty) {
+      throw StateError('No editor membership found for team $teamName.');
+    }
+  }
+
   /// Moves an invite into the past so accept reports it as expired.
   Future<void> expireInvite(String token) async {
     final db = await _database();

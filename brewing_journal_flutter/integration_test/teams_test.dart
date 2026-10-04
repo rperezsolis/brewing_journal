@@ -154,6 +154,8 @@ void main() {
         );
         await teams.replaceInstructions(tester, edited);
         await recipes.expectBrewInstructions(tester, edited);
+        await recipes.backToJournal(tester);
+        expect(find.text(title).hitTestable(), findsNWidgets(2));
         await teams.signOutViaJournal(tester);
 
         await auth.signIn(tester, ownerEmail, integrationPassword);
@@ -163,6 +165,8 @@ void main() {
         await recipes.expectBrewInstructions(tester, edited);
         await teams.replaceInstructions(tester, ownersFinal);
         await recipes.expectBrewInstructions(tester, ownersFinal);
+        await recipes.backToJournal(tester);
+        expect(find.text(title).hitTestable(), findsNWidgets(3));
       },
       timeout: const Timeout(Duration(minutes: 8)),
     );

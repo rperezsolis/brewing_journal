@@ -709,7 +709,7 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
   - [x] Cancel leaves the first heart filled. Accept fills the second and clears the first.
   - [x] The home app-bar heart shows only the winning recipe, and turning it off shows both. With nothing starred, it shows "No favorite recipes".
   - [x] The Brew Mode heart removes and adds that same recipe, and the journal tile follows.
-  - [x] A team viewer stars a shared recipe. The owner's team list does not show that heart as filled, and the viewer's home filter stays empty.
+  - [x] A team viewer sees the team's filled heart and cannot change it. The owner's team list shows that same heart, and the viewer's home filter stays empty. Feature 7 replaced the older case where the viewer starred a personal favorite from the team list.
 - [x] Run the post-phase checklist for the code that landed. Server `recipe_favorite_test.dart` passed, and the Flutter tests listed in 6.3 passed. `favorites_test.dart` passed (2). `dart analyze` is clean in the server and Flutter packages.
 
 ---

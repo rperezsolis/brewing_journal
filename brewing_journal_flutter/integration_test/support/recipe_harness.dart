@@ -81,8 +81,14 @@ class RecipeHarness {
     );
     await tester.enterText(find.byKey(const Key('ingredient-name')), name);
     await tester.pump();
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump();
     final save = find.byKey(const Key('ingredient-register'));
-    await tester.ensureVisible(save);
+    await tester.scrollUntilVisible(
+      save,
+      80,
+      scrollable: find.ancestor(of: save, matching: find.byType(Scrollable)),
+    );
     await tester.tap(save);
     await tester.pump();
     await _waitUntil(
@@ -114,6 +120,11 @@ class RecipeHarness {
     await _enter(tester, const Key('extraction-grind'), grind);
     await _enter(tester, const Key('extraction-grinder'), grinder);
     await _selectMethod(tester, method ?? l10n.methodV60);
+  }
+
+  /// Replaces the dose on the extraction step. The tile shows it as `N g`.
+  Future<void> setDose(WidgetTester tester, String grams) async {
+    await _enter(tester, const Key('extraction-dose'), grams);
   }
 
   /// Types a duration the extraction step accepts (`m:ss` or plain seconds).
@@ -587,7 +598,32 @@ class RecipeHarness {
     );
   }
 
-  Future<void> toggleBrewFavorite(WidgetTester tester) async {
+  /// The brew heart stays visible and does not accept a tap.
+  Future<void> expectBrewFavoriteLocked(
+    WidgetTester tester, {
+    required bool selected,
+  }) async {
+    await _waitForBrew(tester);
+    await _waitUntil(
+      tester,
+      () {
+        final heart = find.byKey(const Key('brew-favorite'));
+        if (heart.evaluate().isEmpty) return false;
+        if (tester.widget<FavoriteIconButton>(heart).selected != selected) {
+          return false;
+        }
+        return !_heartEnabled(tester, heart);
+      },
+      selected
+          ? 'the brew-mode heart to stay filled and locked'
+          : 'the brew-mode heart to stay empty and locked',
+    );
+  }
+
+  /// Taps the brew heart without waiting for it to flip.
+  ///
+  /// A same-name save opens the replace dialog and leaves the heart as it was.
+  Future<void> tapBrewFavorite(WidgetTester tester) async {
     final heart = find.byKey(const Key('brew-favorite')).hitTestable();
     await _waitFor(tester, heart, 'the brew-mode favorite heart');
     await _waitUntil(
@@ -595,9 +631,15 @@ class RecipeHarness {
       () => _heartEnabled(tester, heart),
       'the brew-mode heart to accept a tap',
     );
-    final wasSelected = tester.widget<FavoriteIconButton>(heart).selected;
     await tester.tap(heart);
     await tester.pump();
+  }
+
+  Future<void> toggleBrewFavorite(WidgetTester tester) async {
+    final heart = find.byKey(const Key('brew-favorite')).hitTestable();
+    await _waitFor(tester, heart, 'the brew-mode favorite heart');
+    final wasSelected = tester.widget<FavoriteIconButton>(heart).selected;
+    await tapBrewFavorite(tester);
     await expectBrewFavorite(tester, selected: !wasSelected);
   }
 
