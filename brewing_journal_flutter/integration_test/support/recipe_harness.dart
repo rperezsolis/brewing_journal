@@ -419,13 +419,22 @@ class RecipeHarness {
     );
   }
 
-  Future<void> expectReplaceFavoriteDialog(WidgetTester tester) async {
+  Future<void> expectReplaceFavoriteDialog(
+    WidgetTester tester, {
+    bool team = false,
+  }) async {
+    final title = team
+        ? l10n.favoriteNameTakenTitleTeam
+        : l10n.favoriteNameTakenTitle;
+    final body = team
+        ? l10n.favoriteNameTakenBodyTeam
+        : l10n.favoriteNameTakenBody;
     await _waitFor(
       tester,
-      find.text(l10n.favoriteNameTakenTitle).hitTestable(),
+      find.text(title).hitTestable(),
       'the replace-favorite dialog',
     );
-    expect(find.text(l10n.favoriteNameTakenBody).hitTestable(), findsOneWidget);
+    expect(find.text(body).hitTestable(), findsOneWidget);
     expect(
       find.byKey(const Key('favorite-conflict-close')).hitTestable(),
       findsOneWidget,
@@ -440,24 +449,36 @@ class RecipeHarness {
     );
   }
 
-  Future<void> closeReplaceFavoriteDialog(WidgetTester tester) {
+  Future<void> closeReplaceFavoriteDialog(
+    WidgetTester tester, {
+    bool team = false,
+  }) {
     return _dismissReplaceFavoriteDialog(
       tester,
       const Key('favorite-conflict-close'),
+      team: team,
     );
   }
 
-  Future<void> cancelReplaceFavoriteDialog(WidgetTester tester) {
+  Future<void> cancelReplaceFavoriteDialog(
+    WidgetTester tester, {
+    bool team = false,
+  }) {
     return _dismissReplaceFavoriteDialog(
       tester,
       const Key('favorite-conflict-cancel'),
+      team: team,
     );
   }
 
-  Future<void> acceptReplaceFavoriteDialog(WidgetTester tester) {
+  Future<void> acceptReplaceFavoriteDialog(
+    WidgetTester tester, {
+    bool team = false,
+  }) {
     return _dismissReplaceFavoriteDialog(
       tester,
       const Key('favorite-conflict-accept'),
+      team: team,
     );
   }
 
@@ -487,6 +508,56 @@ class RecipeHarness {
       only
           ? 'the home list to show favorites'
           : 'the home list to show every recipe',
+    );
+  }
+
+  /// The team app-bar heart. On shows only that team's favorite recipes.
+  Future<void> setTeamFavoritesOnly(WidgetTester tester, bool only) async {
+    final button = find.byKey(const Key('team-list-favorites')).hitTestable();
+    await _waitFor(tester, button, 'the team favorites filter');
+    if (tester.widget<FavoriteIconButton>(button).selected == only) return;
+    await tester.tap(button);
+    await tester.pump();
+    await _waitUntil(
+      tester,
+      () =>
+          find
+              .byKey(const Key('team-list-favorites'))
+              .hitTestable()
+              .evaluate()
+              .isNotEmpty &&
+          tester
+                  .widget<FavoriteIconButton>(
+                    find.byKey(const Key('team-list-favorites')).hitTestable(),
+                  )
+                  .selected ==
+              only,
+      only
+          ? 'the team list to show favorites'
+          : 'the team list to show every recipe',
+    );
+  }
+
+  /// A team heart that stays visible and selected, and does not accept a tap.
+  Future<void> expectTileFavoriteLocked(
+    WidgetTester tester, {
+    required Type scope,
+    required String marker,
+    required bool selected,
+  }) async {
+    await _waitUntil(
+      tester,
+      () {
+        final heart = _tileFavorite(scope, marker, hitTestable: false);
+        if (heart.evaluate().isEmpty) return false;
+        if (tester.widget<FavoriteIconButton>(heart).selected != selected) {
+          return false;
+        }
+        return !_heartEnabled(tester, heart);
+      },
+      selected
+          ? '$marker to stay a locked team favorite'
+          : '$marker to stay a locked empty heart',
     );
   }
 
@@ -906,17 +977,24 @@ class RecipeHarness {
     await tester.pump(const Duration(milliseconds: 300));
   }
 
-  Finder _tileFavorite(Type scope, String marker) {
+  Finder _tileFavorite(
+    Type scope,
+    String marker, {
+    bool hitTestable = true,
+  }) {
+    final markerFinder = find.descendant(
+      of: find.byType(scope),
+      matching: find.textContaining(marker),
+    );
     final tile = find.ancestor(
-      of: find.descendant(
-        of: find.byType(scope),
-        matching: find.textContaining(marker).hitTestable(),
-      ),
+      of: hitTestable ? markerFinder.hitTestable() : markerFinder,
       matching: find.byType(ListTile),
     );
-    return find
-        .descendant(of: tile, matching: find.byType(FavoriteIconButton))
-        .hitTestable();
+    final heart = find.descendant(
+      of: tile,
+      matching: find.byType(FavoriteIconButton),
+    );
+    return hitTestable ? heart.hitTestable() : heart;
   }
 
   bool _heartEnabled(WidgetTester tester, Finder heart) {
@@ -928,17 +1006,17 @@ class RecipeHarness {
 
   Future<void> _dismissReplaceFavoriteDialog(
     WidgetTester tester,
-    Key key,
-  ) async {
+    Key key, {
+    bool team = false,
+  }) async {
+    final title = team
+        ? l10n.favoriteNameTakenTitleTeam
+        : l10n.favoriteNameTakenTitle;
     await tester.tap(find.byKey(key).hitTestable());
     await tester.pump();
     await _waitUntil(
       tester,
-      () => find
-          .text(l10n.favoriteNameTakenTitle)
-          .hitTestable()
-          .evaluate()
-          .isEmpty,
+      () => find.text(title).hitTestable().evaluate().isEmpty,
       'the replace-favorite dialog to close',
     );
   }

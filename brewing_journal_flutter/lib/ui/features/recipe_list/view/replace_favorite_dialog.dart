@@ -5,15 +5,21 @@ import '../../../core/l10n.dart';
 /// Asks whether to replace the favorite that already uses this recipe name.
 ///
 /// Returns true only when the user accepts the replacement.
-Future<bool> showReplaceFavoriteDialog(BuildContext context) {
+Future<bool> showReplaceFavoriteDialog(
+  BuildContext context, {
+  bool team = false,
+}) {
   return showDialog<bool>(
     context: context,
-    builder: (context) => const ReplaceFavoriteDialog(),
+    builder: (context) => ReplaceFavoriteDialog(team: team),
   ).then((accepted) => accepted ?? false);
 }
 
 class ReplaceFavoriteDialog extends StatelessWidget {
-  const ReplaceFavoriteDialog({super.key});
+  const ReplaceFavoriteDialog({super.key, this.team = false});
+
+  /// Uses the team-favorites copy when the save belongs to a team.
+  final bool team;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +32,11 @@ class ReplaceFavoriteDialog extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(top: 10),
-              child: Text(l10n.favoriteNameTakenTitle),
+              child: Text(
+                team
+                    ? l10n.favoriteNameTakenTitleTeam
+                    : l10n.favoriteNameTakenTitle,
+              ),
             ),
           ),
           IconButton(
@@ -37,7 +47,9 @@ class ReplaceFavoriteDialog extends StatelessWidget {
           ),
         ],
       ),
-      content: Text(l10n.favoriteNameTakenBody),
+      content: Text(
+        team ? l10n.favoriteNameTakenBodyTeam : l10n.favoriteNameTakenBody,
+      ),
       actions: [
         TextButton(
           key: const Key('favorite-conflict-cancel'),

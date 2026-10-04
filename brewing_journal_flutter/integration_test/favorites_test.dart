@@ -9,12 +9,11 @@ import 'support/auth_harness.dart';
 import 'support/recipe_harness.dart';
 import 'support/team_harness.dart';
 
-/// Feature 6 against the development server (`serverpod start`).
+/// Favorites against the development server (`serverpod start`).
 ///
-/// US-6.1 one favorite per recipe name, US-6.2 hearts on the tile and in
-/// Brew Mode, US-6.3 close, Cancel, and Accept on the replace dialog,
-/// US-6.4 the home filter, US-6.5 a viewer's favorite stays off the owner's
-/// team list and off the viewer's home filter.
+/// Feature 6: one personal favorite per recipe name, hearts on the tile and
+/// in Brew Mode, close, Cancel, and Accept, and the home filter.
+/// Feature 7: a separate team list that only an editor can change.
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -188,14 +187,15 @@ void main() {
     );
 
     testWidgets(
-      'US-6.5 a viewer favorite stays off the owner list and the viewer journal',
+      'US-6.5 through US-6.9 keeps team favorites separate from personal ones',
       (tester) async {
         await recipes.signUpFresh(tester);
         final ownerEmail = auth.accountEmail!;
         final stamp = DateTime.now().millisecondsSinceEpoch;
         final team = 'Shop Recipes $stamp';
         final title = 'Shop V60 $stamp';
-        final bean = 'Shop lot $stamp';
+        final firstBean = 'First lot $stamp';
+        final secondBean = 'Second lot $stamp';
 
         await teams.openTeams(tester);
         await teams.createTeam(tester, team);
@@ -203,17 +203,143 @@ void main() {
         await teams.saveTeamRecipe(
           tester,
           title: title,
-          bean: bean,
+          bean: firstBean,
           instructions: const ['bloom 30g'],
         );
+        await recipes.backToJournal(tester);
+        await teams.saveTeamRecipe(
+          tester,
+          title: title,
+          bean: secondBean,
+          instructions: const ['bloom 30g'],
+        );
+        await recipes.backToJournal(tester);
+
+        await recipes.setTeamFavoritesOnly(tester, true);
+        await recipes.expectHomeMessage(
+          tester,
+          recipes.l10n.noTeamFavoriteRecipes,
+        );
+        expect(find.text(title).hitTestable(), findsNothing);
+        await recipes.setTeamFavoritesOnly(tester, false);
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: firstBean,
+          selected: false,
+        );
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: secondBean,
+          selected: false,
+        );
+
+        await recipes.tapTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: firstBean,
+        );
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: firstBean,
+          selected: true,
+        );
+        await recipes.tapTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: secondBean,
+        );
+        await recipes.expectReplaceFavoriteDialog(tester, team: true);
+        await recipes.closeReplaceFavoriteDialog(tester, team: true);
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: firstBean,
+          selected: true,
+        );
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: secondBean,
+          selected: false,
+        );
+
+        await recipes.tapTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: secondBean,
+        );
+        await recipes.expectReplaceFavoriteDialog(tester, team: true);
+        await recipes.cancelReplaceFavoriteDialog(tester, team: true);
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: firstBean,
+          selected: true,
+        );
+
+        await recipes.tapTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: secondBean,
+        );
+        await recipes.expectReplaceFavoriteDialog(tester, team: true);
+        await recipes.acceptReplaceFavoriteDialog(tester, team: true);
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: secondBean,
+          selected: true,
+        );
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: firstBean,
+          selected: false,
+        );
+
+        await recipes.setTeamFavoritesOnly(tester, true);
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: secondBean,
+          selected: true,
+        );
+        expect(find.textContaining(firstBean).hitTestable(), findsNothing);
+        await recipes.setTeamFavoritesOnly(tester, false);
+        expect(find.textContaining(firstBean).hitTestable(), findsOneWidget);
+
+        await teams.openTeamRecipe(tester, title);
+        await recipes.expectBrewText(tester, secondBean);
+        await recipes.expectBrewFavorite(tester, selected: true);
+        await recipes.toggleBrewFavorite(tester);
         await recipes.backToJournal(tester);
         await recipes.expectTileFavorite(
           tester,
           scope: TeamDetailScreen,
-          marker: bean,
+          marker: secondBean,
           selected: false,
         );
+        await teams.openTeamRecipe(tester, title);
+        await recipes.toggleBrewFavorite(tester);
+        await recipes.backToJournal(tester);
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: secondBean,
+          selected: true,
+        );
 
+        await teams.openMyRecipes(tester);
+        await recipes.setHomeFavoritesOnly(tester, true);
+        await recipes.expectHomeMessage(tester, recipes.l10n.noFavoriteRecipes);
+        expect(find.text(title).hitTestable(), findsNothing);
+        await recipes.setHomeFavoritesOnly(tester, false);
+
+        await teams.openTeams(tester);
+        await teams.openTeam(tester, team);
         final viewerUrl = await teams.createInvite(
           tester,
           roleLabel: recipes.l10n.roleViewer,
@@ -226,15 +352,10 @@ void main() {
         await teams.go(tester, teams.invitePath(viewerUrl));
         await teams.expectJoined(tester, team, recipes.l10n.roleViewer);
         await teams.openJoinedTeam(tester, team);
-        await recipes.tapTileFavorite(
+        await recipes.expectTileFavoriteLocked(
           tester,
           scope: TeamDetailScreen,
-          marker: bean,
-        );
-        await recipes.expectTileFavorite(
-          tester,
-          scope: TeamDetailScreen,
-          marker: bean,
+          marker: secondBean,
           selected: true,
         );
 
@@ -251,9 +372,80 @@ void main() {
         await recipes.expectTileFavorite(
           tester,
           scope: TeamDetailScreen,
-          marker: bean,
+          marker: secondBean,
+          selected: true,
+        );
+
+        await teams.openMyRecipes(tester);
+        await recipes.tapTileFavorite(
+          tester,
+          scope: RecipeListScreen,
+          marker: firstBean,
+        );
+        await recipes.expectTileFavorite(
+          tester,
+          scope: RecipeListScreen,
+          marker: firstBean,
+          selected: true,
+        );
+        await teams.openTeams(tester);
+        await teams.openTeam(tester, team);
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: firstBean,
           selected: false,
         );
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: secondBean,
+          selected: true,
+        );
+
+        await teams.openMyRecipes(tester);
+        await recipes.tapTileFavorite(
+          tester,
+          scope: RecipeListScreen,
+          marker: secondBean,
+        );
+        await recipes.expectReplaceFavoriteDialog(tester);
+        await recipes.acceptReplaceFavoriteDialog(tester);
+        await recipes.expectTileFavorite(
+          tester,
+          scope: RecipeListScreen,
+          marker: secondBean,
+          selected: true,
+        );
+
+        await teams.openTeams(tester);
+        await teams.openTeam(tester, team);
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: firstBean,
+          selected: false,
+        );
+        await recipes.expectTileFavorite(
+          tester,
+          scope: TeamDetailScreen,
+          marker: secondBean,
+          selected: true,
+        );
+        await teams.openTeamRecipe(tester, title);
+        await teams.removeFromTeam(tester);
+        await recipes.backToJournal(tester);
+        expect(find.textContaining(secondBean).hitTestable(), findsNothing);
+
+        await teams.openMyRecipes(tester);
+        await recipes.setHomeFavoritesOnly(tester, true);
+        await recipes.expectTileFavorite(
+          tester,
+          scope: RecipeListScreen,
+          marker: secondBean,
+          selected: true,
+        );
+        expect(find.textContaining(firstBean).hitTestable(), findsNothing);
       },
       timeout: const Timeout(Duration(minutes: 8)),
     );

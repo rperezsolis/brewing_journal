@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -6,9 +8,21 @@ import 'recipe_detail_state.dart';
 
 /// Loads one recipe for Brew Mode. Does not mutate the recipe except [delete].
 class RecipeDetailCubit extends Cubit<RecipeDetailState> {
-  RecipeDetailCubit(this._recipes) : super(const RecipeDetailState());
+  RecipeDetailCubit(this._recipes, {this.teamId})
+    : super(const RecipeDetailState());
 
   final RecipeRepository _recipes;
+
+  /// Set when Brew Mode was opened from a team, or after [assignToTeam].
+  UuidValue? teamId;
+
+  /// Switches the favorite scope when the route query changes.
+  void adoptTeamScope(UuidValue? next) {
+    if (teamId == next) return;
+    teamId = next;
+    final id = state.recipeId;
+    if (id != null) unawaited(load(id));
+  }
 
   Future<void> load(UuidValue id) async {
     emit(
@@ -19,7 +33,7 @@ class RecipeDetailCubit extends Cubit<RecipeDetailState> {
       ),
     );
     try {
-      final detail = await _recipes.get(id);
+      final detail = await _recipes.get(id, teamId: teamId);
       if (isClosed) return;
       emit(
         RecipeDetailState(
@@ -70,6 +84,7 @@ class RecipeDetailCubit extends Cubit<RecipeDetailState> {
     try {
       await _recipes.assignToTeam(id, teamId);
       if (isClosed) return false;
+      this.teamId = teamId;
       await load(id);
       return true;
     } catch (error) {
@@ -86,6 +101,7 @@ class RecipeDetailCubit extends Cubit<RecipeDetailState> {
     try {
       await _recipes.removeFromTeam(id);
       if (isClosed) return false;
+      teamId = null;
       await load(id);
       return true;
     } catch (error) {
@@ -105,7 +121,10 @@ class RecipeDetailCubit extends Cubit<RecipeDetailState> {
     if (id == null || detail == null || state.favoriteBusy) return null;
     emit(state.copyWith(favoriteBusy: true));
     try {
-      final result = await _recipes.saveFavorite(id, replace: replace);
+      final scope = teamId;
+      final result = scope == null
+          ? await _recipes.saveFavorite(id, replace: replace)
+          : await _recipes.saveTeamFavorite(scope, id, replace: replace);
       if (isClosed) return null;
       emit(
         state.copyWith(
@@ -128,7 +147,12 @@ class RecipeDetailCubit extends Cubit<RecipeDetailState> {
     if (id == null || detail == null || state.favoriteBusy) return false;
     emit(state.copyWith(favoriteBusy: true));
     try {
-      await _recipes.removeFavorite(id);
+      final scope = teamId;
+      if (scope == null) {
+        await _recipes.removeFavorite(id);
+      } else {
+        await _recipes.removeTeamFavorite(scope, id);
+      }
       if (isClosed) return false;
       emit(
         state.copyWith(

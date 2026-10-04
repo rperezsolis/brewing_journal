@@ -658,8 +658,9 @@ class _RecipeEndpoint {
 
   _ida.Future<_ikp4ym8g.RecipeDetail> get(
     _ist.TestSessionBuilder sessionBuilder,
-    _is.UuidValue id,
-  ) async {
+    _is.UuidValue id, {
+    _is.UuidValue? teamId,
+  }) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
           (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
@@ -671,7 +672,10 @@ class _RecipeEndpoint {
           createSessionCallback: (_) => _localUniqueSession,
           endpointPath: 'recipe',
           methodName: 'get',
-          parameters: _ist.testObjectToJson({'id': id}),
+          parameters: _ist.testObjectToJson({
+            'id': id,
+            'teamId': teamId,
+          }),
           serializationManager: _serializationManager,
         );
         var _localReturnValue =
@@ -757,6 +761,43 @@ class _RecipeEndpoint {
     });
   }
 
+  _ida.Future<List<_iazv39l2.Recipe>> listTeamFavorites(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue teamId,
+    int limit,
+    int offset,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'recipe',
+            method: 'listTeamFavorites',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'recipe',
+          methodName: 'listTeamFavorites',
+          parameters: _ist.testObjectToJson({
+            'teamId': teamId,
+            'limit': limit,
+            'offset': offset,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<List<_iazv39l2.Recipe>>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
   _ida.Future<_ii6dn70l.FavoriteSaveResult> saveFavorite(
     _ist.TestSessionBuilder sessionBuilder,
     _is.UuidValue recipeId,
@@ -808,6 +849,78 @@ class _RecipeEndpoint {
           endpointPath: 'recipe',
           methodName: 'removeFavorite',
           parameters: _ist.testObjectToJson({'recipeId': recipeId}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<void>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_ii6dn70l.FavoriteSaveResult> saveTeamFavorite(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue teamId,
+    _is.UuidValue recipeId,
+    bool replace,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'recipe',
+            method: 'saveTeamFavorite',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'recipe',
+          methodName: 'saveTeamFavorite',
+          parameters: _ist.testObjectToJson({
+            'teamId': teamId,
+            'recipeId': recipeId,
+            'replace': replace,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_ii6dn70l.FavoriteSaveResult>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<void> removeTeamFavorite(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue teamId,
+    _is.UuidValue recipeId,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'recipe',
+            method: 'removeTeamFavorite',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'recipe',
+          methodName: 'removeTeamFavorite',
+          parameters: _ist.testObjectToJson({
+            'teamId': teamId,
+            'recipeId': recipeId,
+          }),
           serializationManager: _serializationManager,
         );
         var _localReturnValue =

@@ -616,4 +616,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noFavoriteRecipesDetail =>
       'Save a recipe to keep the version you want to brew.';
+
+  @override
+  String get showTeamFavorites => 'Show team favorites';
+
+  @override
+  String get showAllTeamRecipes => 'Show all team recipes';
+
+  @override
+  String get favoriteNameTakenTitleTeam => 'Already in team favorites';
+
+  @override
+  String get favoriteNameTakenBodyTeam =>
+      'A recipe with this name is already in this team\'s favorites. Replace it with this one?';
+
+  @override
+  String get noTeamFavoriteRecipes => 'No team favorites';
+
+  @override
+  String get noTeamFavoriteRecipesDetail =>
+      'Editors save the version the team brews.';
+
+  @override
+  String get viewersCantChangeTeamFavorites =>
+      'Viewers can\'t change team favorites.';
 }

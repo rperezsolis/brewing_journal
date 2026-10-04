@@ -58,12 +58,17 @@ BrewSync is a collaborative brewing journal application designed to help users t
 *   Open the platform share sheet with that image only, so the user can send it to whichever apps are installed (for example Instagram, X, Pinterest, or Messages). No link to the recipe is attached: recipes are private to their owner and team, so a link would not open for most recipients. Where the browser cannot share files, the user can download the image instead. Anyone who can read a recipe, including a team viewer, can share its image.
 
 ### Feature 6: Favorites
-**Description:** Let the user mark the winning version of a recipe, then find it again among the trials that share its name.
+**Description:** Let a brewer mark the winning version of a recipe, and let a team mark its own winning version apart from each member's list.
 **Requirements:**
-*   A heart toggle on every recipe tile and on the Brew Mode app bar adds that recipe to the user's favorites or removes it. Any recipe the user can read can be saved, including a team recipe, and a viewer can save one. The favorite belongs to the signed-in user: another member starring the same shared recipe does not change this user's list.
+*   A heart toggle on a recipe tile in My recipes, and on the Brew Mode app bar when that recipe was opened from My recipes, adds the recipe to the signed-in user's favorites or removes it. That favorite belongs to the user. Another person's list does not change.
 *   A user may keep only one favorite per recipe name. The comparison trims the title and ignores capitalization, so "V60" and "v60" are the same name. Different names can all be favorites at once.
-*   When the user tries to save a recipe whose name is already a favorite, a dialog says a recipe with that name is already in favorites and asks whether to replace it. A close icon in the top-right and a Cancel action dismiss the dialog and leave the existing favorite in place. Accept removes that favorite and saves the recipe the user just chose.
-*   A heart toggle in the home recipe list's app bar filters that list. On, the list shows only the user's own recipes that are favorites. Off, it shows all of the user's recipes. A team recipe the user does not own can still be starred on the team list and in Brew Mode; the home filter does not pull it into My recipes.
+*   When the user tries to save a recipe whose name is already in their favorites, a dialog says a recipe with that name is already in favorites and asks whether to replace it. A close icon in the top-right and a Cancel action dismiss the dialog and leave the existing favorite in place. Accept removes that favorite and saves the recipe the user just chose.
+*   A heart toggle in the home recipe list's app bar filters that list. On, the list shows only the user's own recipes that are favorites. Off, it shows all of the user's recipes. The home filter does not show another member's recipes, and it does not show a team's favorites.
+*   A team has its own favorite list, kept apart from every member's personal list. A heart on the Team detail screen, and on the Brew Mode app bar when the recipe was opened from that screen, adds the recipe to the team's favorites or removes it. That save does not add the recipe to the member's personal favorites, and a personal save does not add it to the team.
+*   The team follows the same one-name rule. The comparison trims the title and ignores capitalization. The replace dialog says the name is already in the team's favorites. Close and Cancel keep the team's current favorite. Accept replaces it. A different team, and each member's personal list, can each keep their own favorite for that same name.
+*   Only a team editor can add or remove a team favorite. The team owner is an editor. A viewer sees the same hearts and can turn on the team's favorites filter, and the hearts stay disabled. A viewer who also owns the recipe still cannot change the team's favorites.
+*   Saving a recipe again stores a new version and leaves the previous one in place. A personal or team favorite stays on the previous version until someone replaces it with the new one.
+*   Removing a recipe from the team drops that team's favorite for it. A member's personal favorite of the same recipe stays in My recipes.
 
 ---
 
@@ -112,7 +117,11 @@ BrewSync is a collaborative brewing journal application designed to help users t
 
 ### Favorites
 *   **US-6.1:** As a brewer refining a recipe, I want to save one version as a favorite so I can tell the winning parameters apart from the trials that share its name.
-*   **US-6.2:** As a brewer, I want a heart on the recipe tile and in Brew Mode so I can add or remove that recipe from favorites without leaving the list or the brew screen.
+*   **US-6.2:** As a brewer, I want a heart on a My recipes tile and in Brew Mode opened from that list so I can add or remove that recipe from my favorites without leaving the screen.
 *   **US-6.3:** As a brewer, I want a dialog when a favorite already uses that name, with Accept to replace it and with Cancel or close to keep the existing favorite.
 *   **US-6.4:** As a brewer, I want the home list to show only my favorite recipes when the app-bar heart is on, and all of my recipes when it is off.
-*   **US-6.5:** As a team member, including a viewer, I want to favorite a shared recipe I can read, and I want that choice to be mine alone so another member's favorite does not change my list.
+*   **US-6.5:** As a team editor, I want the heart on the team list and in Brew Mode opened from that list to add or remove the team's favorite, so the winning version belongs to the team.
+*   **US-6.6:** As a team member, I want the team's favorites kept apart from mine, so a heart on the team list leaves My recipes unchanged and a heart in My recipes leaves the team list unchanged.
+*   **US-6.7:** As a viewer, I want to see which team recipes are favorites and filter the team list to them, and I want those hearts disabled so I cannot add or remove a team favorite.
+*   **US-6.8:** As a team editor, I want a dialog when the team already has a favorite with that name, with Accept to replace it and with Cancel or close to keep the team's current favorite.
+*   **US-6.9:** As a team member, I want the team list's app-bar heart to show only the team's favorite recipes when it is on, and every recipe on the team when it is off.

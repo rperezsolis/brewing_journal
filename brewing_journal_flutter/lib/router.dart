@@ -24,7 +24,12 @@ abstract final class Routes {
   static const home = '/';
   static const teams = '/teams';
   static const newRecipe = '/recipes/new';
-  static String recipe(UuidValue id) => '/recipes/${id.uuid}';
+  static String recipe(UuidValue id, {UuidValue? teamId}) {
+    final path = '/recipes/${id.uuid}';
+    if (teamId == null) return path;
+    return '$path?teamId=${teamId.uuid}';
+  }
+
   static String editRecipe(UuidValue id) => '/recipes/${id.uuid}/edit';
   static String shareRecipe(UuidValue id) => '/recipes/${id.uuid}/share';
   static String team(UuidValue id) => '/teams/${id.uuid}';
@@ -107,7 +112,11 @@ GoRouter createRouter(AuthCubit auth) {
                     builder: (context, state) {
                       final id = _parseId(state.pathParameters['id']);
                       if (id == null) return const _NotFoundScreen();
-                      return BrewModeScreen(key: ValueKey(id), recipeId: id);
+                      return BrewModeScreen(
+                        key: ValueKey(id),
+                        recipeId: id,
+                        teamId: _parseId(state.uri.queryParameters['teamId']),
+                      );
                     },
                   ),
                 ],

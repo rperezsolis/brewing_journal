@@ -135,4 +135,38 @@ void main() {
     expect(replaced?.replacedRecipeId, first.recipe.id);
     expect(list.state.recipes.map((r) => r.isFavorite), [isTrue, isFalse]);
   });
+
+  test('a team filter and save stay off the personal list', () async {
+    final teamId = const Uuid().v7obj();
+    final stored = recipes.details.values.toList()
+      ..sort((a, b) => b.recipe.updatedAt.compareTo(a.recipe.updatedAt));
+    final newest = stored.first.recipe.id!;
+    final older = stored[1].recipe.id!;
+    await recipes.assignToTeam(newest, teamId);
+    await recipes.assignToTeam(older, teamId);
+
+    final teamList = RecipeListCubit(recipes, teamId: teamId, pageSize: 20);
+    addTearDown(teamList.close);
+    await teamList.load();
+    expect(
+      teamList.state.recipes.every((recipe) => !recipe.isFavorite),
+      isTrue,
+    );
+
+    final saved = await teamList.saveFavorite(newest);
+    expect(saved?.saved, isTrue);
+    expect(recipes.details[newest]!.recipe.isFavorite, isFalse);
+
+    await teamList.setFavoritesOnly(true);
+    expect(teamList.state.recipes.map((recipe) => recipe.id), [newest]);
+
+    await cubit.load();
+    expect(await cubit.saveFavorite(older), isNotNull);
+    final teamView = await recipes.listForTeam(teamId, limit: 10, offset: 0);
+    expect(
+      teamView.firstWhere((recipe) => recipe.id == older).isFavorite,
+      isFalse,
+    );
+    expect(recipes.details[older]!.recipe.isFavorite, isTrue);
+  });
 }

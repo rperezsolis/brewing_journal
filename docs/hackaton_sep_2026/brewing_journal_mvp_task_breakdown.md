@@ -15,7 +15,7 @@ Each feature follows the same four phases in this order. Finish a phase before s
 3. **Flutter UI & State Management:** screens, widgets, and Cubits, backed by fake repositories.
 4. **Integration Layer:** real repositories on the generated client, loading states, and error mapping.
 
-Features are ordered so each one depends only on the features before it. The one deviation from the final schema in the system design is that **Feature 2 builds personal recipes only**. `Recipe.team`, `RecipeDraft.teamId`, `RecipeAccess.role`, and the `recipe_team_updated_idx` index are added in **Feature 4**. That migration creates the three team tables and adds one nullable column to `recipe`, so no existing data is lost. When Feature 4 is done, the recipe and team tables match the system design. **Feature 6** adds the `recipe_favorite` table afterward. `Recipe.isFavorite` is not stored, so that migration does not change `recipe`.
+Features are ordered so each one depends only on the features before it. The one deviation from the final schema in the system design is that **Feature 2 builds personal recipes only**. `Recipe.team`, `RecipeDraft.teamId`, `RecipeAccess.role`, and the `recipe_team_updated_idx` index are added in **Feature 4**. That migration creates the three team tables and adds one nullable column to `recipe`, so no existing data is lost. When Feature 4 is done, the recipe and team tables match the system design. **Feature 6** adds the `recipe_favorite` table afterward. `Recipe.isFavorite` is not stored, so that migration does not change `recipe`. **Feature 7** adds the `team_recipe_favorite` table. It leaves `recipe_favorite` and `recipe` unchanged.
 
 The one exception to phase isolation is the Feature 1 `requireLogin` test: it needs a domain endpoint, so it is written in Feature 1 and first run after Feature 2's endpoints exist.
 
@@ -623,7 +623,7 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 
 ## Feature 6 — Favorites
 
-**Stories:** US-6.1 through US-6.5. A favorite is a row per signed-in user and recipe, not a column on `recipe`. The home filter shows the caller's own favorite recipes. A team recipe the caller does not own can still be starred on the team list and in Brew Mode, and it stays off the home list.
+**Stories:** US-6.1 through US-6.4, as first shipped. A favorite is a row per signed-in user and recipe, not a column on `recipe`. The home filter shows the caller's own favorite recipes. Feature 7 replaces the team-screen behavior from US-6.5: a heart on the team list becomes the team's favorite, and a viewer can no longer save a personal favorite from that screen.
 
 
 
@@ -716,11 +716,110 @@ Every table model declares `id: UuidValue?, defaultPersist=random_v7`.
 
 
 
+## Feature 7 — Team favorites
+
+**Stories:** US-6.5 through US-6.9. Depends on Feature 4 (teams and editor vs viewer) and Feature 6 (personal favorites, the heart, and the replace dialog). A team favorite is a row in `team_recipe_favorite`, separate from `recipe_favorite`. Hearts on the Team detail screen and in Brew Mode opened from that screen write the team's list. Only an editor membership can add or remove one. `canEdit` is not the check, because a recipe owner who is a viewer still has `canEdit`.
+
+Do Feature 7.1 before 7.2, then 7.3, then 7.4.
+
+
+
+### 7.1 Backend Schemas & Database
+
+- [x] `lib/src/brewing/team_recipe_favorite.spy.yaml`: `serverOnly: true` table `team_recipe_favorite`:
+  - [x] `team: Team?` and `recipe: Recipe?`, both `relation(onDelete=Cascade)`
+  - [x] `titleKey: String` — `title.trim().toLowerCase()`, the same folding as `recipe_favorite.titleKey`
+  - [x] `createdAt: DateTime, default=now`
+  - [x] Unique indexes `team_recipe_favorite_team_recipe_idx` (`teamId`, `recipeId`) and `team_recipe_favorite_team_title_idx` (`teamId`, `titleKey`)
+- [x] No reverse relation on `Team` or `Recipe`. Leave `recipe_favorite.spy.yaml` and `Recipe.isFavorite` as they are. Reuse `FavoriteSaveResult`.
+- [x] Let `serverpod start` generate. Do not edit `lib/src/generated/` or `brewing_journal_client`.
+- [x] Migration: `create_migration` with tag `team-favorites` (MCP, or `serverpod create-migration --tag team-favorites` if the MCP tool is not connected).
+  - [x] Review `migration.sql`: one `CREATE TABLE team_recipe_favorite`, the two unique indexes, and foreign keys `ON DELETE CASCADE` to `team` and `recipe`. No change to `recipe` or `recipe_favorite`. Do not copy existing personal rows onto the team.
+  - [x] `apply_migrations`, then `hot_restart`. Confirm `migrations/migration_registry.txt` lists the new migration.
+- [x] Run the post-phase checklist. `dart analyze` in the server package is clean.
+
+
+
+### 7.2 Backend API Endpoints
+
+- [x] `lib/src/brewing/team_recipe_favorites.dart`, using `membershipOf` from `lib/src/teams/team_membership_lookup.dart`:
+  - [x] `withTeamFavoriteFlags(session, teamId, recipes)` sets `isFavorite` from `team_recipe_favorite` for that team. An empty page returns immediately.
+  - [x] `saveTeamRecipeFavorite(session, teamId, recipeId, replace)` follows the system-design transaction. No read access, a missing membership, or `recipe.teamId != teamId` throws `notFound`. A membership other than `editor` throws `forbidden`, including a viewer who owns the recipe. Already saved returns `saved: true`. The same `titleKey` with `replace: false` returns `saved: false` and writes nothing. `replace: true` deletes the conflicting team row and inserts the new one, setting `replacedRecipeId`. A `DatabaseUniqueViolationException` returns `saved: true` when this recipe is now the team's favorite, and `saved: false` otherwise. The transaction does not read or write `recipe_favorite`.
+  - [x] `removeTeamRecipeFavorite` uses the same checks and deletes the team's row. A missing row is a no-op.
+- [x] `RecipeEndpoint`:
+  - [x] `listForTeam` fills `isFavorite` through `withTeamFavoriteFlags`, so every member sees the same hearts. It no longer fills the caller's personal flag.
+  - [x] `listTeamFavorites(teamId, limit, offset)`: membership required (viewer or editor). Recipes with `recipe.teamId == teamId` and a `team_recipe_favorite` row for that team, `orderBy updatedAt desc, id desc`, `limit` clamped to 1..50. An empty set returns `[]` without a recipe query.
+  - [x] `saveTeamFavorite(teamId, recipeId, replace)` and `removeTeamFavorite(teamId, recipeId)`.
+  - [x] `get(id, {UuidValue? teamId})` adds an optional named argument, so existing `get(id)` calls and `save`'s return value stay personal. A set `teamId` requires membership and `recipe.teamId == teamId` (else `notFound`) and fills `isFavorite` from the team's rows. Viewers can still read. A non-member gets `notFound` from `listForTeam` and `listTeamFavorites` too.
+  - [x] `assignToTeam` and `removeFromTeam` delete every `team_recipe_favorite` row for that recipe in the same transaction that changes `recipe.teamId`. The returned `isFavorite` stays the caller's personal flag. Personal `saveFavorite` / `removeFavorite` stay unchanged.
+- [x] Server tests in `test/integration/brewing/recipe_team_favorite_test.dart`:
+  - [x] An editor's `saveTeamFavorite` sets `isFavorite` on `listForTeam` for the editor and for a viewer, and the viewer's `listFavorites` stays empty
+  - [x] The editor's personal `listMine` / `listFavorites` stay unchanged, and a personal `saveFavorite` of the same recipe does not fill the team heart
+  - [x] A second team recipe titled `  v60 ` does not replace a team favorite titled `V60` when `replace` is false; `replace: true` swaps them and `listTeamFavorites` returns only the new one
+  - [x] A different title can be a second team favorite. Another team's favorite with the same title is kept. Two members' personal favorites of that title are kept
+  - [x] `removeTeamFavorite` clears the flag for every member, and a second remove is a no-op
+  - [x] A viewer gets `BrewingErrorCode.forbidden` from `saveTeamFavorite` and `removeTeamFavorite`. Also seed an owner whose `team_membership.role` is `viewer` (the invite API never demotes an editor) and expect `forbidden` even though `canEdit` is true. `removeFromTeam` by that owner still succeeds and deletes the team favorite.
+  - [x] A non-member, a recipe on another team, and a personal recipe get `notFound`
+  - [x] `listTeamFavorites` honors `limit` and `offset`. `removeFromTeam` drops the recipe from that list and leaves a personal favorite in place. `assignToTeam` of a personally favorited recipe leaves the team heart empty and the personal heart filled.
+  - [x] Saving a new version of a team favorite leaves the source row starred. `saveTeamFavorite` of the new row, same title, returns `saved: false` until `replace: true`.
+  - [x] Deleting the team row cascades `team_recipe_favorite`, sets `recipe.teamId` null, and leaves a personal favorite in place.
+  - [x] `get(id, teamId: teamId)` reports the team flag; `get(id)` for the owner still reports the personal flag
+- [x] Update `recipe_favorite_test.dart`: the case that lets a viewer save a personal favorite and then expects that flag on `listForTeam` now expects the team flag to stay false. The viewer's personal row can still exist if they save through `saveFavorite` directly.
+- [x] Run the post-phase checklist, then `dart test` for `recipe_team_favorite_test.dart` and `recipe_favorite_test.dart`.
+
+
+
+### 7.3 Flutter UI & State Management
+
+- [x] `RecipeRepository`: `listForTeam` stays. Add `listTeamFavorites(teamId, limit, offset)`, `saveTeamFavorite(teamId, id, {replace})`, and `removeTeamFavorite(teamId, id)`. `get` takes an optional `teamId`. The fake keeps a team title-key map separate from the personal one, and rejects a non-editor team write.
+- [x] `RecipeListCubit` for a `teamId`:
+  - [x] `setFavoritesOnly(true)` reloads through `listTeamFavorites`; `false` reloads through `listForTeam`
+  - [x] `saveFavorite` / `removeFavorite` call the team repository methods and pass `teamId`
+  - [x] `noteFavorite` still updates only that cubit's rows
+- [x] The home `RecipeListCubit` (`teamId` null) keeps calling `listMine`, `listFavorites`, `saveFavorite`, and `removeFavorite`.
+- [x] `RecipeDetailCubit` takes an optional `teamId`. Set: `get(id, teamId)`, `saveTeamFavorite`, `removeTeamFavorite`. Unset: today's personal calls. A blocked team save leaves the loaded recipe unchanged.
+- [x] `RecipeTile` gains `favoriteEnabled`. When false, the heart keeps `isSelected` and its `onPressed` is null. Tooltip for a disabled team heart: viewers can't change team favorites.
+- [x] `ReplaceFavoriteDialog` takes the team copy when the save is a team save. Title and body say the name is already in the team's favorites. Keys stay `favorite-conflict-close`, `favorite-conflict-cancel`, and `favorite-conflict-accept`.
+- [x] `TeamDetailScreen`:
+  - [x] App-bar heart `Key('team-list-favorites')`, shown to viewers and editors. On uses the empty team-favorites copy. Off shows every recipe on the team. An unfiltered empty team still uses `noRecipesOnTeam`.
+  - [x] Tile hearts call the team cubit only. Remove the `personalList` capture and the `noteFavorite` call, so `build` no longer reads the session cubit. Hearts stay disabled until the team summary has loaded, and stay disabled unless `role == editor`. The team owner is an editor.
+  - [x] Opening a recipe pushes `/recipes/:id?teamId=<uuid>` (`Routes.recipe(id, teamId: teamId)`).
+- [x] Brew Mode reads `teamId` from that query. With it, the heart writes the team favorite and does not call `noteFavorite` on the session `RecipeListCubit`. The heart is disabled when `access.role != editor`, including when `canEdit` is true. Without the query, the heart stays personal and still updates the home cubit. Returning from Brew Mode still reloads the team list.
+- [x] After the wizard saves a team recipe, `pushReplacement` keeps `teamId` on the Brew Mode route. `assignToTeam` reloads Brew Mode with that team's query. `removeFromTeam` drops the query and reloads the personal heart.
+- [x] Localization in `app_en.arb`, `app_es.arb`, `app_es_419.arb`, `app_pt.arb`, and `app_pt_BR.arb`: `showTeamFavorites`, `showAllTeamRecipes`, `favoriteNameTakenTitleTeam`, `favoriteNameTakenBodyTeam`, `noTeamFavoriteRecipes`, `noTeamFavoriteRecipesDetail`, `viewersCantChangeTeamFavorites`. Then `flutter gen-l10n`.
+- [x] Tests:
+  - [x] `recipe_list_cubit_test.dart`: a team cubit's filter calls `listTeamFavorites`; a team save does not change the fake's personal favorites; a personal save does not change the team flag
+  - [x] Team screen widget test: the app-bar heart shows only team favorites; an editor's Accept replaces the team favorite; Cancel leaves it; a viewer heart does not open the dialog
+  - [x] `recipe_detail_cubit_test.dart`: with `teamId`, save and replace call the team methods and leave personal favorites untouched; a viewer-shaped fake failure leaves the recipe unchanged
+  - [x] `brew_mode_screen_test.dart`: with `teamId`, the heart is present; with `access.role == viewer` and `canEdit == true`, the heart is disabled
+  - [x] `team_detail_screen_test.dart`: the screen builds without a parent `RecipeListCubit`, a viewer heart does not call save, and an editor heart does not require the home cubit
+- [x] Run the post-phase checklist, then `hot_restart`.
+
+
+
+### 7.4 Integration Layer
+
+- [x] `ServerpodRecipeRepository` passes `teamId` through to `client.recipe.listTeamFavorites`, `saveTeamFavorite`, `removeTeamFavorite`, and `get`. Personal methods stay positional and omit `teamId`.
+- [x] The existing repository registration in `app_scope.dart` picks up the new methods.
+- [x] A failed team save or remove uses the existing snackbar. Map `forbidden` on these actions to "Viewers can't change team favorites." `favoriteBusy` / `favoriteBusyIds` disable that heart while the request is in flight.
+- [x] Update `integration_test/favorites_test.dart` and extend `integration_test/support/recipe_harness.dart`. The old viewer case starred a personal favorite from the team list; replace it with the team list:
+  - [x] An editor saves two team recipes with the same name, stars the first from the team tile, and the second opens the team dialog. Close and Cancel leave the first heart filled. Accept fills the second and clears the first.
+  - [x] The team app-bar heart shows only the winning recipe. Turning it off shows both. With nothing starred, it shows the empty team-favorites message.
+  - [x] Brew Mode opened from the team list removes and adds that team favorite, and the team tile follows. The editor's home filter does not list it.
+  - [x] A viewer sees the filled team heart, the heart does not accept a tap, and the viewer's home filter stays empty. The owner's team list shows the same filled heart.
+  - [x] The editor stars a recipe from My recipes. The team heart stays empty. Removing that recipe from the team clears the team favorite and leaves the personal one on My recipes.
+- [x] Run `flutter test integration_test/favorites_test.dart -d macos` while `serverpod start` is up.
+- [x] Run the post-phase checklist. `dart analyze` is clean in the server and Flutter packages, and the server tests from 7.2 pass.
+
+---
+
+
+
 ## Wrap-up
 
-- [ ] Full regression with `flutter_driver`: sign up, create a recipe (all 5 steps), open Brew Mode and let the timer finish, star that recipe, create a team and invite a viewer, accept as a second user, share from the viewer account.
+- [ ] Full regression with `flutter_driver`: sign up, create a recipe (all 5 steps), open Brew Mode and let the timer finish, star that recipe, create a team and invite a viewer, accept as a second user, have an editor star a team recipe, confirm the viewer can see that heart and cannot change it, share from the viewer account.
 - [ ] `dart test` in `brewing_journal_server/` and `flutter test` in `brewing_journal_flutter/` both pass.
 - [ ] `dart analyze` is clean in all three packages; run `dart format .`.
-- [ ] Confirm `migrations/migration_registry.txt` lists: initial, `recipes`, `teams`, `favorites`. `create_migration` reports no pending changes.
+- [ ] Confirm `migrations/migration_registry.txt` lists: initial, `recipes`, `teams`, `favorites`, `team-favorites`. `create_migration` reports no pending changes.
 - [ ] Update `AGENTS.md` with a description of BrewSync (features, folder layout, `RecipeAccessPolicy`, the invite URL format, and the known limit that invites open in the web app). Keep the MCP section and the checklist, and remove the "After building the first version…" paragraph.
 - [ ] Set `enableTextEntryEmulation` in `lib/driver.dart` back to `false`.

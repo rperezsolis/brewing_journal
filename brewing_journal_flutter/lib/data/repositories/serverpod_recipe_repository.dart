@@ -11,7 +11,8 @@ class ServerpodRecipeRepository implements RecipeRepository {
   Future<RecipeDetail> save(RecipeDraft draft) => _endpoint.save(draft);
 
   @override
-  Future<RecipeDetail> get(UuidValue id) => _endpoint.get(id);
+  Future<RecipeDetail> get(UuidValue id, {UuidValue? teamId}) =>
+      _endpoint.get(id, teamId: teamId);
 
   @override
   Future<List<Recipe>> listMine({
@@ -38,6 +39,24 @@ class ServerpodRecipeRepository implements RecipeRepository {
     required int limit,
     required int offset,
   }) => _endpoint.listForTeam(teamId, limit, offset);
+
+  @override
+  Future<List<Recipe>> listTeamFavorites(
+    UuidValue teamId, {
+    required int limit,
+    required int offset,
+  }) => _endpoint.listTeamFavorites(teamId, limit, offset);
+
+  @override
+  Future<FavoriteSaveResult> saveTeamFavorite(
+    UuidValue teamId,
+    UuidValue id, {
+    required bool replace,
+  }) => _endpoint.saveTeamFavorite(teamId, id, replace);
+
+  @override
+  Future<void> removeTeamFavorite(UuidValue teamId, UuidValue id) =>
+      _endpoint.removeTeamFavorite(teamId, id);
 
   @override
   Future<Recipe> assignToTeam(UuidValue recipeId, UuidValue teamId) =>

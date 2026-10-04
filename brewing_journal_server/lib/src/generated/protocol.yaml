@@ -17,8 +17,11 @@ recipe:
   - get:
   - listMine:
   - listFavorites:
+  - listTeamFavorites:
   - saveFavorite:
   - removeFavorite:
+  - saveTeamFavorite:
+  - removeTeamFavorite:
   - getAccess:
   - listForTeam:
   - assignToTeam:

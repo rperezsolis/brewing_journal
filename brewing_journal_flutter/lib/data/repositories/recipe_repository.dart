@@ -5,7 +5,7 @@ abstract class RecipeRepository {
   /// instructions and tags in full.
   Future<RecipeDetail> save(RecipeDraft draft);
 
-  Future<RecipeDetail> get(UuidValue id);
+  Future<RecipeDetail> get(UuidValue id, {UuidValue? teamId});
 
   /// The signed-in user's recipes, most recently updated first.
   ///
@@ -34,6 +34,27 @@ abstract class RecipeRepository {
     required int limit,
     required int offset,
   });
+
+  /// Team recipes that team has saved, most recently updated first.
+  Future<List<Recipe>> listTeamFavorites(
+    UuidValue teamId, {
+    required int limit,
+    required int offset,
+  });
+
+  /// Saves [id] as [teamId]'s favorite for that recipe's name.
+  ///
+  /// A caller who is not an editor is rejected. When another team favorite
+  /// already uses the name and [replace] is false, nothing changes and
+  /// [FavoriteSaveResult.saved] is false.
+  Future<FavoriteSaveResult> saveTeamFavorite(
+    UuidValue teamId,
+    UuidValue id, {
+    required bool replace,
+  });
+
+  /// Removes [id] from [teamId]'s favorites.
+  Future<void> removeTeamFavorite(UuidValue teamId, UuidValue id);
 
   Future<Recipe> assignToTeam(UuidValue recipeId, UuidValue teamId);
 

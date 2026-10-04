@@ -7,7 +7,7 @@
 - Auth stays on `serverpod_auth_idp`. Domain endpoints set `requireLogin => true` and read `session.authenticated!.authUserId` (`UuidValue`). Account scopes are unused. Viewer vs editor is a row in `team_membership`, checked inside the method.
 - Timers, alarms, and share-card rendering run only in the Flutter app; nothing about them is sent to Serverpod. The server stores `extractionDuration` only. The share image leaves the device only through the OS share sheet or a download.
 - A recipe is owned by one `AuthUser`. `teamId` is null (personal) or one workspace. Adding an existing recipe sets `teamId`. Deleting the team nulls `teamId`; the recipe remains with the owner.
-- A favorite is one row per user and recipe, not a column on `recipe`. `titleKey` is the trimmed lower-case title, and a user may have only one favorite per `titleKey`. Saving a second recipe with that name writes nothing until the caller passes `replace: true`, which deletes the previous row in the same transaction. Deleting the recipe or the account cascades the favorite away. `Recipe.isFavorite` is filled on read for the caller and is not stored. A new version is a new recipe row, so a stored `titleKey` does not drift from later edits.
+- A personal favorite is one row per user and recipe in `recipe_favorite`, not a column on `recipe`. A team favorite is a separate row per team and recipe in `team_recipe_favorite`. `titleKey` is the trimmed lower-case title. A user may have only one personal favorite per `titleKey`, and a team may have only one team favorite per `titleKey`. The two lists do not share rows, so the same name can be a personal favorite and a team favorite at the same time. Saving a second recipe with that name in the same list writes nothing until the caller passes `replace: true`, which deletes the previous row in that list in the same transaction. Deleting the recipe cascades both kinds of row. Deleting the account cascades personal rows. Deleting the team cascades that team's rows. `Recipe.isFavorite` is filled on read for the list being shown and is not stored. Saving again inserts a new recipe row and leaves the source row unchanged, so a favorite stays on the source until someone replaces it. The new row starts with no favorite rows.
 - Extra instructions are child rows. A save deletes the previous rows for that recipe and inserts the submitted list in order. Empty-after-trim is rejected. Duplicate text is allowed. Max length is 280 characters after trim (`kInstructionMaxLength`), enforced by the server and mirrored in the wizard.
 - Photos are rows written only after `session.storage.verifyUpload` on storage id `public`. The client never chooses the storage path. Public storage means a photo URL is readable by anyone holding it; paths contain a random UUID so they are not enumerable.
 - Team invite links are HTTPS URLs on the Serverpod web server (`<webBaseUrl>/invite/<token>`), served by the Flutter web app through the existing `FlutterRoute` at `/`. Recipe sharing carries no link; only the image is shared. Custom schemes are not used because Flutter web cannot receive them. `webBaseUrl` is built on the server from `pod.config.webServer` (`publicScheme://publicHost:publicPort`).
@@ -151,7 +151,7 @@ fields:
   bitterness: int
   createdAt: DateTime, default=now
   updatedAt: DateTime, default=now
-  ### Whether the caller has saved this recipe to favorites. Not stored.
+  ### Whether this recipe is a favorite on the list being read. Personal reads use the caller's rows. Team reads use the team's rows. Not stored.
   isFavorite: bool, default=false, !persist
   instructions: List<RecipeInstruction>?, relation(name=recipe_instructions)
   photos: List<RecipePhoto>?, relation(name=recipe_photos)
@@ -168,7 +168,7 @@ indexes:
 
 `onDelete=NoAction` on `ingredient` blocks deleting a bean that still has recipes. It is `NoAction` rather than `Restrict` because deleting an account cascades to both that user’s ingredients and recipes in one statement. `Restrict` is checked immediately and would fail partway through; `NoAction` is checked at the end of the statement, after the recipes are gone. Team delete uses `SetNull` so shared recipes fall back to the owner. `recipe_ingredient_idx` backs that foreign-key check.
 
-The instruction, photo, and tag list fields on `Recipe` are left null in responses. `RecipeDetail` carries them as separate ordered lists. `isFavorite` defaults to false and is set by the endpoint for the caller on `get`, `listMine`, `listForTeam`, `listFavorites`, `assignToTeam`, and `removeFromTeam`.
+The instruction, photo, and tag list fields on `Recipe` are left null in responses. `RecipeDetail` carries them as separate ordered lists. `isFavorite` defaults to false. `get` without `teamId`, `listMine`, `listFavorites`, `assignToTeam`, and `removeFromTeam` set it from the caller's personal rows. `get` with `teamId`, `listForTeam`, and `listTeamFavorites` set it from that team's rows.
 
 ### `lib/src/brewing/recipe_favorite.spy.yaml`
 
@@ -195,7 +195,34 @@ indexes:
     unique: true
 ```
 
-`titleKey` is `title.trim().toLowerCase()`, the same folding as an ingredient `nameKey`. The unique `(userId, recipeId)` index makes a second save of the same recipe a no-op. The unique `(userId, titleKey)` index is what keeps a single winning version per name. Both foreign keys cascade, so deleting the account or the recipe removes the favorite.
+`titleKey` is `title.trim().toLowerCase()`, the same folding as an ingredient `nameKey`. The unique `(userId, recipeId)` index makes a second save of the same recipe a no-op. The unique `(userId, titleKey)` index is what keeps a single winning version per name. Both foreign keys cascade, so deleting the account or the recipe removes the personal favorite. These rows are never the team's favorites.
+
+### `lib/src/brewing/team_recipe_favorite.spy.yaml`
+
+`serverOnly: true`. The client sees the team's choice only as `Recipe.isFavorite` on team reads, and the same `FavoriteSaveResult` as a personal save.
+
+```yaml
+class: TeamRecipeFavorite
+table: team_recipe_favorite
+serverOnly: true
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  team: Team?, relation(onDelete=Cascade)
+  recipe: Recipe?, relation(onDelete=Cascade)
+  ### Trimmed, lower-case title. One favorite per team per title.
+  titleKey: String
+  createdAt: DateTime, default=now
+
+indexes:
+  team_recipe_favorite_team_recipe_idx:
+    fields: teamId, recipeId
+    unique: true
+  team_recipe_favorite_team_title_idx:
+    fields: teamId, titleKey
+    unique: true
+```
+
+There is no reverse relation on `Team` or `Recipe`. `titleKey` uses the same folding as a personal favorite. The unique `(teamId, recipeId)` index makes a second save of the same recipe a no-op. The unique `(teamId, titleKey)` index keeps one winning version per name on that team. Deleting the team or the recipe cascades the row. A row is valid only while `recipe.teamId` equals `teamId`. `assignToTeam` and `removeFromTeam` delete every `team_recipe_favorite` row for that recipe in the same transaction that changes `recipe.teamId`, so a recipe that leaves a team takes the team's favorite with it. Personal rows for that recipe stay.
 
 ### `lib/src/brewing/recipe_instruction.spy.yaml`
 
@@ -358,7 +385,7 @@ fields:
   instructions: List<String>
 ```
 
-`id` null inserts. Non-null updates that row and replaces instructions and tags in full. Photos are not on the draft. `teamId` is read only on insert. On update it is ignored, and team membership changes only through `assignToTeam` / `removeFromTeam`, so a team editor cannot move another owner’s recipe with a save.
+`id` null inserts a recipe owned by the caller. Non-null inserts a new version: a new id, the caller as owner, the source's `teamId`, and copies of its instructions, tags, and photos. The source row is left unchanged, so its personal and team favorites stay on it. `teamId` on the draft is read only for a brand-new recipe. A new version copies the source's team, and moving a recipe uses `assignToTeam` / `removeFromTeam`.
 
 `lib/src/brewing/ingredient_draft.spy.yaml`
 
@@ -448,12 +475,12 @@ Authorization used by every recipe read/write:
 
 | Caller | Personal recipe (`teamId == null`) | Team recipe |
 | --- | --- | --- |
-| Owner | read, update, delete | read, update, delete |
-| Team editor (not owner) | `notFound` | read, update (instructions replaced in full) |
-| Team viewer (not owner) | `notFound` | read; writes → `forbidden` |
+| Owner | read, update, delete | read, update, delete. Team favorite writes still require an editor membership. |
+| Team editor (not owner) | `notFound` | read, update (a save inserts a new version). Team favorite writes are allowed. |
+| Team viewer (not owner) | `notFound` | read; recipe writes and team favorite writes → `forbidden` |
 | Anyone else | `notFound` | `notFound` |
 
-A single helper, `RecipeAccessPolicy.resolve(session, recipe)`, returns `RecipeAccess` or throws `notFound`. Every recipe and media method uses it. Updating a team recipe does not require ownership. Only the owner can delete, so neither editors nor viewers can remove a recipe. Saving or removing a favorite uses the same read check: a viewer may favorite a team recipe, and a caller who cannot read it gets `notFound`.
+A single helper, `RecipeAccessPolicy.resolve(session, recipe)`, returns `RecipeAccess` or throws `notFound`. Every recipe and media method uses it. Updating a team recipe does not require ownership. Only the owner can delete, so neither editors nor viewers can remove a recipe. Saving or removing a personal favorite uses the read check: anyone who can read the recipe may favorite it for themselves, and a caller who cannot read it gets `notFound`. A team favorite is different. The caller must be a member of that team, the recipe's `teamId` must be that team, and the membership role must be `editor`. `canEdit` is not the check: the recipe owner has `canEdit` even when their membership is `viewer`, and a viewer still cannot change the team's favorites. A viewer, including a viewer who owns the recipe, gets `forbidden`. A caller who is not a member, or a recipe that is not on that team, gets `notFound`. The team owner has an editor membership, so the owner can change the team's favorites.
 
 ### `IngredientEndpoint` → `client.ingredient`
 
@@ -467,27 +494,30 @@ A single helper, `RecipeAccessPolicy.resolve(session, recipe)`, returns `RecipeA
 | Method | Parameters | Returns | Contract |
 | --- | --- | --- | --- |
 | `save` | `RecipeDraft draft` | `RecipeDetail` | 5-step commit. See below. |
-| `get` | `UuidValue id` | `RecipeDetail` | One query with includes: ingredient, instructions ordered by `sortOrder`, flavor tags, photos ordered by `sortOrder`. Fills `photos[].publicUrl`, `access`, and `recipe.isFavorite`. |
-| `listMine` | `int limit`, `int offset` | `List<Recipe>` | `ownerId = caller` (personal and team recipes the caller owns), `orderBy updatedAt desc`. `limit` clamped to 1..50. Index `recipe_owner_updated_idx`. Each row has `isFavorite` for the caller. |
-| `listFavorites` | `int limit`, `int offset` | `List<Recipe>` | The caller's favorites among recipes they own, same order and clamp as `listMine`. An empty favorite set returns `[]` without a recipe query. A favorited team recipe the caller does not own is excluded, so the home filter stays inside My recipes. |
-| `listForTeam` | `UuidValue teamId`, `int limit`, `int offset` | `List<Recipe>` | Membership required (viewer or editor). `teamId` match, `orderBy updatedAt desc`. Index `recipe_team_updated_idx`. Viewer and editor receive the same rows; `RecipeAccess` is not on this list. Each row has that caller's `isFavorite`. |
-| `saveFavorite` | `UuidValue recipeId`, `bool replace` | `FavoriteSaveResult` | See below. |
-| `removeFavorite` | `UuidValue recipeId` | `void` | Read access required. Deletes the caller's row for that recipe. A missing row is a no-op. |
+| `get` | `UuidValue id`, `{UuidValue? teamId}` | `RecipeDetail` | One query with includes: ingredient, instructions ordered by `sortOrder`, flavor tags, photos ordered by `sortOrder`. Fills `photos[].publicUrl` and `access`. `teamId` is an optional named argument, so existing `get(id)` calls stay personal. Null fills `recipe.isFavorite` from the caller's personal rows. Set fills it from that team's rows; the caller must be a member and `recipe.teamId` must match, else `notFound`. |
+| `listMine` | `int limit`, `int offset` | `List<Recipe>` | `ownerId = caller` (personal and team recipes the caller owns), `orderBy updatedAt desc`. `limit` clamped to 1..50. Index `recipe_owner_updated_idx`. Each row has the caller's personal `isFavorite`. |
+| `listFavorites` | `int limit`, `int offset` | `List<Recipe>` | The caller's personal favorites among recipes they own, same order and clamp as `listMine`. An empty favorite set returns `[]` without a recipe query. Team favorites are not included. |
+| `listForTeam` | `UuidValue teamId`, `int limit`, `int offset` | `List<Recipe>` | Membership required (viewer or editor), else `notFound`. `teamId` match, `orderBy updatedAt desc, id desc`. Index `recipe_team_updated_idx`. Viewer and editor receive the same rows; `RecipeAccess` is not on this list. Each row's `isFavorite` is that team's favorite, the same value for every member. |
+| `listTeamFavorites` | `UuidValue teamId`, `int limit`, `int offset` | `List<Recipe>` | Membership required, else `notFound`. Recipes on that team that have a `team_recipe_favorite` row for it, same order and clamp as `listForTeam`. An empty set returns `[]` without a recipe query. A recipe whose `teamId` no longer matches is excluded. |
+| `saveFavorite` | `UuidValue recipeId`, `bool replace` | `FavoriteSaveResult` | Personal list. See below. |
+| `removeFavorite` | `UuidValue recipeId` | `void` | Personal list. Read access required. Deletes the caller's row for that recipe. A missing row is a no-op. |
+| `saveTeamFavorite` | `UuidValue teamId`, `UuidValue recipeId`, `bool replace` | `FavoriteSaveResult` | Team list. See below. |
+| `removeTeamFavorite` | `UuidValue teamId`, `UuidValue recipeId` | `void` | Team list. Editor membership required. Deletes that team's row for the recipe. A missing row is a no-op. |
 | `getAccess` | `UuidValue id` | `RecipeAccess` | Used by the client before opening the editor. |
 | `delete` | `UuidValue id` | `void` | `canDelete` (owner only). Child rows cascade. Photo storage objects are deleted best-effort after commit. |
-| `assignToTeam` | `UuidValue recipeId`, `UuidValue teamId` | `Recipe` | Caller is the recipe owner and an editor of `teamId`. Sets `teamId` and `updatedAt`. The returned recipe has `isFavorite`. |
-| `removeFromTeam` | `UuidValue recipeId` | `Recipe` | Caller is the recipe owner, or an editor of the recipe’s current team. Sets `teamId` null. The returned recipe has `isFavorite`. |
+| `assignToTeam` | `UuidValue recipeId`, `UuidValue teamId` | `Recipe` | Caller is the recipe owner and an editor of `teamId`. Sets `teamId` and `updatedAt`, and deletes any `team_recipe_favorite` rows for the recipe. The returned `isFavorite` is the caller's personal flag. |
+| `removeFromTeam` | `UuidValue recipeId` | `Recipe` | Caller is the recipe owner, or an editor of the recipe’s current team. Sets `teamId` null and deletes the team's favorite row for the recipe. A viewer who owns the recipe may take it off the team, which drops the team's favorite; they still cannot call `removeTeamFavorite`. The returned `isFavorite` is the caller's personal flag. |
 
 `save` transaction (`session.db.transaction`):
 
-1. On update, load the recipe and resolve access. No read access → `notFound`; read-only → `forbidden`.
-2. Resolve ingredient. On insert, `ingredientId` must belong to the caller. On update, it must belong to the caller or equal the recipe’s current `ingredientId`, so a team editor can save another member’s recipe without re-picking the bean. Anything else → `notFound`.
+1. When `draft.id` is set, load that source recipe and require edit access. No read access → `notFound`; read-only → `forbidden`. The source row is not modified.
+2. Resolve ingredient. For a brand-new recipe, `ingredientId` must belong to the caller. For a new version, it must belong to the caller or equal the source's `ingredientId`, so a team editor can save another member’s recipe without re-picking the bean. Anything else → `notFound`.
 3. Validate: title (1..120), grind size and grinder model (1..80) after trim; `waterTempC` in `1..100`; `doseGrams` in `0.1..500`; `extractionDuration` null or `1s..2h`; scores in `0..5`; `extractionMethod == other` requires a non-empty note; tags 1..40 characters, at most 12; each instruction `trim()` length in `1..280`, at most 30 items. Failures → `validation`, with the field name in `message`.
-4. Insert or update the `recipe` row. On insert, `owner` is the caller, and `teamId` is set only when the caller is an editor of that team (else `forbidden`). On update, `updatedAt` is refreshed and `teamId` is untouched.
-5. Delete `recipe_instruction` and `recipe_flavor_tag` rows for the recipe. Insert instructions with `sortOrder = index` of the trimmed list (possibly empty), and insert distinct `tagKey` rows.
-6. After commit, return the same payload as `get`.
+4. Insert a `recipe` row. A brand-new recipe uses the caller as owner, and `teamId` only when the caller is an editor of that team (else `forbidden`). A new version uses a new id, the caller as owner, and the source's `teamId`. Favorite rows are not copied. The source's personal and team favorites stay on the source, so a new version with the same title conflicts until someone passes `replace: true`.
+5. Insert instructions with `sortOrder = index` of the trimmed list (possibly empty), and insert distinct `tagKey` rows. Copy the source's photos onto the new id when saving a version.
+6. After commit, return `get` of the new id with no `teamId`, so `isFavorite` is the caller's personal flag. A new row has none.
 
-The delete-and-insert in step 5 is in the same transaction as step 4. Two editors saving at once therefore produce the last committer’s complete list, never a mix, which satisfies the “replaces in full” rule. Photos are not written here. A recipe with zero instructions and zero photos is valid.
+The insert in step 5 is in the same transaction as step 4. Each version carries one complete instruction list, which is the "replaces in full" rule, and the previous version remains on the team as its own recipe. Two editors saving at once therefore produce two new rows, and the source stays as it was. Photos of a new version are copies. A recipe with zero instructions and zero photos is valid. Deleting a team cascades `team_recipe_favorite` and sets `recipe.teamId` null, and personal favorites of those recipes stay.
 
 `saveFavorite` runs in one transaction after `RecipeAccessPolicy.load` (no read access → `notFound`):
 
@@ -497,7 +527,19 @@ The delete-and-insert in step 5 is in the same transaction as step 4. Two editor
 4. If that conflict exists and `replace` is true, delete it, then insert the new row. The result is `saved: true` with `replacedRecipeId` set to the removed recipe.
 5. A unique-index race (two saves of the same title) returns `saved: true` when this recipe is now the favorite, and `saved: false` otherwise, so the client can show the replace dialog.
 
-`removeFavorite` uses the same read check and deletes the caller's `(userId, recipeId)` row when one exists.
+`removeFavorite` uses the same read check and deletes the caller's `(userId, recipeId)` row when one exists. It does not read or write `team_recipe_favorite`.
+
+`saveTeamFavorite` runs in one transaction after `RecipeAccessPolicy.load` and `membershipOf(session, teamId, caller)`:
+
+1. No read access, a missing membership, or `recipe.teamId != teamId` → `notFound`.
+2. Membership role other than `editor` → `forbidden`. This includes a viewer who owns the recipe.
+3. `titleKey = title.trim().toLowerCase()`.
+4. If this team already has a favorite row for `recipeId`, return `saved: true` and write nothing.
+5. If another of this team's favorites has the same `titleKey` and `replace` is false, return `saved: false` and write nothing.
+6. If that conflict exists and `replace` is true, delete it, then insert the new `team_recipe_favorite` row. The result is `saved: true` with `replacedRecipeId` set to the removed recipe.
+7. A unique-index race returns `saved: true` when this recipe is now the team's favorite, and `saved: false` otherwise.
+
+The transaction does not read or write `recipe_favorite`. `removeTeamFavorite` uses the same membership check and deletes the team's `(teamId, recipeId)` row when one exists.
 
 ### `RecipeMediaEndpoint` → `client.recipeMedia`
 
@@ -616,24 +658,24 @@ Both modes alarm at `target`. Count-down shows `remaining`, and count-up shows `
 
 `AlarmPlayer` is a thin wrapper over an in-app audio asset. It is invoked only from `tick` while the cubit is open. `close()` calls `stop()`, so leaving the route ends the sound and does not arm a later alarm. When the app goes to the background, the route’s `AppLifecycleListener` calls `pause()`. The ticker does not run in the background, so no alarm fires outside Brew Mode.
 
-Brew Mode reads `RecipeDetail` through a separate `RecipeDetailCubit` (`get` once), then calls `BrewTimerCubit.configure(recipe.extractionDuration)`. It does not change the recipe's parameters. The favorite heart calls `saveFavorite` or `removeFavorite`. Instructions render from `instructions` ordered by `sortOrder`; an empty list omits the section. Photos render from `publicUrl`; an empty `photos` list omits the section. The same `RecipeDetail` feeds the share card.
+Brew Mode reads `RecipeDetail` through a separate `RecipeDetailCubit` (`get` once), then calls `BrewTimerCubit.configure(recipe.extractionDuration)`. It does not change the recipe's parameters. The route `/recipes/:id` uses the personal favorite. `/recipes/:id?teamId=<uuid>`, opened from the team screen, calls `get(id, teamId)` and the heart calls `saveTeamFavorite` or `removeTeamFavorite`. A viewer on that route sees the heart disabled. Instructions render from `instructions` ordered by `sortOrder`; an empty list omits the section. Photos render from `publicUrl`; an empty `photos` list omits the section. The same `RecipeDetail` feeds the share card.
 
 ### Other Cubits
 
 | Cubit | Scope | Calls |
 | --- | --- | --- |
-| `RecipeListCubit` | Home and team screens | `recipe.listMine`, `recipe.listFavorites` when the home filter is on, or `recipe.listForTeam`, paged by `limit`/`offset`. `saveFavorite` / `removeFavorite` update the visible rows. |
-| `RecipeDetailCubit` | Brew Mode and share | `recipe.get`, `recipe.delete` when `access.canDelete`, `saveFavorite`, `removeFavorite` |
+| `RecipeListCubit` | Home and team screens | Home: `recipe.listMine`, or `recipe.listFavorites` when its filter is on. Team: `recipe.listForTeam`, or `recipe.listTeamFavorites` when its filter is on. Personal saves call `saveFavorite` / `removeFavorite`. Team saves call `saveTeamFavorite` / `removeTeamFavorite`. |
+| `RecipeDetailCubit` | Brew Mode and share | `recipe.get`. With a route `teamId`, `saveTeamFavorite` / `removeTeamFavorite`. Without one, `saveFavorite` / `removeFavorite`. `recipe.delete` when `access.canDelete`. |
 | `TeamsCubit` | Teams screen | `team.listMine`, `team.create`, `team.createInvite` (owner only) |
 | `InviteAcceptCubit` | `/invite/:token` route | `team.acceptInvite`; maps `inviteExpired`, `inviteUsed`, `alreadyMember`, and `notFound` to messages |
 
 ### Favorites
 
-`Recipe.isFavorite` drives a heart `IconButton` (`isSelected`, outline heart when off and filled heart when on). The same button is the trailing control on `RecipeTile` and the first action in the Brew Mode app bar. The home app bar uses it as a filter: selected calls `RecipeListCubit.setFavoritesOnly(true)`, which reloads through `listFavorites`; clearing it reloads `listMine`. The team list has no filter. An empty filtered home list says there are no favorite recipes.
+`Recipe.isFavorite` drives a heart `IconButton` (`isSelected`, outline heart when off and filled heart when on). The same button is the trailing control on `RecipeTile` and the first action in the Brew Mode app bar. The home app bar uses it as a filter (`Key('recipe-list-favorites')`): selected calls `RecipeListCubit.setFavoritesOnly(true)`, which reloads through `listFavorites`; clearing it reloads `listMine`. An empty filtered home list says there are no favorite recipes. The team detail app bar has its own filter (`Key('team-list-favorites')`). Selected reloads through `listTeamFavorites`; clearing it reloads `listForTeam`. An empty filtered team list says the team has no favorite recipes. An empty unfiltered team list still says the team has no recipes. Viewers and editors can both use that filter. Tile hearts stay disabled until the team summary has loaded, and then stay disabled unless `role == editor`.
 
-`toggleRecipeFavorite` is the shared tap handler. A filled heart calls `removeFavorite`. An outline heart calls `saveFavorite(replace: false)`. `saved: false` opens `ReplaceFavoriteDialog`: the close icon and Cancel pop false, and Accept calls `saveFavorite(replace: true)`. A failure shows the usual error snackbar. While a request for that recipe is in flight, its heart is disabled (`favoriteBusyIds` on the list, `favoriteBusy` on the detail).
+`toggleRecipeFavorite` is the shared tap handler. On My recipes and on Brew Mode opened from My recipes, a filled heart calls `removeFavorite` and an outline heart calls `saveFavorite(replace: false)`. On the team screen and on Brew Mode opened with `teamId`, those calls are `removeTeamFavorite` and `saveTeamFavorite`. `saved: false` opens `ReplaceFavoriteDialog`. The personal copy says the name is already in the user's favorites. The team copy says it is already in the team's favorites. Close and Cancel pop false. Accept retries with `replace: true`. A failure shows the usual error snackbar. A team heart is disabled when `role != editor`, including a viewer who owns the recipe and therefore has `canEdit`. Its tooltip says viewers can't change team favorites. On Brew Mode the same rule uses `access.role` when the route has `teamId`. While a request for that recipe is in flight, its heart is disabled (`favoriteBusyIds` on the list, `favoriteBusy` on the detail).
 
-The list cubit that owns the tile applies the new flags itself. Brew Mode's detail cubit does the server call, then `noteFavorite` on the session `RecipeListCubit` so the home heart matches without a second request. A team tile does the same for the personal list, which sits above the team screen's own cubit. When the home filter is on and the saved recipe is not in the loaded page, `noteFavorite` reloads. Unfavoriting while the filter is on drops that row. Replacing a favorite clears `isFavorite` on `replacedRecipeId` and, while the filter is on, removes that row.
+The list cubit that owns the tile applies the new flags itself. Brew Mode opened from My recipes then calls `noteFavorite` on the session `RecipeListCubit`. Brew Mode opened from a team does not. The team screen reloads its own cubit when that push returns, and it does not write the session cubit. When a filter is on and the saved recipe is not in the loaded page, `noteFavorite` reloads. Unfavoriting while the filter is on drops that row. Replacing a favorite clears `isFavorite` on `replacedRecipeId` in that same list and, while the filter is on, removes that row.
 
 ---
 

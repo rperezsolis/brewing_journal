@@ -365,6 +365,11 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<_is.UuidValue>(),
               nullable: false,
             ),
+            'teamId': _is.ParameterDescription(
+              name: 'teamId',
+              type: _is.getType<_is.UuidValue?>(),
+              nullable: true,
+            ),
           },
           call:
               (
@@ -373,6 +378,7 @@ class Endpoints extends _is.EndpointDispatch {
               ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint).get(
                 session,
                 params['id'],
+                teamId: params['teamId'],
               ),
         ),
         'listMine': _is.MethodConnector(
@@ -425,6 +431,37 @@ class Endpoints extends _is.EndpointDispatch {
                     params['offset'],
                   ),
         ),
+        'listTeamFavorites': _is.MethodConnector(
+          name: 'listTeamFavorites',
+          params: {
+            'teamId': _is.ParameterDescription(
+              name: 'teamId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+            'limit': _is.ParameterDescription(
+              name: 'limit',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'offset': _is.ParameterDescription(
+              name: 'offset',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint)
+                  .listTeamFavorites(
+                    session,
+                    params['teamId'],
+                    params['limit'],
+                    params['offset'],
+                  ),
+        ),
         'saveFavorite': _is.MethodConnector(
           name: 'saveFavorite',
           params: {
@@ -466,6 +503,62 @@ class Endpoints extends _is.EndpointDispatch {
               ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint)
                   .removeFavorite(
                     session,
+                    params['recipeId'],
+                  ),
+        ),
+        'saveTeamFavorite': _is.MethodConnector(
+          name: 'saveTeamFavorite',
+          params: {
+            'teamId': _is.ParameterDescription(
+              name: 'teamId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+            'recipeId': _is.ParameterDescription(
+              name: 'recipeId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+            'replace': _is.ParameterDescription(
+              name: 'replace',
+              type: _is.getType<bool>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint)
+                  .saveTeamFavorite(
+                    session,
+                    params['teamId'],
+                    params['recipeId'],
+                    params['replace'],
+                  ),
+        ),
+        'removeTeamFavorite': _is.MethodConnector(
+          name: 'removeTeamFavorite',
+          params: {
+            'teamId': _is.ParameterDescription(
+              name: 'teamId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+            'recipeId': _is.ParameterDescription(
+              name: 'recipeId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint)
+                  .removeTeamFavorite(
+                    session,
+                    params['teamId'],
                     params['recipeId'],
                   ),
         ),

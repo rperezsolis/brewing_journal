@@ -623,6 +623,31 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get noFavoriteRecipesDetail =>
       'Guarda una receta para conservar la versión que quieres preparar.';
+
+  @override
+  String get showTeamFavorites => 'Mostrar favoritos del equipo';
+
+  @override
+  String get showAllTeamRecipes => 'Mostrar todas las recetas del equipo';
+
+  @override
+  String get favoriteNameTakenTitleTeam =>
+      'Ya está en los favoritos del equipo';
+
+  @override
+  String get favoriteNameTakenBodyTeam =>
+      'Ya hay una receta con ese nombre en los favoritos de este equipo. ¿Quieres reemplazarla por esta?';
+
+  @override
+  String get noTeamFavoriteRecipes => 'No hay favoritos del equipo';
+
+  @override
+  String get noTeamFavoriteRecipesDetail =>
+      'Los editores guardan la versión que el equipo prepara.';
+
+  @override
+  String get viewersCantChangeTeamFavorites =>
+      'Los lectores no pueden cambiar los favoritos del equipo.';
 }
 
 /// The translations for Spanish Castilian, as used in Latin America and the Caribbean (`es_419`).
@@ -1244,4 +1269,29 @@ class AppLocalizationsEs419 extends AppLocalizationsEs {
   @override
   String get noFavoriteRecipesDetail =>
       'Guarda una receta para conservar la versión que quieres preparar.';
+
+  @override
+  String get showTeamFavorites => 'Mostrar favoritos del equipo';
+
+  @override
+  String get showAllTeamRecipes => 'Mostrar todas las recetas del equipo';
+
+  @override
+  String get favoriteNameTakenTitleTeam =>
+      'Ya está en los favoritos del equipo';
+
+  @override
+  String get favoriteNameTakenBodyTeam =>
+      'Ya hay una receta con ese nombre en los favoritos de este equipo. ¿Quieres reemplazarla por esta?';
+
+  @override
+  String get noTeamFavoriteRecipes => 'No hay favoritos del equipo';
+
+  @override
+  String get noTeamFavoriteRecipesDetail =>
+      'Los editores guardan la versión que el equipo prepara.';
+
+  @override
+  String get viewersCantChangeTeamFavorites =>
+      'Los lectores no pueden cambiar los favoritos del equipo.';
 }

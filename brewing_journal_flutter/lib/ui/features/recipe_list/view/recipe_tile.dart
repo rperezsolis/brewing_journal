@@ -14,12 +14,16 @@ class RecipeTile extends StatelessWidget {
     required this.onTap,
     required this.onFavorite,
     this.favoriteBusy = false,
+    this.favoriteEnabled = true,
   });
 
   final Recipe recipe;
   final VoidCallback onTap;
   final VoidCallback onFavorite;
   final bool favoriteBusy;
+
+  /// When false the heart stays visible and selected, but does not respond.
+  final bool favoriteEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +78,10 @@ class RecipeTile extends StatelessWidget {
             FavoriteIconButton(
               key: ValueKey('recipe-favorite-${recipe.id?.uuid}'),
               selected: recipe.isFavorite,
-              onPressed: favoriteBusy ? null : onFavorite,
+              tooltip: favoriteEnabled
+                  ? null
+                  : l10n.viewersCantChangeTeamFavorites,
+              onPressed: favoriteBusy || !favoriteEnabled ? null : onFavorite,
             ),
             const Icon(Icons.chevron_right),
           ],

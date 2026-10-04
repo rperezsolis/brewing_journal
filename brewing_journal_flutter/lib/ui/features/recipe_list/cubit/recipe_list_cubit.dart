@@ -106,7 +106,9 @@ class RecipeListCubit extends Cubit<RecipeListState> {
     if (state.favoriteBusyIds.contains(id)) return null;
     emit(state.copyWith(favoriteBusyIds: {...state.favoriteBusyIds, id}));
     try {
-      final result = await _recipes.saveFavorite(id, replace: replace);
+      final result = teamId == null
+          ? await _recipes.saveFavorite(id, replace: replace)
+          : await _recipes.saveTeamFavorite(teamId!, id, replace: replace);
       if (isClosed) return null;
       if (result.saved) {
         _emitFavorite(
@@ -131,7 +133,12 @@ class RecipeListCubit extends Cubit<RecipeListState> {
     if (state.favoriteBusyIds.contains(id)) return false;
     emit(state.copyWith(favoriteBusyIds: {...state.favoriteBusyIds, id}));
     try {
-      await _recipes.removeFavorite(id);
+      final team = teamId;
+      if (team == null) {
+        await _recipes.removeFavorite(id);
+      } else {
+        await _recipes.removeTeamFavorite(team, id);
+      }
       if (isClosed) return false;
       _emitFavorite(id, isFavorite: false);
       return true;
@@ -164,6 +171,9 @@ class RecipeListCubit extends Cubit<RecipeListState> {
   }) {
     final id = teamId;
     if (id != null) {
+      if (favoritesOnly) {
+        return _recipes.listTeamFavorites(id, limit: limit, offset: offset);
+      }
       return _recipes.listForTeam(id, limit: limit, offset: offset);
     }
     return _recipes.listMine(

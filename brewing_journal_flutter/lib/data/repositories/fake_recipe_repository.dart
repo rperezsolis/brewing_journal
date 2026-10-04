@@ -17,6 +17,13 @@ class FakeRecipeRepository implements RecipeRepository {
   /// When set, the next call throws it once.
   Object? nextError;
 
+  /// Team favorites, keyed by team and then by folded title. Separate from
+  /// each recipe's personal [Recipe.isFavorite] flag.
+  final Map<UuidValue, Map<String, UuidValue>> teamFavorites = {};
+
+  /// When false, team favorite writes throw [BrewingErrorCode.forbidden].
+  bool teamEditor = true;
+
   @override
   Future<RecipeDetail> save(RecipeDraft draft) async {
     _throwIfFailing();
@@ -77,9 +84,12 @@ class FakeRecipeRepository implements RecipeRepository {
   }
 
   @override
-  Future<RecipeDetail> get(UuidValue id) async {
+  Future<RecipeDetail> get(UuidValue id, {UuidValue? teamId}) async {
     _throwIfFailing();
-    return details[id] ?? (throw _notFound());
+    final detail = details[id] ?? (throw _notFound());
+    if (teamId == null) return detail;
+    if (detail.recipe.teamId != teamId) throw _notFound();
+    return detail.copyWith(recipe: _withTeamFlag(detail.recipe, teamId));
   }
 
   @override
@@ -139,7 +149,7 @@ class FakeRecipeRepository implements RecipeRepository {
     _throwIfFailing();
     final recipes =
         details.values
-            .map((d) => d.recipe)
+            .map((d) => _withTeamFlag(d.recipe, teamId))
             .where((r) => r.teamId == teamId)
             .toList()
           ..sort(_newestFirst);
@@ -147,9 +157,61 @@ class FakeRecipeRepository implements RecipeRepository {
   }
 
   @override
+  Future<List<Recipe>> listTeamFavorites(
+    UuidValue teamId, {
+    required int limit,
+    required int offset,
+  }) async {
+    _throwIfFailing();
+    final ids = teamFavorites[teamId]?.values.toSet() ?? const <UuidValue>{};
+    if (ids.isEmpty) return [];
+    final recipes =
+        details.values
+            .map((d) => _withTeamFlag(d.recipe, teamId))
+            .where((r) => r.teamId == teamId && ids.contains(r.id))
+            .toList()
+          ..sort(_newestFirst);
+    return recipes.skip(offset).take(limit).toList();
+  }
+
+  @override
+  Future<FavoriteSaveResult> saveTeamFavorite(
+    UuidValue teamId,
+    UuidValue id, {
+    required bool replace,
+  }) async {
+    _throwIfFailing();
+    _requireTeamEditor();
+    final detail = details[id] ?? (throw _notFound());
+    if (detail.recipe.teamId != teamId) throw _notFound();
+    final key = _titleKey(detail.recipe.title);
+    final byTitle = teamFavorites.putIfAbsent(teamId, () => {});
+    final current = byTitle[key];
+    if (current == id) return FavoriteSaveResult(saved: true);
+    if (current != null && !replace) {
+      return FavoriteSaveResult(saved: false);
+    }
+    byTitle[key] = id;
+    return FavoriteSaveResult(saved: true, replacedRecipeId: current);
+  }
+
+  @override
+  Future<void> removeTeamFavorite(UuidValue teamId, UuidValue id) async {
+    _throwIfFailing();
+    _requireTeamEditor();
+    final detail = details[id] ?? (throw _notFound());
+    if (detail.recipe.teamId != teamId) throw _notFound();
+    final byTitle = teamFavorites[teamId];
+    if (byTitle == null) return;
+    final key = _titleKey(detail.recipe.title);
+    if (byTitle[key] == id) byTitle.remove(key);
+  }
+
+  @override
   Future<Recipe> assignToTeam(UuidValue recipeId, UuidValue teamId) async {
     _throwIfFailing();
     final detail = details[recipeId] ?? (throw _notFound());
+    _dropTeamFavorite(recipeId);
     final recipe = detail.recipe.copyWith(teamId: teamId);
     details[recipeId] = RecipeDetail(
       recipe: recipe,
@@ -166,6 +228,7 @@ class FakeRecipeRepository implements RecipeRepository {
   Future<Recipe> removeFromTeam(UuidValue recipeId) async {
     _throwIfFailing();
     final detail = details[recipeId] ?? (throw _notFound());
+    _dropTeamFavorite(recipeId);
     final recipe = detail.recipe.copyWith(teamId: null);
     details[recipeId] = RecipeDetail(
       recipe: recipe,
@@ -185,6 +248,26 @@ class FakeRecipeRepository implements RecipeRepository {
   Future<void> delete(UuidValue id) async {
     _throwIfFailing();
     if (details.remove(id) == null) throw _notFound();
+    _dropTeamFavorite(id);
+  }
+
+  Recipe _withTeamFlag(Recipe recipe, UuidValue teamId) {
+    final winner = teamFavorites[teamId]?[_titleKey(recipe.title)];
+    return recipe.copyWith(isFavorite: winner != null && winner == recipe.id);
+  }
+
+  void _dropTeamFavorite(UuidValue recipeId) {
+    for (final byTitle in teamFavorites.values) {
+      byTitle.removeWhere((_, id) => id == recipeId);
+    }
+  }
+
+  void _requireTeamEditor() {
+    if (teamEditor) return;
+    throw BrewingException(
+      code: BrewingErrorCode.forbidden,
+      message: "Viewers can't change team favorites",
+    );
   }
 
   void _setFavorite(UuidValue id, bool isFavorite) {

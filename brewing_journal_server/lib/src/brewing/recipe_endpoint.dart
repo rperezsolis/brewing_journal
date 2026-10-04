@@ -9,6 +9,7 @@ import 'recipe_authors.dart';
 import 'recipe_favorites.dart';
 import 'recipe_storage.dart';
 import 'recipe_validator.dart';
+import 'team_recipe_favorites.dart';
 
 class RecipeEndpoint extends AuthenticatedEndpoint {
   /// Inserts a recipe. When [draft.id] is set, that recipe is the source of a
@@ -134,7 +135,15 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
 
   /// The recipe with its ingredient, ordered instructions, tags, photos (with
   /// `publicUrl`), and the caller's access.
-  Future<RecipeDetail> get(Session session, UuidValue id) async {
+  ///
+  /// [teamId] null fills [Recipe.isFavorite] from the caller's personal rows.
+  /// Set fills it from that team's rows. The caller must be a member and the
+  /// recipe must be on that team.
+  Future<RecipeDetail> get(
+    Session session,
+    UuidValue id, {
+    UuidValue? teamId,
+  }) async {
     final recipe = await Recipe.db.findById(
       session,
       id,
@@ -149,9 +158,16 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
     );
     if (recipe == null) throw recipeNotFound();
     final access = await RecipeAccessPolicy.resolve(session, recipe);
+    if (teamId != null) {
+      if (recipe.teamId != teamId) throw recipeNotFound();
+      final membership = await membershipOf(session, teamId, session.callerId);
+      if (membership == null) throw recipeNotFound();
+    }
 
     final named = (await withAuthorNames(session, [recipe])).single;
-    final flagged = (await withFavoriteFlags(session, [named])).single;
+    final flagged = teamId == null
+        ? (await withFavoriteFlags(session, [named])).single
+        : (await withTeamFavoriteFlags(session, teamId, [named])).single;
     final detail = RecipeDetail(
       recipe: flagged,
       ingredient: recipe.ingredient!,
@@ -178,7 +194,7 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
       offset: offset < 0 ? 0 : offset,
       include: Recipe.include(ingredient: Ingredient.include()),
     );
-    return _withListFields(session, recipes);
+    return _withPersonalFields(session, recipes);
   }
 
   /// The caller's own recipes that are in favorites, most recently updated first.
@@ -203,7 +219,35 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
       offset: offset < 0 ? 0 : offset,
       include: Recipe.include(ingredient: Ingredient.include()),
     );
-    return _withListFields(session, recipes);
+    return _withPersonalFields(session, recipes);
+  }
+
+  /// Team recipes the team has saved, most recently updated first.
+  /// Membership required.
+  Future<List<Recipe>> listTeamFavorites(
+    Session session,
+    UuidValue teamId,
+    int limit,
+    int offset,
+  ) async {
+    final membership = await membershipOf(session, teamId, session.callerId);
+    if (membership == null) throw recipeNotFound();
+    final marks = await TeamRecipeFavorite.db.find(
+      session,
+      where: (t) => t.teamId.equals(teamId),
+    );
+    if (marks.isEmpty) return [];
+    final recipes = await Recipe.db.find(
+      session,
+      where: (t) =>
+          t.teamId.equals(teamId) &
+          t.id.inSet(marks.map((mark) => mark.recipeId).toSet()),
+      orderByList: (t) => [t.updatedAt.desc(), t.id.desc()],
+      limit: limit.clamp(1, 50),
+      offset: offset < 0 ? 0 : offset,
+      include: Recipe.include(ingredient: Ingredient.include()),
+    );
+    return _withTeamFields(session, teamId, recipes);
   }
 
   /// Saves [recipeId] as the caller's favorite for its title.
@@ -219,6 +263,21 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
   /// Removes [recipeId] from the caller's favorites.
   Future<void> removeFavorite(Session session, UuidValue recipeId) =>
       removeRecipeFavorite(session, recipeId);
+
+  /// Saves [recipeId] as [teamId]'s favorite for its title.
+  Future<FavoriteSaveResult> saveTeamFavorite(
+    Session session,
+    UuidValue teamId,
+    UuidValue recipeId,
+    bool replace,
+  ) => saveTeamRecipeFavorite(session, teamId, recipeId, replace);
+
+  /// Removes [recipeId] from [teamId]'s favorites.
+  Future<void> removeTeamFavorite(
+    Session session,
+    UuidValue teamId,
+    UuidValue recipeId,
+  ) => removeTeamRecipeFavorite(session, teamId, recipeId);
 
   Future<RecipeAccess> getAccess(Session session, UuidValue id) async {
     final (_, access) = await RecipeAccessPolicy.load(session, id);
@@ -242,7 +301,7 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
       offset: offset < 0 ? 0 : offset,
       include: Recipe.include(ingredient: Ingredient.include()),
     );
-    return _withListFields(session, recipes);
+    return _withTeamFields(session, teamId, recipes);
   }
 
   /// Moves a personal recipe the caller owns onto a team they edit.
@@ -257,10 +316,18 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
     if (membership?.role != TeamRole.editor) {
       throw recipeForbidden("You can't add a recipe to this team");
     }
-    final updated = await Recipe.db.updateRow(
-      session,
-      recipe.copyWith(teamId: teamId, updatedAt: DateTime.now().toUtc()),
-    );
+    final updated = await session.db.transaction((transaction) async {
+      await deleteTeamFavoritesForRecipe(
+        session,
+        recipeId,
+        transaction: transaction,
+      );
+      return Recipe.db.updateRow(
+        session,
+        recipe.copyWith(teamId: teamId, updatedAt: DateTime.now().toUtc()),
+        transaction: transaction,
+      );
+    });
     return (await withFavoriteFlags(session, [updated])).single;
   }
 
@@ -272,10 +339,18 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
     if (!isOwner && !isTeamEditor) {
       throw recipeForbidden("You can't remove this recipe from the team");
     }
-    final updated = await Recipe.db.updateRow(
-      session,
-      recipe.copyWith(teamId: null, updatedAt: DateTime.now().toUtc()),
-    );
+    final updated = await session.db.transaction((transaction) async {
+      await deleteTeamFavoritesForRecipe(
+        session,
+        recipeId,
+        transaction: transaction,
+      );
+      return Recipe.db.updateRow(
+        session,
+        recipe.copyWith(teamId: null, updatedAt: DateTime.now().toUtc()),
+        transaction: transaction,
+      );
+    });
     return (await withFavoriteFlags(session, [updated])).single;
   }
 
@@ -305,11 +380,20 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
     await deletePhotoFiles(session, paths);
   }
 
-  Future<List<Recipe>> _withListFields(
+  Future<List<Recipe>> _withPersonalFields(
     Session session,
     List<Recipe> recipes,
   ) async {
     final named = await withAuthorNames(session, recipes);
     return withFavoriteFlags(session, named);
+  }
+
+  Future<List<Recipe>> _withTeamFields(
+    Session session,
+    UuidValue teamId,
+    List<Recipe> recipes,
+  ) async {
+    final named = await withAuthorNames(session, recipes);
+    return withTeamFavoriteFlags(session, teamId, named);
   }
 }

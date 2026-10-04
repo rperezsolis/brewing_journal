@@ -118,4 +118,62 @@ void main() {
     expect(cubit.state.detail!.recipe.isFavorite, isTrue);
     expect(recipes.details[first.recipe.id]!.recipe.isFavorite, isFalse);
   });
+
+  test(
+    'with teamId, save and replace leave personal favorites untouched',
+    () async {
+      final teamId = const Uuid().v7obj();
+      final first = await seed();
+      final second = await recipes.save(
+        RecipeDraft(
+          ingredientId: first.ingredient.id!,
+          title: 'Morning V60',
+          waterTempC: 90,
+          doseGrams: 18,
+          grindSize: 'fine',
+          grinderModel: 'Niche',
+          extractionMethod: ExtractionMethod.v60,
+          acidity: 0,
+          sweetness: 0,
+          body: 0,
+          bitterness: 0,
+          flavorTags: const [],
+          instructions: const [],
+        ),
+      );
+      await recipes.assignToTeam(first.recipe.id!, teamId);
+      await recipes.assignToTeam(second.recipe.id!, teamId);
+      final teamCubit = RecipeDetailCubit(recipes, teamId: teamId);
+      addTearDown(teamCubit.close);
+      await recipes.saveTeamFavorite(teamId, first.recipe.id!, replace: false);
+      await teamCubit.load(second.recipe.id!);
+
+      final blocked = await teamCubit.saveFavorite();
+      expect(blocked?.saved, isFalse);
+      expect(teamCubit.state.detail!.recipe.isFavorite, isFalse);
+
+      final replaced = await teamCubit.saveFavorite(replace: true);
+      expect(replaced?.replacedRecipeId, first.recipe.id);
+      expect(teamCubit.state.detail!.recipe.isFavorite, isTrue);
+      expect(recipes.details[first.recipe.id!]!.recipe.isFavorite, isFalse);
+      expect(recipes.details[second.recipe.id!]!.recipe.isFavorite, isFalse);
+      expect((await recipes.get(second.recipe.id!)).recipe.isFavorite, isFalse);
+    },
+  );
+
+  test('a forbidden team save leaves the loaded recipe unchanged', () async {
+    final teamId = const Uuid().v7obj();
+    final saved = await seed();
+    await recipes.assignToTeam(saved.recipe.id!, teamId);
+    recipes.teamEditor = false;
+    final teamCubit = RecipeDetailCubit(recipes, teamId: teamId);
+    addTearDown(teamCubit.close);
+    await teamCubit.load(saved.recipe.id!);
+
+    final result = await teamCubit.saveFavorite();
+
+    expect(result, isNull);
+    expect(teamCubit.state.detail!.recipe.isFavorite, isFalse);
+    expect(teamCubit.state.error, isA<BrewingException>());
+  });
 }

@@ -1,0 +1,18 @@
+class: TeamRecipeFavorite
+table: team_recipe_favorite
+serverOnly: true
+fields:
+  id: UuidValue?, defaultPersist=random_v7
+  team: Team?, relation(onDelete=Cascade)
+  recipe: Recipe?, relation(onDelete=Cascade)
+  ### Trimmed, lower-case title. One favorite per team per title.
+  titleKey: String
+  createdAt: DateTime, default=now
+
+indexes:
+  team_recipe_favorite_team_recipe_idx:
+    fields: teamId, recipeId
+    unique: true
+  team_recipe_favorite_team_title_idx:
+    fields: teamId, titleKey
+    unique: true

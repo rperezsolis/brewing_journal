@@ -59,7 +59,11 @@ void main() {
     return detail;
   }
 
-  Future<void> pumpBrew(WidgetTester tester, UuidValue id) async {
+  Future<void> pumpBrew(
+    WidgetTester tester,
+    UuidValue id, {
+    UuidValue? teamId,
+  }) async {
     await tester.pumpWidget(
       MultiRepositoryProvider(
         providers: [
@@ -70,7 +74,7 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           localeListResolutionCallback: resolveBrewSyncLocales,
-          home: BrewModeScreen(recipeId: id),
+          home: BrewModeScreen(recipeId: id, teamId: teamId),
         ),
       ),
     );
@@ -125,6 +129,55 @@ void main() {
     expect(find.byKey(const Key('brew-photos')), findsOneWidget);
     expect(find.byKey(const Key('brew-timer')), findsOneWidget);
     expect(find.text('Start'), findsOneWidget);
+  });
+
+  testWidgets('with teamId the heart is present', (tester) async {
+    final saved = await seed();
+    final teamId = const Uuid().v7obj();
+    await recipes.assignToTeam(saved.recipe.id!, teamId);
+    final id = saved.recipe.id!;
+    recipes.details[id] = recipes.details[id]!.copyWith(
+      access: RecipeAccess(
+        canEdit: true,
+        canDelete: false,
+        role: TeamRole.editor,
+      ),
+    );
+    await pumpBrew(tester, id, teamId: teamId);
+
+    expect(find.byKey(const Key('brew-favorite')), findsOneWidget);
+    final button = tester.widget<IconButton>(
+      find.descendant(
+        of: find.byKey(const Key('brew-favorite')),
+        matching: find.byType(IconButton),
+      ),
+    );
+    expect(button.onPressed, isNotNull);
+  });
+
+  testWidgets('a viewer who can still edit cannot change the team heart', (
+    tester,
+  ) async {
+    final saved = await seed();
+    final teamId = const Uuid().v7obj();
+    await recipes.assignToTeam(saved.recipe.id!, teamId);
+    final id = saved.recipe.id!;
+    recipes.details[id] = recipes.details[id]!.copyWith(
+      access: RecipeAccess(
+        canEdit: true,
+        canDelete: true,
+        role: TeamRole.viewer,
+      ),
+    );
+    await pumpBrew(tester, id, teamId: teamId);
+
+    final button = tester.widget<IconButton>(
+      find.descendant(
+        of: find.byKey(const Key('brew-favorite')),
+        matching: find.byType(IconButton),
+      ),
+    );
+    expect(button.onPressed, isNull);
   });
 }
 

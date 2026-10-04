@@ -180,5 +180,12 @@
   "favoriteNameTakenTitle": "Já está nos favoritos",
   "favoriteNameTakenBody": "Já existe uma receita com esse nome nos seus favoritos. Deseja substituí-la por esta?",
   "noFavoriteRecipes": "Nenhuma receita favorita",
-  "noFavoriteRecipesDetail": "Salve uma receita para guardar a versão que você quer preparar."
+  "noFavoriteRecipesDetail": "Salve uma receita para guardar a versão que você quer preparar.",
+  "showTeamFavorites": "Mostrar favoritos da equipe",
+  "showAllTeamRecipes": "Mostrar todas as receitas da equipe",
+  "favoriteNameTakenTitleTeam": "Já está nos favoritos da equipe",
+  "favoriteNameTakenBodyTeam": "Já existe uma receita com esse nome nos favoritos desta equipe. Deseja substituí-la por esta?",
+  "noTeamFavoriteRecipes": "Nenhum favorito da equipe",
+  "noTeamFavoriteRecipesDetail": "Os editores salvam a versão que a equipe prepara.",
+  "viewersCantChangeTeamFavorites": "Leitores não podem alterar os favoritos da equipe."
 }

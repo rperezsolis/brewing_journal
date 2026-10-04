@@ -487,5 +487,19 @@
   "noFavoriteRecipes": "No favorite recipes",
   "@noFavoriteRecipes": { "description": "Empty state title when the home list is filtered to favorites" },
   "noFavoriteRecipesDetail": "Save a recipe to keep the version you want to brew.",
-  "@noFavoriteRecipesDetail": { "description": "Empty state detail when the home list is filtered to favorites" }
+  "@noFavoriteRecipesDetail": { "description": "Empty state detail when the home list is filtered to favorites" },
+  "showTeamFavorites": "Show team favorites",
+  "@showTeamFavorites": { "description": "Tooltip for filtering a team list to that team's favorites" },
+  "showAllTeamRecipes": "Show all team recipes",
+  "@showAllTeamRecipes": { "description": "Tooltip for clearing the team favorites filter" },
+  "favoriteNameTakenTitleTeam": "Already in team favorites",
+  "@favoriteNameTakenTitleTeam": { "description": "Title of the dialog shown when a team favorite already uses this recipe name" },
+  "favoriteNameTakenBodyTeam": "A recipe with this name is already in this team's favorites. Replace it with this one?",
+  "@favoriteNameTakenBodyTeam": { "description": "Body of the dialog that asks to replace the team favorite with the same name" },
+  "noTeamFavoriteRecipes": "No team favorites",
+  "@noTeamFavoriteRecipes": { "description": "Empty state title when a team list is filtered to favorites" },
+  "noTeamFavoriteRecipesDetail": "Editors save the version the team brews.",
+  "@noTeamFavoriteRecipesDetail": { "description": "Empty state detail when a team list is filtered to favorites" },
+  "viewersCantChangeTeamFavorites": "Viewers can't change team favorites.",
+  "@viewersCantChangeTeamFavorites": { "description": "Shown when a viewer tries to change a team favorite" }
 }

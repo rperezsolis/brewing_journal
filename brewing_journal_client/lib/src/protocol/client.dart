@@ -323,12 +323,21 @@ class EndpointRecipe extends EndpointAuthenticated {
 
   /// The recipe with its ingredient, ordered instructions, tags, photos (with
   /// `publicUrl`), and the caller's access.
-  _ida.Future<_io43huzj.RecipeDetail> get(_isc.UuidValue id) =>
-      caller.callServerEndpoint<_io43huzj.RecipeDetail>(
-        'recipe',
-        'get',
-        {'id': id},
-      );
+  ///
+  /// [teamId] null fills [Recipe.isFavorite] from the caller's personal rows.
+  /// Set fills it from that team's rows. The caller must be a member and the
+  /// recipe must be on that team.
+  _ida.Future<_io43huzj.RecipeDetail> get(
+    _isc.UuidValue id, {
+    _isc.UuidValue? teamId,
+  }) => caller.callServerEndpoint<_io43huzj.RecipeDetail>(
+    'recipe',
+    'get',
+    {
+      'id': id,
+      'teamId': teamId,
+    },
+  );
 
   /// The caller's own recipes, most recently updated first.
   _ida.Future<List<_i261jxz0.Recipe>> listMine(
@@ -351,6 +360,22 @@ class EndpointRecipe extends EndpointAuthenticated {
     'recipe',
     'listFavorites',
     {
+      'limit': limit,
+      'offset': offset,
+    },
+  );
+
+  /// Team recipes the team has saved, most recently updated first.
+  /// Membership required.
+  _ida.Future<List<_i261jxz0.Recipe>> listTeamFavorites(
+    _isc.UuidValue teamId,
+    int limit,
+    int offset,
+  ) => caller.callServerEndpoint<List<_i261jxz0.Recipe>>(
+    'recipe',
+    'listTeamFavorites',
+    {
+      'teamId': teamId,
       'limit': limit,
       'offset': offset,
     },
@@ -379,6 +404,34 @@ class EndpointRecipe extends EndpointAuthenticated {
         'removeFavorite',
         {'recipeId': recipeId},
       );
+
+  /// Saves [recipeId] as [teamId]'s favorite for its title.
+  _ida.Future<_i6y9w12f.FavoriteSaveResult> saveTeamFavorite(
+    _isc.UuidValue teamId,
+    _isc.UuidValue recipeId,
+    bool replace,
+  ) => caller.callServerEndpoint<_i6y9w12f.FavoriteSaveResult>(
+    'recipe',
+    'saveTeamFavorite',
+    {
+      'teamId': teamId,
+      'recipeId': recipeId,
+      'replace': replace,
+    },
+  );
+
+  /// Removes [recipeId] from [teamId]'s favorites.
+  _ida.Future<void> removeTeamFavorite(
+    _isc.UuidValue teamId,
+    _isc.UuidValue recipeId,
+  ) => caller.callServerEndpoint<void>(
+    'recipe',
+    'removeTeamFavorite',
+    {
+      'teamId': teamId,
+      'recipeId': recipeId,
+    },
+  );
 
   _ida.Future<_i6vleds3.RecipeAccess> getAccess(_isc.UuidValue id) =>
       caller.callServerEndpoint<_i6vleds3.RecipeAccess>(

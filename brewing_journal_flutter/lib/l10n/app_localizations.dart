@@ -1193,6 +1193,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save a recipe to keep the version you want to brew.'**
   String get noFavoriteRecipesDetail;
+
+  /// Tooltip for filtering a team list to that team's favorites
+  ///
+  /// In en, this message translates to:
+  /// **'Show team favorites'**
+  String get showTeamFavorites;
+
+  /// Tooltip for clearing the team favorites filter
+  ///
+  /// In en, this message translates to:
+  /// **'Show all team recipes'**
+  String get showAllTeamRecipes;
+
+  /// Title of the dialog shown when a team favorite already uses this recipe name
+  ///
+  /// In en, this message translates to:
+  /// **'Already in team favorites'**
+  String get favoriteNameTakenTitleTeam;
+
+  /// Body of the dialog that asks to replace the team favorite with the same name
+  ///
+  /// In en, this message translates to:
+  /// **'A recipe with this name is already in this team\'s favorites. Replace it with this one?'**
+  String get favoriteNameTakenBodyTeam;
+
+  /// Empty state title when a team list is filtered to favorites
+  ///
+  /// In en, this message translates to:
+  /// **'No team favorites'**
+  String get noTeamFavoriteRecipes;
+
+  /// Empty state detail when a team list is filtered to favorites
+  ///
+  /// In en, this message translates to:
+  /// **'Editors save the version the team brews.'**
+  String get noTeamFavoriteRecipesDetail;
+
+  /// Shown when a viewer tries to change a team favorite
+  ///
+  /// In en, this message translates to:
+  /// **'Viewers can\'t change team favorites.'**
+  String get viewersCantChangeTeamFavorites;
 }
 
 class _AppLocalizationsDelegate

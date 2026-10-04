@@ -73,7 +73,9 @@ class RecipeWizardView extends StatelessWidget {
         if (state.loadStatus == LoadStatus.ready &&
             !state.canEdit &&
             state.recipeId != null) {
-          context.pushReplacement(Routes.recipe(state.recipeId!));
+          context.pushReplacement(
+            Routes.recipe(state.recipeId!, teamId: state.teamId),
+          );
           return;
         }
         final error = state.error;
@@ -341,11 +343,12 @@ class _BottomBar extends StatelessWidget {
       return;
     }
     final router = GoRouter.of(context);
+    final route = Routes.recipe(id, teamId: cubit.state.teamId);
     if (openedAsEdit) {
       router.pop();
-      router.pushReplacement(Routes.recipe(id));
+      router.pushReplacement(route);
     } else {
-      router.pushReplacement(Routes.recipe(id));
+      router.pushReplacement(route);
     }
   }
 }

@@ -197,7 +197,7 @@ void main() {
     });
 
     test(
-      'when a team member favorites a shared recipe then only they see the flag',
+      'when a viewer saves a personal favorite then the team list stays clear',
       () async {
         final member = await createTestUser(sessionBuilder);
         final team = await createTeam(endpoints, owner);
@@ -234,8 +234,13 @@ void main() {
           10,
           0,
         );
-        expect(memberList.single.isFavorite, isTrue);
+        expect(memberList.single.isFavorite, isFalse);
         expect(ownerList.single.isFavorite, isFalse);
+        final personal = await endpoints.recipe.get(
+          member.sessionBuilder,
+          recipe.recipe.id!,
+        );
+        expect(personal.recipe.isFavorite, isTrue);
         final memberHome = await endpoints.recipe.listFavorites(
           member.sessionBuilder,
           10,

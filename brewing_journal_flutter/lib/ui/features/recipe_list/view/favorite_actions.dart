@@ -19,6 +19,7 @@ Future<void> toggleRecipeFavorite({
   onChanged,
   required void Function(Object error) onError,
   required Object? Function() readError,
+  bool team = false,
 }) async {
   final id = recipe.id;
   if (id == null) return;
@@ -48,7 +49,7 @@ Future<void> toggleRecipeFavorite({
     return;
   }
 
-  final replace = await showReplaceFavoriteDialog(context);
+  final replace = await showReplaceFavoriteDialog(context, team: team);
   if (!replace || !context.mounted) return;
   final replaced = await save(replace: true);
   if (!context.mounted) return;
@@ -73,14 +74,28 @@ void _report(
   if (error != null) onError(error);
 }
 
-void showFavoriteError(BuildContext context, Object error) {
+void showFavoriteError(
+  BuildContext context,
+  Object error, {
+  bool team = false,
+}) {
   final colors = Theme.of(context).colorScheme;
+  final l10n = context.l10n;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
         content: Text(
-          errorMessage(error, context.l10n),
+          errorMessage(
+            error,
+            l10n,
+            overrides: team
+                ? {
+                    BrewingErrorCode.forbidden:
+                        l10n.viewersCantChangeTeamFavorites,
+                  }
+                : const {},
+          ),
           style: TextStyle(color: colors.onErrorContainer),
         ),
         backgroundColor: colors.errorContainer,

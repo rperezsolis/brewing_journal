@@ -39,6 +39,7 @@ import 'brewing/recipe_flavor_tag.dart' as _ij3iqvmk;
 import 'brewing/recipe_instruction.dart' as _id0mij74;
 import 'brewing/recipe_photo.dart' as _i9xtdqqg;
 import 'brewing/roast_level.dart' as _ilmoykyi;
+import 'brewing/team_recipe_favorite.dart' as _intarog7;
 import 'brewing/upload_ticket.dart' as _ivpdymeq;
 import 'teams/invite_link.dart' as _ih3460lx;
 import 'teams/team.dart' as _im6wd3ml;
@@ -62,6 +63,7 @@ export 'brewing/recipe_flavor_tag.dart';
 export 'brewing/recipe_instruction.dart';
 export 'brewing/recipe_photo.dart';
 export 'brewing/roast_level.dart';
+export 'brewing/team_recipe_favorite.dart';
 export 'brewing/upload_ticket.dart';
 export 'teams/invite_link.dart';
 export 'teams/team.dart';
@@ -998,6 +1000,105 @@ class Protocol extends _is.DatabaseSerializationManager {
       ],
       managed: true,
     ),
+    _isp.TableDefinition(
+      name: 'team_recipe_favorite',
+      dartName: 'TeamRecipeFavorite',
+      schema: 'public',
+      module: 'brewing_journal',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue?',
+          columnDefault: 'random_v7',
+        ),
+        _isp.ColumnDefinition(
+          name: 'teamId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'recipeId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'titleKey',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'team_recipe_favorite_fk_0',
+          columns: ['teamId'],
+          referenceTable: 'team',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+        _isp.ForeignKeyDefinition(
+          constraintName: 'team_recipe_favorite_fk_1',
+          columns: ['recipeId'],
+          referenceTable: 'recipe',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'team_recipe_favorite_team_recipe_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'teamId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'recipeId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+        _isp.IndexDefinition(
+          indexName: 'team_recipe_favorite_team_title_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'teamId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'titleKey',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
     ..._iais.Protocol.targetTableDefinitions,
     ..._iacs.Protocol.targetTableDefinitions,
     ..._isp.Protocol.targetTableDefinitions,
@@ -1078,6 +1179,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _ilmoykyi.RoastLevel) {
       return _ilmoykyi.RoastLevel.fromJson(data) as T;
     }
+    if (t == _intarog7.TeamRecipeFavorite) {
+      return _intarog7.TeamRecipeFavorite.fromJson(data) as T;
+    }
     if (t == _ivpdymeq.UploadTicket) {
       return _ivpdymeq.UploadTicket.fromJson(data) as T;
     }
@@ -1154,6 +1258,10 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _is.getType<_ilmoykyi.RoastLevel?>()) {
       return (data != null ? _ilmoykyi.RoastLevel.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_intarog7.TeamRecipeFavorite?>()) {
+      return (data != null ? _intarog7.TeamRecipeFavorite.fromJson(data) : null)
+          as T;
     }
     if (t == _is.getType<_ivpdymeq.UploadTicket?>()) {
       return (data != null ? _ivpdymeq.UploadTicket.fromJson(data) : null) as T;
@@ -1312,6 +1420,7 @@ class Protocol extends _is.DatabaseSerializationManager {
       _id0mij74.RecipeInstruction => 'RecipeInstruction',
       _i9xtdqqg.RecipePhoto => 'RecipePhoto',
       _ilmoykyi.RoastLevel => 'RoastLevel',
+      _intarog7.TeamRecipeFavorite => 'TeamRecipeFavorite',
       _ivpdymeq.UploadTicket => 'UploadTicket',
       _ih3460lx.InviteLink => 'InviteLink',
       _im6wd3ml.Team => 'Team',
@@ -1368,6 +1477,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'RecipePhoto';
       case _ilmoykyi.RoastLevel():
         return 'RoastLevel';
+      case _intarog7.TeamRecipeFavorite():
+        return 'TeamRecipeFavorite';
       case _ivpdymeq.UploadTicket():
         return 'UploadTicket';
       case _ih3460lx.InviteLink():
@@ -1456,6 +1567,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName == 'RoastLevel') {
       return deserialize<_ilmoykyi.RoastLevel>(data['data']);
     }
+    if (dataClassName == 'TeamRecipeFavorite') {
+      return deserialize<_intarog7.TeamRecipeFavorite>(data['data']);
+    }
     if (dataClassName == 'UploadTicket') {
       return deserialize<_ivpdymeq.UploadTicket>(data['data']);
     }
@@ -1530,6 +1644,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return _id0mij74.RecipeInstruction.t;
       case _i9xtdqqg.RecipePhoto:
         return _i9xtdqqg.RecipePhoto.t;
+      case _intarog7.TeamRecipeFavorite:
+        return _intarog7.TeamRecipeFavorite.t;
       case _im6wd3ml.Team:
         return _im6wd3ml.Team.t;
       case _ixubbi3v.TeamInvite:

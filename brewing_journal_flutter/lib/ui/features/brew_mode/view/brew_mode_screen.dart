@@ -22,27 +22,34 @@ import '../cubit/brew_timer_state.dart';
 
 /// Read-only brew session for a saved recipe, with an optional timer.
 class BrewModeScreen extends StatelessWidget {
-  const BrewModeScreen({super.key, required this.recipeId});
+  const BrewModeScreen({super.key, required this.recipeId, this.teamId});
 
   final UuidValue recipeId;
+
+  /// Set when this brew was opened from a team list.
+  final UuidValue? teamId;
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) =>
-              RecipeDetailCubit(context.read())..load(recipeId),
+          create: (context) => RecipeDetailCubit(
+            context.read(),
+            teamId: teamId,
+          )..load(recipeId),
         ),
         BlocProvider(create: (context) => BrewTimerCubit(context.read())),
       ],
-      child: const BrewModeView(),
+      child: BrewModeView(teamId: teamId),
     );
   }
 }
 
 class BrewModeView extends StatefulWidget {
-  const BrewModeView({super.key});
+  const BrewModeView({super.key, this.teamId});
+
+  final UuidValue? teamId;
 
   @override
   State<BrewModeView> createState() => _BrewModeViewState();
@@ -59,6 +66,13 @@ class _BrewModeViewState extends State<BrewModeView> {
   void initState() {
     super.initState();
     _lifecycle = AppLifecycleListener(onHide: _onHide);
+  }
+
+  @override
+  void didUpdateWidget(BrewModeView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.teamId == oldWidget.teamId) return;
+    context.read<RecipeDetailCubit>().adoptTeamScope(widget.teamId);
   }
 
   @override
@@ -194,6 +208,8 @@ class _BrewModeViewState extends State<BrewModeView> {
     if (!mounted) return;
     if (ok) {
       _refreshRecipeLists();
+      final id = detail.recipe.id;
+      if (id != null) context.replace(Routes.recipe(id, teamId: teamId));
     } else {
       final error = context.read<RecipeDetailCubit>().state.error;
       if (error != null) {
@@ -208,23 +224,26 @@ class _BrewModeViewState extends State<BrewModeView> {
 
   Future<void> _toggleFavorite(Recipe recipe) async {
     final detailCubit = context.read<RecipeDetailCubit>();
-    final listCubit = context.read<RecipeListCubit>();
     final id = recipe.id;
     if (id == null) return;
+    final teamScoped = widget.teamId != null;
     await toggleRecipeFavorite(
       context: context,
       recipe: recipe,
       save: ({required replace}) => detailCubit.saveFavorite(replace: replace),
       remove: detailCubit.removeFavorite,
-      onChanged: ({required isFavorite, replacedRecipeId}) {
-        listCubit.noteFavorite(
-          recipeId: id,
-          isFavorite: isFavorite,
-          replacedRecipeId: replacedRecipeId,
-        );
-      },
-      onError: _showError,
+      onChanged: teamScoped
+          ? null
+          : ({required isFavorite, replacedRecipeId}) {
+              context.read<RecipeListCubit>().noteFavorite(
+                recipeId: id,
+                isFavorite: isFavorite,
+                replacedRecipeId: replacedRecipeId,
+              );
+            },
+      onError: (error) => showFavoriteError(context, error, team: teamScoped),
       readError: () => detailCubit.state.error,
+      team: teamScoped,
     );
   }
 
@@ -233,6 +252,8 @@ class _BrewModeViewState extends State<BrewModeView> {
     if (!mounted) return;
     if (ok) {
       _refreshRecipeLists();
+      final id = detail.recipe.id;
+      if (id != null) context.replace(Routes.recipe(id));
     } else {
       final error = context.read<RecipeDetailCubit>().state.error;
       if (error != null) {
@@ -268,7 +289,15 @@ class _BrewModeViewState extends State<BrewModeView> {
                   FavoriteIconButton(
                     key: const Key('brew-favorite'),
                     selected: detail.recipe.isFavorite,
-                    onPressed: state.favoriteBusy
+                    tooltip:
+                        widget.teamId != null &&
+                            detail.access.role != TeamRole.editor
+                        ? l10n.viewersCantChangeTeamFavorites
+                        : null,
+                    onPressed:
+                        state.favoriteBusy ||
+                            (widget.teamId != null &&
+                                detail.access.role != TeamRole.editor)
                         ? null
                         : () => _toggleFavorite(detail.recipe),
                   ),

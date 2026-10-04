@@ -624,6 +624,30 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get noFavoriteRecipesDetail =>
       'Salve uma receita para guardar a versão que você quer preparar.';
+
+  @override
+  String get showTeamFavorites => 'Mostrar favoritos da equipe';
+
+  @override
+  String get showAllTeamRecipes => 'Mostrar todas as receitas da equipe';
+
+  @override
+  String get favoriteNameTakenTitleTeam => 'Já está nos favoritos da equipe';
+
+  @override
+  String get favoriteNameTakenBodyTeam =>
+      'Já existe uma receita com esse nome nos favoritos desta equipe. Deseja substituí-la por esta?';
+
+  @override
+  String get noTeamFavoriteRecipes => 'Nenhum favorito da equipe';
+
+  @override
+  String get noTeamFavoriteRecipesDetail =>
+      'Os editores salvam a versão que a equipe prepara.';
+
+  @override
+  String get viewersCantChangeTeamFavorites =>
+      'Leitores não podem alterar os favoritos da equipe.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1246,4 +1270,28 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get noFavoriteRecipesDetail =>
       'Salve uma receita para guardar a versão que você quer preparar.';
+
+  @override
+  String get showTeamFavorites => 'Mostrar favoritos da equipe';
+
+  @override
+  String get showAllTeamRecipes => 'Mostrar todas as receitas da equipe';
+
+  @override
+  String get favoriteNameTakenTitleTeam => 'Já está nos favoritos da equipe';
+
+  @override
+  String get favoriteNameTakenBodyTeam =>
+      'Já existe uma receita com esse nome nos favoritos desta equipe. Deseja substituí-la por esta?';
+
+  @override
+  String get noTeamFavoriteRecipes => 'Nenhum favorito da equipe';
+
+  @override
+  String get noTeamFavoriteRecipesDetail =>
+      'Os editores salvam a versão que a equipe prepara.';
+
+  @override
+  String get viewersCantChangeTeamFavorites =>
+      'Leitores não podem alterar os favoritos da equipe.';
 }
