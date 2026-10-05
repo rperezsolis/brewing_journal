@@ -262,6 +262,7 @@ class _RegisterIngredientSheetState extends State<RegisterIngredientSheet> {
             ),
             const SizedBox(height: 8),
             TextField(
+              key: const Key('ingredient-origin'),
               controller: _origin,
               decoration: InputDecoration(
                 labelText: l10n.originOptional,

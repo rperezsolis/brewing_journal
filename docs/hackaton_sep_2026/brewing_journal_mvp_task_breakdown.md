@@ -860,6 +860,8 @@ Do Feature 8.2 before 8.3, then 8.4. There is no schema phase.
 
 - [x] `ServerpodIngredientRepository.adopt` and `ServerpodRecipeRepository.listGrinderModels` call the generated client. No new registration in `app_scope.dart`.
 - [x] No `.spy.yaml` file changed, so no migration was created.
+- [x] `integration_test/team_catalog_test.dart` covers US-4.7 through US-4.10 against `serverpod start`: a viewer finds the team coffee bean and matcha, does not find a personal bean or grinder, copies the matcha (origin included), keeps their own origin when the coffee name already exists, picks a team grinder and still types their own, then after both recipes leave the team still has the adopted matcha and their coffee while the team grinders are gone.
+- [x] Run `flutter test integration_test/team_catalog_test.dart -d macos` while `serverpod start` is up.
 - [x] Run the post-phase checklist. `dart analyze` is clean in the server and Flutter packages.
 
 ---

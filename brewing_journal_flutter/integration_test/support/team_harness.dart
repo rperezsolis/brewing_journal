@@ -365,6 +365,9 @@ class TeamHarness {
     required String title,
     required String bean,
     required List<String> instructions,
+    String? kind,
+    String? origin,
+    String? grinder,
   }) async {
     await tester.tap(find.byKey(const Key('team-new-recipe')).hitTestable());
     await tester.pump();
@@ -378,6 +381,9 @@ class TeamHarness {
       title: title,
       bean: bean,
       instructions: instructions,
+      kind: kind,
+      origin: origin,
+      grinder: grinder,
     );
   }
 
@@ -385,9 +391,16 @@ class TeamHarness {
     WidgetTester tester, {
     required String title,
     required String bean,
+    String? grinder,
   }) async {
     await recipes.startNewRecipe(tester);
-    await _saveRecipe(tester, title: title, bean: bean, instructions: const []);
+    await _saveRecipe(
+      tester,
+      title: title,
+      bean: bean,
+      instructions: const [],
+      grinder: grinder,
+    );
   }
 
   Future<void> replaceInstructions(
@@ -596,10 +609,14 @@ class TeamHarness {
     required String title,
     required String bean,
     required List<String> instructions,
+    String? kind,
+    String? origin,
+    String? grinder,
   }) async {
-    await recipes.registerBean(tester, bean);
+    if (kind != null) await recipes.selectIngredientKind(tester, kind);
+    await recipes.registerBean(tester, bean, origin: origin);
     await recipes.next(tester, find.text(l10n.brewParameters));
-    await recipes.fillBrewParameters(tester, title: title);
+    await recipes.fillBrewParameters(tester, title: title, grinder: grinder);
     await recipes.next(tester, find.text(l10n.flavorMap));
     await recipes.next(tester, find.text(l10n.extraSteps));
     if (instructions.isEmpty) {

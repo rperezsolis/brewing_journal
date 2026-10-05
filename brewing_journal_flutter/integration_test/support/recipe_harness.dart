@@ -5,13 +5,16 @@ import 'dart:typed_data';
 
 import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
+import 'package:brewing_journal_flutter/ui/core/brewing_labels.dart';
 import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
 import 'package:brewing_journal_flutter/ui/core/widgets/favorite_icon_button.dart';
 import 'package:brewing_journal_flutter/ui/features/brew_mode/cubit/brew_timer_state.dart';
 import 'package:brewing_journal_flutter/ui/features/brew_mode/view/brew_mode_screen.dart';
+import 'package:brewing_journal_flutter/ui/features/recipe_creation/cubit/recipe_creation_cubit.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_creation/view/recipe_wizard_screen.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_list/view/recipe_list_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
@@ -71,7 +74,11 @@ class RecipeHarness {
     );
   }
 
-  Future<void> registerBean(WidgetTester tester, String name) async {
+  Future<void> registerBean(
+    WidgetTester tester,
+    String name, {
+    String? origin,
+  }) async {
     await tester.tap(find.byKey(const Key('ingredient-register-open')));
     await tester.pump();
     await _waitFor(
@@ -81,6 +88,21 @@ class RecipeHarness {
     );
     await tester.enterText(find.byKey(const Key('ingredient-name')), name);
     await tester.pump();
+    if (origin != null) {
+      final originField = find.byKey(const Key('ingredient-origin'));
+      await tester.scrollUntilVisible(
+        originField,
+        80,
+        scrollable: find.ancestor(
+          of: originField,
+          matching: find.byType(Scrollable),
+        ),
+      );
+      await tester.enterText(originField, origin);
+      await tester.pump();
+      final controller = tester.widget<TextField>(originField).controller!;
+      if (controller.text != origin) controller.text = origin;
+    }
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pump();
     final save = find.byKey(const Key('ingredient-register'));
@@ -97,6 +119,9 @@ class RecipeHarness {
       'the register sheet to close',
     );
     expect(find.text(name), findsWidgets);
+    if (origin != null) {
+      expect(_wizardCubit(tester).state.selectedIngredient?.origin, origin);
+    }
   }
 
   /// Chooses a beverage kind on the ingredient step, before registering.
@@ -107,18 +132,173 @@ class RecipeHarness {
     );
     await tester.tap(segment);
     await tester.pump();
+    await waitUntil(tester, () {
+      final state = _wizardCubit(tester).state;
+      return state.ingredientKind.label(l10n) == label &&
+          !state.searchingIngredients;
+    }, 'the $label catalog');
+  }
+
+  /// Waits until the open wizard's ingredient search lists [name].
+  Future<void> waitForIngredient(WidgetTester tester, String name) {
+    return waitUntil(tester, () {
+      final state = _wizardCubit(tester).state;
+      return !state.searchingIngredients &&
+          state.ingredientResults.any((row) => row.name == name);
+    }, name);
+  }
+
+  /// Types into the bean search and waits until that query has finished.
+  Future<void> searchIngredient(WidgetTester tester, String query) async {
+    await _replaceField(tester, const Key('ingredient-search'), query);
+    await waitUntil(tester, () {
+      final state = _wizardCubit(tester).state;
+      return state.ingredientQuery == query && !state.searchingIngredients;
+    }, 'ingredient search for "$query"');
+  }
+
+  void expectIngredients(
+    WidgetTester tester, {
+    List<String> present = const [],
+    List<String> absent = const [],
+  }) {
+    final results = _wizardCubit(tester).state.ingredientResults;
+    final names = results.map((row) => row.name).toList();
+    for (final name in present) {
+      expect(names, contains(name), reason: 'Catalog was $names');
+      expect(find.widgetWithText(ListTile, name), findsWidgets);
+    }
+    for (final name in absent) {
+      expect(names, isNot(contains(name)), reason: 'Catalog was $names');
+    }
+  }
+
+  /// One search row for [name], optionally with [origin].
+  void expectIngredientRow(
+    WidgetTester tester,
+    String name, {
+    String? origin,
+    String? notOrigin,
+  }) {
+    final matches = _wizardCubit(
+      tester,
+    ).state.ingredientResults.where((row) => row.name == name).toList();
+    expect(matches, hasLength(1), reason: name);
+    if (origin != null) {
+      expect(matches.single.origin, origin);
+      expect(find.textContaining(origin), findsWidgets);
+    }
+    if (notOrigin != null) {
+      expect(matches.single.origin, isNot(notOrigin));
+      expect(find.textContaining(notOrigin), findsNothing);
+    }
+  }
+
+  /// Taps a search row and waits until the account's copy is selected.
+  Future<void> selectIngredientResult(WidgetTester tester, String name) async {
+    final tile = find.widgetWithText(ListTile, name).last;
+    await _reveal(tester, _wizardScrollable(), tile);
+    await tester.tap(tile);
+    await tester.pump();
+    await waitUntil(tester, () {
+      final state = _wizardCubit(tester).state;
+      return state.adoptingIngredientId == null &&
+          state.selectedIngredient?.name == name &&
+          state.error == null;
+    }, 'adopting $name');
+  }
+
+  String? selectedOrigin(WidgetTester tester) =>
+      _wizardCubit(tester).state.selectedIngredient?.origin;
+
+  /// Types a grinder prefix and waits out the suggestion debounce.
+  Future<void> typeGrinder(WidgetTester tester, String query) async {
+    await _replaceField(tester, const Key('extraction-grinder'), query);
+    await tester.pump(const Duration(milliseconds: 400));
+    await waitUntil(
+      tester,
+      () => _wizardCubit(tester).state.grinderModel == query,
+      'the grinder field',
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+  }
+
+  Future<void> waitForGrinder(WidgetTester tester, String model) {
+    return waitUntil(
+      tester,
+      () => _wizardCubit(tester).state.grinderSuggestions.contains(model),
+      model,
+    );
+  }
+
+  void expectGrinders(
+    WidgetTester tester, {
+    List<String> present = const [],
+    List<String> absent = const [],
+  }) {
+    final models = _wizardCubit(tester).state.grinderSuggestions;
+    for (final model in present) {
+      expect(models, contains(model), reason: 'Suggestions were $models');
+      expect(
+        find.byKey(ValueKey('grinder-suggestion-$model')),
+        findsOneWidget,
+        reason: model,
+      );
+    }
+    for (final model in absent) {
+      expect(
+        models,
+        isNot(contains(model)),
+        reason: 'Suggestions were $models',
+      );
+      expect(find.byKey(ValueKey('grinder-suggestion-$model')), findsNothing);
+    }
+  }
+
+  Future<void> tapGrinderSuggestion(WidgetTester tester, String model) async {
+    final tile = find.byKey(ValueKey('grinder-suggestion-$model'));
+    await _reveal(tester, _wizardScrollable(), tile);
+    await tester.tap(tile);
+    await tester.pump();
+    await waitUntil(
+      tester,
+      () => _fieldText(tester, const Key('extraction-grinder')) == model,
+      'the grinder field to show $model',
+    );
+    expect(find.byKey(ValueKey('grinder-suggestion-$model')), findsNothing);
+  }
+
+  /// Leaves a new-recipe wizard without saving.
+  Future<void> closeWizard(WidgetTester tester) async {
+    await tester.tap(
+      find.descendant(
+        of: find.byType(RecipeWizardScreen),
+        matching: find.byTooltip(l10n.close),
+      ),
+    );
+    await tester.pump();
+    await waitUntil(
+      tester,
+      () => find.byType(RecipeWizardScreen).evaluate().isEmpty,
+      'the wizard to close',
+    );
   }
 
   Future<void> fillBrewParameters(
     WidgetTester tester, {
     required String title,
     String? method,
+    String? grinder,
   }) async {
     await _enter(tester, const Key('extraction-title'), title);
     await _enter(tester, const Key('extraction-temp'), temperature);
     await _enter(tester, const Key('extraction-dose'), dose);
     await _enter(tester, const Key('extraction-grind'), grind);
-    await _enter(tester, const Key('extraction-grinder'), grinder);
+    await _replaceField(
+      tester,
+      const Key('extraction-grinder'),
+      grinder ?? RecipeHarness.grinder,
+    );
     await _selectMethod(tester, method ?? l10n.methodV60);
   }
 
@@ -968,6 +1148,32 @@ class RecipeHarness {
     await _reveal(tester, _wizardScrollable(), field);
     await tester.enterText(field, value);
     await tester.pump();
+  }
+
+  /// Sets a wizard field and notifies its listener, including when the macOS
+  /// IME ignores [WidgetTester.enterText].
+  Future<void> _replaceField(WidgetTester tester, Key key, String value) async {
+    final field = find.byKey(key);
+    await _reveal(tester, _wizardScrollable(), field);
+    await tester.enterText(field, value);
+    await tester.pump();
+    final textField = tester.widget<TextField>(field);
+    final controller = textField.controller;
+    if (controller != null && controller.text != value) {
+      controller.value = TextEditingValue(
+        text: value,
+        selection: TextSelection.collapsed(offset: value.length),
+      );
+      await tester.pump();
+    }
+    textField.onChanged?.call(value);
+    await tester.pump();
+  }
+
+  RecipeCreationCubit _wizardCubit(WidgetTester tester) {
+    final view = find.byType(RecipeWizardView);
+    expect(view, findsOneWidget, reason: 'The recipe wizard is not open.');
+    return BlocProvider.of<RecipeCreationCubit>(tester.element(view));
   }
 
   void _setFieldText(WidgetTester tester, Key key, String value) {
