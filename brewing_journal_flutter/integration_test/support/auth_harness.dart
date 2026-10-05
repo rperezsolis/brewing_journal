@@ -6,6 +6,7 @@ import 'package:brewing_journal_flutter/client.dart';
 import 'package:brewing_journal_flutter/data/services/analytics_service.dart';
 import 'package:brewing_journal_flutter/main.dart' as app;
 import 'package:brewing_journal_flutter/router.dart';
+import 'package:brewing_journal_flutter/ui/core/analytics/analytics_route_observer.dart';
 import 'package:brewing_journal_flutter/ui/features/auth/cubit/auth_cubit.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_list/view/recipe_list_screen.dart';
 import 'package:flutter/material.dart';
@@ -243,11 +244,15 @@ class AuthHarness {
     );
     final authCubit = AuthCubit(repositories.auth);
     unawaited(authCubit.start());
+    final routeObserver = AnalyticsRouteObserver(repositories.analytics);
     await tester.pumpWidget(
       AppScope(
         repositories: repositories,
         authCubit: authCubit,
-        child: app.BrewSyncApp(router: createRouter(authCubit)),
+        child: app.BrewSyncApp(
+          router: createRouter(authCubit, observers: [routeObserver]),
+          routeObserver: routeObserver,
+        ),
       ),
     );
   }

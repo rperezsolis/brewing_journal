@@ -93,4 +93,17 @@ class _RecordingAnalyticsService implements AnalyticsService {
   Future<void> trackAppOpened({required bool signedIn}) async {
     appOpens.add(signedIn);
   }
+
+  @override
+  Future<void> trackScreenView({
+    required String screenName,
+    required String navigationSource,
+  }) async {}
+
+  @override
+  Future<void> trackButtonTapped({
+    required String buttonLabel,
+    required String buttonAction,
+    required String currentScreen,
+  }) async {}
 }

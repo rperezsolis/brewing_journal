@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../router.dart';
+import '../../../core/analytics/screen_names.dart';
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/error_messages.dart';
 import '../../../core/l10n.dart';
 import '../../../core/widgets/favorite_icon_button.dart';
@@ -42,20 +44,32 @@ class RecipeListScreen extends StatelessWidget {
               );
             },
           ),
-          IconButton(
-            key: const ValueKey('sign-out'),
-            tooltip: l10n.signOut,
-            icon: const Icon(Icons.logout),
+          TrackedButton(
+            buttonLabel: 'sign_out',
+            buttonAction: 'sign_out',
+            currentScreen: ScreenNames.recipeList,
             onPressed: () => context.read<AuthCubit>().signOut(),
+            builder: (context, onPressed) => IconButton(
+              key: const ValueKey('sign-out'),
+              tooltip: l10n.signOut,
+              icon: const Icon(Icons.logout),
+              onPressed: onPressed,
+            ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'recipe-list-new',
-        key: const Key('recipe-list-new'),
+      floatingActionButton: TrackedButton(
+        buttonLabel: 'new_recipe',
+        buttonAction: 'open_recipe_wizard',
+        currentScreen: ScreenNames.recipeList,
         onPressed: () => context.push(Routes.newRecipe),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.newRecipe),
+        builder: (context, onPressed) => FloatingActionButton.extended(
+          heroTag: 'recipe-list-new',
+          key: const Key('recipe-list-new'),
+          onPressed: onPressed,
+          icon: const Icon(Icons.add),
+          label: Text(l10n.newRecipe),
+        ),
       ),
       body: BlocBuilder<RecipeListCubit, RecipeListState>(
         builder: (context, state) {
@@ -68,9 +82,15 @@ class RecipeListScreen extends StatelessWidget {
               ),
               RecipeListStatus.failure => _Message(
                 text: errorMessage(state.error ?? Object(), l10n),
-                action: FilledButton(
+                action: TrackedButton(
+                  buttonLabel: 'retry',
+                  buttonAction: 'reload_recipes',
+                  currentScreen: ScreenNames.recipeList,
                   onPressed: cubit.load,
-                  child: Text(l10n.retry),
+                  builder: (context, onPressed) => FilledButton(
+                    onPressed: onPressed,
+                    child: Text(l10n.retry),
+                  ),
                 ),
               ),
               RecipeListStatus.success => _Message(

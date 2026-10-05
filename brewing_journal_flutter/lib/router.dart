@@ -4,6 +4,8 @@ import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'ui/core/analytics/screen_names.dart';
+import 'ui/core/analytics/tracked_button.dart';
 import 'ui/features/auth/cubit/auth_cubit.dart';
 import 'ui/features/auth/cubit/auth_state.dart';
 import 'ui/features/auth/view/sign_in_screen.dart';
@@ -40,25 +42,32 @@ abstract final class Routes {
 
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
-GoRouter createRouter(AuthCubit auth) {
+GoRouter createRouter(
+  AuthCubit auth, {
+  List<NavigatorObserver> observers = const [],
+}) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: Routes.home,
     refreshListenable: GoRouterRefreshStream(auth.stream),
     redirect: (context, state) => authRedirect(auth.state.status, state.uri),
+    observers: observers,
     routes: [
       GoRoute(
         path: Routes.splash,
+        name: ScreenNames.splash,
         builder: (context, state) =>
             const SplashScreen(key: ValueKey('splash')),
       ),
       GoRoute(
         path: Routes.signIn,
+        name: ScreenNames.signIn,
         builder: (context, state) =>
             const SignInScreen(key: ValueKey('sign-in')),
       ),
       GoRoute(
         path: '/invite/:token',
+        name: ScreenNames.invite,
         builder: (context, state) => InviteAcceptScreen(
           token: state.pathParameters['token'] ?? '',
         ),
@@ -71,10 +80,12 @@ GoRouter createRouter(AuthCubit auth) {
             routes: [
               GoRoute(
                 path: Routes.home,
+                name: ScreenNames.recipeList,
                 builder: (context, state) => const RecipeListScreen(),
                 routes: [
                   GoRoute(
                     path: 'recipes/new',
+                    name: ScreenNames.recipeCreate,
                     parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) => RecipeWizardScreen(
                       teamId: _parseId(state.uri.queryParameters['teamId']),
@@ -82,6 +93,7 @@ GoRouter createRouter(AuthCubit auth) {
                   ),
                   GoRoute(
                     path: 'recipes/:id/share',
+                    name: ScreenNames.recipeShare,
                     parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) {
                       final id = _parseId(state.pathParameters['id']);
@@ -96,6 +108,7 @@ GoRouter createRouter(AuthCubit auth) {
                   ),
                   GoRoute(
                     path: 'recipes/:id/edit',
+                    name: ScreenNames.recipeEdit,
                     parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) {
                       final id = _parseId(state.pathParameters['id']);
@@ -108,6 +121,7 @@ GoRouter createRouter(AuthCubit auth) {
                   ),
                   GoRoute(
                     path: 'recipes/:id',
+                    name: ScreenNames.brewMode,
                     parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) {
                       final id = _parseId(state.pathParameters['id']);
@@ -127,10 +141,12 @@ GoRouter createRouter(AuthCubit auth) {
             routes: [
               GoRoute(
                 path: Routes.teams,
+                name: ScreenNames.teams,
                 builder: (context, state) => const TeamsScreen(),
                 routes: [
                   GoRoute(
                     path: ':id',
+                    name: ScreenNames.teamDetail,
                     builder: (context, state) {
                       final id = _parseId(state.pathParameters['id']);
                       if (id == null) return const _NotFoundScreen();
@@ -144,7 +160,11 @@ GoRouter createRouter(AuthCubit auth) {
         ],
       ),
     ],
-    errorBuilder: (context, state) => const _NotFoundScreen(),
+    errorPageBuilder: (context, state) => MaterialPage<void>(
+      name: ScreenNames.notFound,
+      key: state.pageKey,
+      child: const _NotFoundScreen(),
+    ),
   );
 }
 
@@ -235,9 +255,15 @@ class _NotFoundScreen extends StatelessWidget {
           children: [
             Text(l10n.pageNotFound),
             const SizedBox(height: 16),
-            FilledButton(
+            TrackedButton(
+              buttonLabel: 'go_home',
+              buttonAction: 'navigate_home',
+              currentScreen: ScreenNames.notFound,
               onPressed: () => context.go(Routes.home),
-              child: Text(l10n.goHome),
+              builder: (context, onPressed) => FilledButton(
+                onPressed: onPressed,
+                child: Text(l10n.goHome),
+              ),
             ),
           ],
         ),

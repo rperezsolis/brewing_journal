@@ -76,17 +76,50 @@ class AmplitudeAnalyticsService implements AnalyticsService {
   }
 
   @override
-  Future<void> trackAppOpened({required bool signedIn}) async {
+  Future<void> trackAppOpened({required bool signedIn}) {
+    return _track(
+      AnalyticsEvents.appOpened,
+      {AnalyticsProperties.signedIn: signedIn},
+      flush: true,
+    );
+  }
+
+  @override
+  Future<void> trackScreenView({
+    required String screenName,
+    required String navigationSource,
+  }) {
+    return _track(AnalyticsEvents.screenView, {
+      AnalyticsProperties.screenName: screenName,
+      AnalyticsProperties.navigationSource: navigationSource,
+    });
+  }
+
+  @override
+  Future<void> trackButtonTapped({
+    required String buttonLabel,
+    required String buttonAction,
+    required String currentScreen,
+  }) {
+    return _track(AnalyticsEvents.buttonTapped, {
+      AnalyticsProperties.buttonLabel: buttonLabel,
+      AnalyticsProperties.buttonAction: buttonAction,
+      AnalyticsProperties.currentScreen: currentScreen,
+    });
+  }
+
+  Future<void> _track(
+    String eventType,
+    Map<String, Object> properties, {
+    bool flush = false,
+  }) async {
     final amplitude = await _ready();
     if (amplitude == null) return;
     try {
       await amplitude.track(
-        BaseEvent(
-          'App Opened',
-          eventProperties: {'signed_in': signedIn},
-        ),
+        BaseEvent(eventType, eventProperties: properties),
       );
-      await amplitude.flush();
+      if (flush) await amplitude.flush();
     } catch (_) {
       // Ignore plugin failures. The journal keeps working without analytics.
     }
