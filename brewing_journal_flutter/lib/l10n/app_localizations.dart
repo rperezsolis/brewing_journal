@@ -1235,6 +1235,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Viewers can\'t change team favorites.'**
   String get viewersCantChangeTeamFavorites;
+
+  /// Title of the email sign-in form
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Email'**
+  String get authSignInWithEmail;
+
+  /// Label for the email field
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get authEmail;
+
+  /// Label for the password field
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get authPassword;
+
+  /// Action that starts the password reset flow
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Password'**
+  String get authForgotPassword;
+
+  /// Action and title for creating an account
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get authCreateAccount;
+
+  /// Button that submits the email sign-in form
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get authSignIn;
+
+  /// Prompt shown beside the create-account action
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account?'**
+  String get authDontHaveAnAccount;
+
+  /// Button that continues the email sign-in flow
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get authContinue;
+
+  /// Prompt shown beside the sign-in action on the registration form
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get authAlreadyHaveAnAccount;
+
+  /// Title of the account verification screen
+  ///
+  /// In en, this message translates to:
+  /// **'Verify account'**
+  String get authVerifyAccountTitle;
+
+  /// Title of the password-reset code screen
+  ///
+  /// In en, this message translates to:
+  /// **'Verify reset code'**
+  String get authVerifyResetCodeTitle;
+
+  /// Instructions shown after a verification email is sent
+  ///
+  /// In en, this message translates to:
+  /// **'A verification email has been sent. Please check your email and enter the verification code below.'**
+  String get authVerificationMessage;
+
+  /// Button that submits a verification code
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get authVerify;
+
+  /// Title of the screen where a new account sets its password
+  ///
+  /// In en, this message translates to:
+  /// **'Set account password'**
+  String get authSetAccountPasswordTitle;
+
+  /// Action that returns to the registration form
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign up'**
+  String get authBackToSignUp;
+
+  /// Title of the screen where a reset password is chosen
+  ///
+  /// In en, this message translates to:
+  /// **'Set new password'**
+  String get authSetNewPasswordTitle;
+
+  /// Label for the new-password field
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get authNewPassword;
+
+  /// Title of the password reset request screen
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get authResetPasswordTitle;
+
+  /// Instructions on the password reset request screen
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the email address to reset password.'**
+  String get authResetPasswordDescription;
+
+  /// Button that emails a password reset code
+  ///
+  /// In en, this message translates to:
+  /// **'Request password reset'**
+  String get authRequestPasswordReset;
+
+  /// Button that submits a new password
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get authResetPassword;
+
+  /// Action that returns to the sign-in form
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get authBackToSignIn;
+
+  /// Prefix of the terms and privacy notice, including the trailing space
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and accept the '**
+  String get authTermsIntro;
+
+  /// Link text for the terms and conditions
+  ///
+  /// In en, this message translates to:
+  /// **'Terms and Conditions'**
+  String get authTermsAndConditions;
+
+  /// Connector between the terms and privacy links, including surrounding spaces
+  ///
+  /// In en, this message translates to:
+  /// **' and '**
+  String get authAnd;
+
+  /// Link text for the privacy policy
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get authPrivacyPolicy;
+
+  /// Message shown when the server has no sign-in providers
+  ///
+  /// In en, this message translates to:
+  /// **'No authentication providers configured'**
+  String get authNoProviders;
+
+  /// Divider label above additional sign-in providers
+  ///
+  /// In en, this message translates to:
+  /// **'or continue with'**
+  String get authOrContinueWith;
+
+  /// Password rule for the minimum length. Pass the literal {length} token; the auth widget replaces it.
+  ///
+  /// In en, this message translates to:
+  /// **'At least {length} characters'**
+  String authPasswordMinLength(String length);
+
+  /// Password rule for the maximum length. Pass the literal {length} token; the auth widget replaces it.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {length} characters'**
+  String authPasswordMaxLength(String length);
+
+  /// Password rule requiring a lowercase letter
+  ///
+  /// In en, this message translates to:
+  /// **'Contains at least one lowercase letter'**
+  String get authPasswordLowercase;
+
+  /// Password rule requiring an uppercase letter
+  ///
+  /// In en, this message translates to:
+  /// **'Contains at least one uppercase letter'**
+  String get authPasswordUppercase;
+
+  /// Password rule requiring a digit
+  ///
+  /// In en, this message translates to:
+  /// **'Contains at least one number'**
+  String get authPasswordNumber;
+
+  /// Password rule requiring a special character
+  ///
+  /// In en, this message translates to:
+  /// **'Contains at least one special character'**
+  String get authPasswordSpecial;
 }
 
 class _AppLocalizationsDelegate

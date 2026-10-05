@@ -640,4 +640,112 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get viewersCantChangeTeamFavorites =>
       'Viewers can\'t change team favorites.';
+
+  @override
+  String get authSignInWithEmail => 'Sign in with Email';
+
+  @override
+  String get authEmail => 'Email';
+
+  @override
+  String get authPassword => 'Password';
+
+  @override
+  String get authForgotPassword => 'Forgot Password';
+
+  @override
+  String get authCreateAccount => 'Create Account';
+
+  @override
+  String get authSignIn => 'Sign in';
+
+  @override
+  String get authDontHaveAnAccount => 'Don\'t have an account?';
+
+  @override
+  String get authContinue => 'Continue';
+
+  @override
+  String get authAlreadyHaveAnAccount => 'Already have an account?';
+
+  @override
+  String get authVerifyAccountTitle => 'Verify account';
+
+  @override
+  String get authVerifyResetCodeTitle => 'Verify reset code';
+
+  @override
+  String get authVerificationMessage =>
+      'A verification email has been sent. Please check your email and enter the verification code below.';
+
+  @override
+  String get authVerify => 'Verify';
+
+  @override
+  String get authSetAccountPasswordTitle => 'Set account password';
+
+  @override
+  String get authBackToSignUp => 'Back to sign up';
+
+  @override
+  String get authSetNewPasswordTitle => 'Set new password';
+
+  @override
+  String get authNewPassword => 'New Password';
+
+  @override
+  String get authResetPasswordTitle => 'Reset password';
+
+  @override
+  String get authResetPasswordDescription =>
+      'Enter the email address to reset password.';
+
+  @override
+  String get authRequestPasswordReset => 'Request password reset';
+
+  @override
+  String get authResetPassword => 'Reset password';
+
+  @override
+  String get authBackToSignIn => 'Back to sign in';
+
+  @override
+  String get authTermsIntro => 'I have read and accept the ';
+
+  @override
+  String get authTermsAndConditions => 'Terms and Conditions';
+
+  @override
+  String get authAnd => ' and ';
+
+  @override
+  String get authPrivacyPolicy => 'Privacy Policy';
+
+  @override
+  String get authNoProviders => 'No authentication providers configured';
+
+  @override
+  String get authOrContinueWith => 'or continue with';
+
+  @override
+  String authPasswordMinLength(String length) {
+    return 'At least $length characters';
+  }
+
+  @override
+  String authPasswordMaxLength(String length) {
+    return 'At most $length characters';
+  }
+
+  @override
+  String get authPasswordLowercase => 'Contains at least one lowercase letter';
+
+  @override
+  String get authPasswordUppercase => 'Contains at least one uppercase letter';
+
+  @override
+  String get authPasswordNumber => 'Contains at least one number';
+
+  @override
+  String get authPasswordSpecial => 'Contains at least one special character';
 }

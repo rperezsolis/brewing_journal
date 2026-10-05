@@ -648,6 +648,114 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get viewersCantChangeTeamFavorites =>
       'Leitores não podem alterar os favoritos da equipe.';
+
+  @override
+  String get authSignInWithEmail => 'Entrar com e-mail';
+
+  @override
+  String get authEmail => 'E-mail';
+
+  @override
+  String get authPassword => 'Senha';
+
+  @override
+  String get authForgotPassword => 'Esqueci a senha';
+
+  @override
+  String get authCreateAccount => 'Criar conta';
+
+  @override
+  String get authSignIn => 'Entrar';
+
+  @override
+  String get authDontHaveAnAccount => 'Não tem uma conta?';
+
+  @override
+  String get authContinue => 'Continuar';
+
+  @override
+  String get authAlreadyHaveAnAccount => 'Já tem uma conta?';
+
+  @override
+  String get authVerifyAccountTitle => 'Verificar conta';
+
+  @override
+  String get authVerifyResetCodeTitle => 'Verificar código';
+
+  @override
+  String get authVerificationMessage =>
+      'Enviamos um e-mail de verificação. Confira seu e-mail e digite o código abaixo.';
+
+  @override
+  String get authVerify => 'Verificar';
+
+  @override
+  String get authSetAccountPasswordTitle => 'Definir senha da conta';
+
+  @override
+  String get authBackToSignUp => 'Voltar ao cadastro';
+
+  @override
+  String get authSetNewPasswordTitle => 'Definir nova senha';
+
+  @override
+  String get authNewPassword => 'Nova senha';
+
+  @override
+  String get authResetPasswordTitle => 'Redefinir senha';
+
+  @override
+  String get authResetPasswordDescription =>
+      'Digite o e-mail para redefinir a senha.';
+
+  @override
+  String get authRequestPasswordReset => 'Solicitar redefinição de senha';
+
+  @override
+  String get authResetPassword => 'Redefinir senha';
+
+  @override
+  String get authBackToSignIn => 'Voltar para entrar';
+
+  @override
+  String get authTermsIntro => 'Li e aceito os ';
+
+  @override
+  String get authTermsAndConditions => 'Termos e Condições';
+
+  @override
+  String get authAnd => ' e a ';
+
+  @override
+  String get authPrivacyPolicy => 'Política de Privacidade';
+
+  @override
+  String get authNoProviders => 'Nenhum provedor de autenticação configurado';
+
+  @override
+  String get authOrContinueWith => 'ou continuar com';
+
+  @override
+  String authPasswordMinLength(String length) {
+    return 'Pelo menos $length caracteres';
+  }
+
+  @override
+  String authPasswordMaxLength(String length) {
+    return 'No máximo $length caracteres';
+  }
+
+  @override
+  String get authPasswordLowercase => 'Contém pelo menos uma letra minúscula';
+
+  @override
+  String get authPasswordUppercase => 'Contém pelo menos uma letra maiúscula';
+
+  @override
+  String get authPasswordNumber => 'Contém pelo menos um número';
+
+  @override
+  String get authPasswordSpecial => 'Contém pelo menos um caractere especial';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1294,4 +1402,112 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get viewersCantChangeTeamFavorites =>
       'Leitores não podem alterar os favoritos da equipe.';
+
+  @override
+  String get authSignInWithEmail => 'Entrar com e-mail';
+
+  @override
+  String get authEmail => 'E-mail';
+
+  @override
+  String get authPassword => 'Senha';
+
+  @override
+  String get authForgotPassword => 'Esqueci a senha';
+
+  @override
+  String get authCreateAccount => 'Criar conta';
+
+  @override
+  String get authSignIn => 'Entrar';
+
+  @override
+  String get authDontHaveAnAccount => 'Não tem uma conta?';
+
+  @override
+  String get authContinue => 'Continuar';
+
+  @override
+  String get authAlreadyHaveAnAccount => 'Já tem uma conta?';
+
+  @override
+  String get authVerifyAccountTitle => 'Verificar conta';
+
+  @override
+  String get authVerifyResetCodeTitle => 'Verificar código';
+
+  @override
+  String get authVerificationMessage =>
+      'Enviamos um e-mail de verificação. Confira seu e-mail e digite o código abaixo.';
+
+  @override
+  String get authVerify => 'Verificar';
+
+  @override
+  String get authSetAccountPasswordTitle => 'Definir senha da conta';
+
+  @override
+  String get authBackToSignUp => 'Voltar ao cadastro';
+
+  @override
+  String get authSetNewPasswordTitle => 'Definir nova senha';
+
+  @override
+  String get authNewPassword => 'Nova senha';
+
+  @override
+  String get authResetPasswordTitle => 'Redefinir senha';
+
+  @override
+  String get authResetPasswordDescription =>
+      'Digite o e-mail para redefinir a senha.';
+
+  @override
+  String get authRequestPasswordReset => 'Solicitar redefinição de senha';
+
+  @override
+  String get authResetPassword => 'Redefinir senha';
+
+  @override
+  String get authBackToSignIn => 'Voltar para entrar';
+
+  @override
+  String get authTermsIntro => 'Li e aceito os ';
+
+  @override
+  String get authTermsAndConditions => 'Termos e Condições';
+
+  @override
+  String get authAnd => ' e a ';
+
+  @override
+  String get authPrivacyPolicy => 'Política de Privacidade';
+
+  @override
+  String get authNoProviders => 'Nenhum provedor de autenticação configurado';
+
+  @override
+  String get authOrContinueWith => 'ou continuar com';
+
+  @override
+  String authPasswordMinLength(String length) {
+    return 'Pelo menos $length caracteres';
+  }
+
+  @override
+  String authPasswordMaxLength(String length) {
+    return 'No máximo $length caracteres';
+  }
+
+  @override
+  String get authPasswordLowercase => 'Contém pelo menos uma letra minúscula';
+
+  @override
+  String get authPasswordUppercase => 'Contém pelo menos uma letra maiúscula';
+
+  @override
+  String get authPasswordNumber => 'Contém pelo menos um número';
+
+  @override
+  String get authPasswordSpecial => 'Contém pelo menos um caractere especial';
 }

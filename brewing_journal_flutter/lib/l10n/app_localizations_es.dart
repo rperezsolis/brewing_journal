@@ -648,6 +648,115 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get viewersCantChangeTeamFavorites =>
       'Los lectores no pueden cambiar los favoritos del equipo.';
+
+  @override
+  String get authSignInWithEmail => 'Iniciar sesión con correo electrónico';
+
+  @override
+  String get authEmail => 'Correo electrónico';
+
+  @override
+  String get authPassword => 'Contraseña';
+
+  @override
+  String get authForgotPassword => 'Olvidé mi contraseña';
+
+  @override
+  String get authCreateAccount => 'Crear cuenta';
+
+  @override
+  String get authSignIn => 'Iniciar sesión';
+
+  @override
+  String get authDontHaveAnAccount => '¿No tienes una cuenta?';
+
+  @override
+  String get authContinue => 'Continuar';
+
+  @override
+  String get authAlreadyHaveAnAccount => '¿Ya tienes una cuenta?';
+
+  @override
+  String get authVerifyAccountTitle => 'Verificar cuenta';
+
+  @override
+  String get authVerifyResetCodeTitle => 'Verificar código';
+
+  @override
+  String get authVerificationMessage =>
+      'Enviamos un correo de verificación. Revisa tu correo e ingresa el código a continuación.';
+
+  @override
+  String get authVerify => 'Verificar';
+
+  @override
+  String get authSetAccountPasswordTitle => 'Establecer contraseña';
+
+  @override
+  String get authBackToSignUp => 'Volver al registro';
+
+  @override
+  String get authSetNewPasswordTitle => 'Establecer nueva contraseña';
+
+  @override
+  String get authNewPassword => 'Nueva contraseña';
+
+  @override
+  String get authResetPasswordTitle => 'Restablecer contraseña';
+
+  @override
+  String get authResetPasswordDescription =>
+      'Ingresa el correo electrónico para restablecer la contraseña.';
+
+  @override
+  String get authRequestPasswordReset => 'Solicitar restablecimiento';
+
+  @override
+  String get authResetPassword => 'Restablecer contraseña';
+
+  @override
+  String get authBackToSignIn => 'Volver a iniciar sesión';
+
+  @override
+  String get authTermsIntro => 'He leído y acepto los ';
+
+  @override
+  String get authTermsAndConditions => 'Términos y condiciones';
+
+  @override
+  String get authAnd => ' y la ';
+
+  @override
+  String get authPrivacyPolicy => 'Política de privacidad';
+
+  @override
+  String get authNoProviders =>
+      'No hay proveedores de autenticación configurados';
+
+  @override
+  String get authOrContinueWith => 'o continuar con';
+
+  @override
+  String authPasswordMinLength(String length) {
+    return 'Al menos $length caracteres';
+  }
+
+  @override
+  String authPasswordMaxLength(String length) {
+    return 'Como máximo $length caracteres';
+  }
+
+  @override
+  String get authPasswordLowercase => 'Contiene al menos una letra minúscula';
+
+  @override
+  String get authPasswordUppercase => 'Contiene al menos una letra mayúscula';
+
+  @override
+  String get authPasswordNumber => 'Contiene al menos un número';
+
+  @override
+  String get authPasswordSpecial => 'Contiene al menos un carácter especial';
 }
 
 /// The translations for Spanish Castilian, as used in Latin America and the Caribbean (`es_419`).
@@ -1294,4 +1403,113 @@ class AppLocalizationsEs419 extends AppLocalizationsEs {
   @override
   String get viewersCantChangeTeamFavorites =>
       'Los lectores no pueden cambiar los favoritos del equipo.';
+
+  @override
+  String get authSignInWithEmail => 'Iniciar sesión con correo electrónico';
+
+  @override
+  String get authEmail => 'Correo electrónico';
+
+  @override
+  String get authPassword => 'Contraseña';
+
+  @override
+  String get authForgotPassword => 'Olvidé mi contraseña';
+
+  @override
+  String get authCreateAccount => 'Crear cuenta';
+
+  @override
+  String get authSignIn => 'Iniciar sesión';
+
+  @override
+  String get authDontHaveAnAccount => '¿No tienes una cuenta?';
+
+  @override
+  String get authContinue => 'Continuar';
+
+  @override
+  String get authAlreadyHaveAnAccount => '¿Ya tienes una cuenta?';
+
+  @override
+  String get authVerifyAccountTitle => 'Verificar cuenta';
+
+  @override
+  String get authVerifyResetCodeTitle => 'Verificar código';
+
+  @override
+  String get authVerificationMessage =>
+      'Enviamos un correo de verificación. Revisa tu correo e ingresa el código a continuación.';
+
+  @override
+  String get authVerify => 'Verificar';
+
+  @override
+  String get authSetAccountPasswordTitle => 'Establecer contraseña';
+
+  @override
+  String get authBackToSignUp => 'Volver al registro';
+
+  @override
+  String get authSetNewPasswordTitle => 'Establecer nueva contraseña';
+
+  @override
+  String get authNewPassword => 'Nueva contraseña';
+
+  @override
+  String get authResetPasswordTitle => 'Restablecer contraseña';
+
+  @override
+  String get authResetPasswordDescription =>
+      'Ingresa el correo electrónico para restablecer la contraseña.';
+
+  @override
+  String get authRequestPasswordReset => 'Solicitar restablecimiento';
+
+  @override
+  String get authResetPassword => 'Restablecer contraseña';
+
+  @override
+  String get authBackToSignIn => 'Volver a iniciar sesión';
+
+  @override
+  String get authTermsIntro => 'He leído y acepto los ';
+
+  @override
+  String get authTermsAndConditions => 'Términos y condiciones';
+
+  @override
+  String get authAnd => ' y la ';
+
+  @override
+  String get authPrivacyPolicy => 'Política de privacidad';
+
+  @override
+  String get authNoProviders =>
+      'No hay proveedores de autenticación configurados';
+
+  @override
+  String get authOrContinueWith => 'o continuar con';
+
+  @override
+  String authPasswordMinLength(String length) {
+    return 'Al menos $length caracteres';
+  }
+
+  @override
+  String authPasswordMaxLength(String length) {
+    return 'Como máximo $length caracteres';
+  }
+
+  @override
+  String get authPasswordLowercase => 'Contiene al menos una letra minúscula';
+
+  @override
+  String get authPasswordUppercase => 'Contiene al menos una letra mayúscula';
+
+  @override
+  String get authPasswordNumber => 'Contiene al menos un número';
+
+  @override
+  String get authPasswordSpecial => 'Contiene al menos un carácter especial';
 }
