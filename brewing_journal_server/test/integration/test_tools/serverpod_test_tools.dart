@@ -613,6 +613,37 @@ class _IngredientEndpoint {
       }
     });
   }
+
+  _ida.Future<_ijmrhoj0.Ingredient> adopt(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue id,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'ingredient',
+            method: 'adopt',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'ingredient',
+          methodName: 'adopt',
+          parameters: _ist.testObjectToJson({'id': id}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_ijmrhoj0.Ingredient>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
 }
 
 class _RecipeEndpoint {
@@ -960,6 +991,41 @@ class _RecipeEndpoint {
                   _localCallContext.arguments,
                 )
                 as _ida.Future<_iodf0ma5.RecipeAccess>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<List<String>> listGrinderModels(
+    _ist.TestSessionBuilder sessionBuilder,
+    String query,
+    int limit,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'recipe',
+            method: 'listGrinderModels',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'recipe',
+          methodName: 'listGrinderModels',
+          parameters: _ist.testObjectToJson({
+            'query': query,
+            'limit': limit,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<List<String>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

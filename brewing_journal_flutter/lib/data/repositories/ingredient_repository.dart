@@ -11,4 +11,9 @@ abstract class IngredientRepository {
 
   /// Returns the existing ingredient with the same kind and name, or a new one.
   Future<Ingredient> register(IngredientDraft draft);
+
+  /// Copies [id] onto the signed-in user's account when it belongs to a
+  /// teammate, or returns the user's existing ingredient of that kind and name.
+  /// The user's own id is returned unchanged.
+  Future<Ingredient> adopt(UuidValue id);
 }

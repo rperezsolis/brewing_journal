@@ -63,4 +63,8 @@ abstract class RecipeRepository {
   Future<RecipeAccess> getAccess(UuidValue id);
 
   Future<void> delete(UuidValue id);
+
+  /// Grinder models from the signed-in user's recipes and from recipes on
+  /// their teams. The match is a case-insensitive prefix of [query].
+  Future<List<String>> listGrinderModels(String query, {int limit = 20});
 }

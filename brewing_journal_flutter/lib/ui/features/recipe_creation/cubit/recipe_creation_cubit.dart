@@ -28,6 +28,10 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
   Stopwatch? _stopwatch;
   Timer? _ticker;
   int _searchSeq = 0;
+  int _grinderSeq = 0;
+
+  /// A forward step the user asked for while an ingredient copy was in flight.
+  RecipeWizardStep? _stepAfterAdopt;
 
   void startNew({UuidValue? teamId}) {
     _cancelStopwatch();
@@ -91,7 +95,7 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
       ),
     );
     try {
-      final results = await _ingredients.search(kind, query);
+      final results = await _ingredients.search(kind, query, limit: 30);
       if (isClosed || seq != _searchSeq) return;
       emit(
         state.copyWith(ingredientResults: results, searchingIngredients: false),
@@ -102,8 +106,36 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     }
   }
 
-  void selectIngredient(Ingredient ingredient) {
-    emit(state.copyWith(selectedIngredient: () => ingredient));
+  /// Copies a teammate's ingredient onto this account, then selects that copy.
+  ///
+  /// A second tap while a copy is in flight is ignored. Forward navigation
+  /// waits until the copy exists, so a new recipe is never saved with the
+  /// teammate's id.
+  Future<void> selectIngredient(Ingredient ingredient) async {
+    final id = ingredient.id;
+    if (id == null || state.adoptingIngredientId != null) return;
+    emit(state.copyWith(adoptingIngredientId: () => id));
+    try {
+      final adopted = await _ingredients.adopt(id);
+      if (isClosed) return;
+      final results = _withAdopted(state.ingredientResults, id, adopted);
+      final nextStep = _stepAfterAdopt;
+      _stepAfterAdopt = null;
+      emit(
+        state.copyWith(
+          adoptingIngredientId: () => null,
+          selectedIngredient: () => adopted,
+          ingredientResults: results,
+        ),
+      );
+      if (nextStep != null) goTo(nextStep);
+    } catch (error) {
+      if (isClosed) return;
+      _stepAfterAdopt = null;
+      emit(
+        state.copyWith(adoptingIngredientId: () => null, error: error),
+      );
+    }
   }
 
   /// Registers (or finds) the ingredient and selects it.
@@ -161,6 +193,20 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
 
   void setGrinderModel(String value) =>
       emit(state.copyWith(grinderModel: value));
+
+  /// Models whose folded name starts with [query], from this account and
+  /// from recipes on this account's teams.
+  Future<void> searchGrinderModels(String query) async {
+    final seq = ++_grinderSeq;
+    try {
+      final models = await _recipes.listGrinderModels(query, limit: 30);
+      if (isClosed || seq != _grinderSeq) return;
+      emit(state.copyWith(grinderSuggestions: models));
+    } catch (error) {
+      if (isClosed || seq != _grinderSeq) return;
+      emit(state.copyWith(error: error));
+    }
+  }
 
   void setExtractionMethod(ExtractionMethod? value) =>
       emit(state.copyWith(extractionMethod: () => value));
@@ -367,6 +413,11 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
   /// complete.
   bool goTo(RecipeWizardStep target) {
     if (target == state.step) return true;
+    if (state.adoptingIngredientId != null && target.index > state.step.index) {
+      _stepAfterAdopt = target;
+      return false;
+    }
+    _stepAfterAdopt = null;
     if (state.step == RecipeWizardStep.extraction &&
         target.index > state.step.index) {
       stopStopwatch();
@@ -437,7 +488,7 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
 
   /// Saves the whole wizard. On failure every field is kept.
   Future<bool> save() async {
-    if (state.isSaving) return false;
+    if (state.isSaving || state.adoptingIngredientId != null) return false;
     for (final step in RecipeWizardStep.values) {
       final problem = problemAt(step);
       if (problem != null) {
@@ -575,4 +626,28 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     _ticker?.cancel();
     return super.close();
   }
+}
+
+/// Replaces [tappedId] with [adopted], and drops any other row of the same
+/// kind and name. Leaves the list unchanged when the tap is no longer in it.
+List<Ingredient> _withAdopted(
+  List<Ingredient> results,
+  UuidValue tappedId,
+  Ingredient adopted,
+) {
+  if (!results.any((row) => row.id == tappedId)) return results;
+  final next = <Ingredient>[];
+  var placed = false;
+  for (final row in results) {
+    final sameName = row.kind == adopted.kind && row.nameKey == adopted.nameKey;
+    if (row.id != tappedId && row.id != adopted.id && !sameName) {
+      next.add(row);
+      continue;
+    }
+    if (!placed) {
+      next.add(adopted);
+      placed = true;
+    }
+  }
+  return next;
 }

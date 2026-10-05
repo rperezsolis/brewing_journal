@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:brewing_journal_client/brewing_journal_client.dart';
@@ -464,6 +465,104 @@ void main() {
         'Uji Ceremonial',
       ]);
       expect(cubit.state.searchingIngredients, isFalse);
+    });
+
+    test('selecting a team ingredient copies it onto this account', () async {
+      final foreign = Ingredient(
+        id: const Uuid().v7obj(),
+        ownerId: const Uuid().v7obj(),
+        kind: BeverageKind.coffee,
+        name: 'Ethiopia Guji',
+        nameKey: 'ethiopia guji',
+        origin: 'Yirgacheffe',
+      );
+      ingredients.ingredients.add(foreign);
+      await cubit.searchIngredients(BeverageKind.coffee, '');
+
+      await cubit.selectIngredient(foreign);
+
+      final selected = cubit.state.selectedIngredient!;
+      expect(selected.id, isNot(foreign.id));
+      expect(selected.ownerId, ingredients.selfId);
+      expect(selected.origin, 'Yirgacheffe');
+      expect(selected.name, 'Ethiopia Guji');
+      expect(cubit.state.ingredientResults.single.id, selected.id);
+    });
+
+    test(
+      'selecting a team ingredient keeps the row this account already named',
+      () async {
+        final own = await ingredients.register(
+          IngredientDraft(
+            kind: BeverageKind.coffee,
+            name: 'Ethiopia Guji',
+            origin: 'Mine',
+          ),
+        );
+        final foreign = Ingredient(
+          id: const Uuid().v7obj(),
+          ownerId: const Uuid().v7obj(),
+          kind: BeverageKind.coffee,
+          name: 'ethiopia guji',
+          nameKey: 'ethiopia guji',
+          origin: 'Theirs',
+        );
+        ingredients.ingredients.add(foreign);
+
+        await cubit.selectIngredient(foreign);
+
+        expect(cubit.state.selectedIngredient!.id, own.id);
+        expect(cubit.state.selectedIngredient!.origin, 'Mine');
+      },
+    );
+
+    test('next waits until the tapped team ingredient is copied', () async {
+      final foreign = Ingredient(
+        id: const Uuid().v7obj(),
+        ownerId: const Uuid().v7obj(),
+        kind: BeverageKind.coffee,
+        name: 'Ethiopia Guji',
+        nameKey: 'ethiopia guji',
+      );
+      final other = Ingredient(
+        id: const Uuid().v7obj(),
+        ownerId: const Uuid().v7obj(),
+        kind: BeverageKind.coffee,
+        name: 'Kenya AA',
+        nameKey: 'kenya aa',
+      );
+      ingredients.ingredients.addAll([foreign, other]);
+      final gate = Completer<void>();
+      ingredients.pendingAdopt = gate.future;
+
+      final pending = cubit.selectIngredient(foreign);
+      await cubit.selectIngredient(other);
+      expect(cubit.state.adoptingIngredientId, foreign.id);
+      expect(cubit.next(), isFalse);
+      expect(cubit.state.step, RecipeWizardStep.ingredient);
+      expect(cubit.state.selectedIngredient, isNull);
+
+      gate.complete();
+      await pending;
+
+      expect(cubit.state.step, RecipeWizardStep.extraction);
+      expect(cubit.state.selectedIngredient!.name, 'Ethiopia Guji');
+      expect(cubit.state.selectedIngredient!.ownerId, ingredients.selfId);
+      expect(cubit.state.adoptingIngredientId, isNull);
+      expect(
+        ingredients.ingredients.where(
+          (row) => row.ownerId == ingredients.selfId,
+        ),
+        hasLength(1),
+      );
+    });
+
+    test('grinder search returns models that start with the query', () async {
+      recipes.grinderCatalog.addAll(['Comandante C40', 'Niche Zero']);
+
+      await cubit.searchGrinderModels('com');
+
+      expect(cubit.state.grinderSuggestions, ['Comandante C40']);
     });
 
     test('a failed register keeps the draft for a retry', () async {

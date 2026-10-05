@@ -24,6 +24,10 @@ class FakeRecipeRepository implements RecipeRepository {
   /// When false, team favorite writes throw [BrewingErrorCode.forbidden].
   bool teamEditor = true;
 
+  /// Extra grinder models returned by [listGrinderModels], besides models
+  /// already stored on saved recipes.
+  final List<String> grinderCatalog = [];
+
   @override
   Future<RecipeDetail> save(RecipeDraft draft) async {
     _throwIfFailing();
@@ -243,6 +247,30 @@ class FakeRecipeRepository implements RecipeRepository {
 
   @override
   Future<RecipeAccess> getAccess(UuidValue id) async => (await get(id)).access;
+
+  @override
+  Future<List<String>> listGrinderModels(
+    String query, {
+    int limit = 20,
+  }) async {
+    _throwIfFailing();
+    final prefix = query.trim().toLowerCase();
+    final spelling = <String, String>{};
+    final fromRecipes = details.values.map((detail) => detail.recipe).toList()
+      ..sort(_newestFirst);
+    for (final model in [
+      ...fromRecipes.map((recipe) => recipe.grinderModel),
+      ...grinderCatalog,
+    ]) {
+      final trimmed = model.trim();
+      final key = trimmed.toLowerCase();
+      if (!key.startsWith(prefix)) continue;
+      spelling.putIfAbsent(key, () => trimmed);
+    }
+    final models = spelling.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return [for (final entry in models.take(limit)) entry.value];
+  }
 
   @override
   Future<void> delete(UuidValue id) async {

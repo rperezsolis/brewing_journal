@@ -71,4 +71,8 @@ class ServerpodRecipeRepository implements RecipeRepository {
 
   @override
   Future<void> delete(UuidValue id) => _endpoint.delete(id);
+
+  @override
+  Future<List<String>> listGrinderModels(String query, {int limit = 20}) =>
+      _endpoint.listGrinderModels(query, limit);
 }

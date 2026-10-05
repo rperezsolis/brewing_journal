@@ -270,7 +270,8 @@ class EndpointJwtRefresh extends _iacc.EndpointRefreshJwtTokens {
       );
 }
 
-/// The caller's own coffee beans, tea leaves, and matcha grades.
+/// The caller's coffee beans, tea leaves, and matcha grades, plus ingredients
+/// used by recipes on the caller's teams.
 /// {@category Endpoint}
 class EndpointIngredient extends EndpointAuthenticated {
   EndpointIngredient(_isc.EndpointCaller caller) : super(caller);
@@ -278,8 +279,9 @@ class EndpointIngredient extends EndpointAuthenticated {
   @override
   String get name => 'ingredient';
 
-  /// The caller's ingredients of [kind] whose name starts with [query]
-  /// (case-insensitive), ordered by name.
+  /// Ingredients of [kind] whose name starts with [query] (case-insensitive),
+  /// ordered by name. Includes the caller's rows and rows used on their teams.
+  /// One row per folded name; the caller's own row wins.
   _ida.Future<List<_ifm45unr.Ingredient>> search(
     _i4erj0ra.BeverageKind kind,
     String query,
@@ -301,6 +303,16 @@ class EndpointIngredient extends EndpointAuthenticated {
         'ingredient',
         'register',
         {'draft': draft},
+      );
+
+  /// Copies a team ingredient onto the caller, or returns the row they
+  /// already have for that kind and name. The caller's own id is returned
+  /// unchanged. A private ingredient is [BrewingErrorCode.notFound].
+  _ida.Future<_ifm45unr.Ingredient> adopt(_isc.UuidValue id) =>
+      caller.callServerEndpoint<_ifm45unr.Ingredient>(
+        'ingredient',
+        'adopt',
+        {'id': id},
       );
 }
 
@@ -439,6 +451,20 @@ class EndpointRecipe extends EndpointAuthenticated {
         'getAccess',
         {'id': id},
       );
+
+  /// Grinder models from the caller's recipes and from recipes on the
+  /// caller's teams. One spelling per folded name, from the newest recipe.
+  _ida.Future<List<String>> listGrinderModels(
+    String query,
+    int limit,
+  ) => caller.callServerEndpoint<List<String>>(
+    'recipe',
+    'listGrinderModels',
+    {
+      'query': query,
+      'limit': limit,
+    },
+  );
 
   /// Team recipes, most recently updated first. Membership required.
   _ida.Future<List<_i261jxz0.Recipe>> listForTeam(

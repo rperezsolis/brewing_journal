@@ -12,6 +12,7 @@ jwtRefresh:
 ingredient:
   - search:
   - register:
+  - adopt:
 recipe:
   - save:
   - get:
@@ -23,6 +24,7 @@ recipe:
   - saveTeamFavorite:
   - removeTeamFavorite:
   - getAccess:
+  - listGrinderModels:
   - listForTeam:
   - assignToTeam:
   - removeFromTeam:

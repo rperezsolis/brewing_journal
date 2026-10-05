@@ -1384,6 +1384,9 @@ class Protocol extends _is.DatabaseSerializationManager {
               .toList()
           as T;
     }
+    if (t == List<String>) {
+      return (data as List).map((e) => deserialize<String>(e)).toList() as T;
+    }
     if (t == List<_id1eflpk.TeamSummary>) {
       return (data as List)
               .map((e) => deserialize<_id1eflpk.TeamSummary>(e))

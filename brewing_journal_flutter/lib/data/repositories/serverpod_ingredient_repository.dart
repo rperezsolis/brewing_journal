@@ -17,4 +17,7 @@ class ServerpodIngredientRepository implements IngredientRepository {
   @override
   Future<Ingredient> register(IngredientDraft draft) =>
       _endpoint.register(draft);
+
+  @override
+  Future<Ingredient> adopt(UuidValue id) => _endpoint.adopt(id);
 }

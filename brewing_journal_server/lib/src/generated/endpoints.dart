@@ -333,6 +333,26 @@ class Endpoints extends _is.EndpointDispatch {
                         params['draft'],
                       ),
         ),
+        'adopt': _is.MethodConnector(
+          name: 'adopt',
+          params: {
+            'id': _is.ParameterDescription(
+              name: 'id',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['ingredient'] as _iow895b6.IngredientEndpoint)
+                      .adopt(
+                        session,
+                        params['id'],
+                      ),
+        ),
       },
     );
     connectors['recipe'] = _is.EndpointConnector(
@@ -579,6 +599,31 @@ class Endpoints extends _is.EndpointDispatch {
                   (endpoints['recipe'] as _i34apttk.RecipeEndpoint).getAccess(
                     session,
                     params['id'],
+                  ),
+        ),
+        'listGrinderModels': _is.MethodConnector(
+          name: 'listGrinderModels',
+          params: {
+            'query': _is.ParameterDescription(
+              name: 'query',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'limit': _is.ParameterDescription(
+              name: 'limit',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['recipe'] as _i34apttk.RecipeEndpoint)
+                  .listGrinderModels(
+                    session,
+                    params['query'],
+                    params['limit'],
                   ),
         ),
         'listForTeam': _is.MethodConnector(

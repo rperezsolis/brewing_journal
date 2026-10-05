@@ -22,6 +22,7 @@ class RecipeCreationState extends Equatable {
     this.ingredientResults = const [],
     this.searchingIngredients = false,
     this.selectedIngredient,
+    this.adoptingIngredientId,
     this.ingredientDraft,
     this.registeringIngredient = false,
     this.title = '',
@@ -29,6 +30,7 @@ class RecipeCreationState extends Equatable {
     this.doseGrams,
     this.grindSize = '',
     this.grinderModel = '',
+    this.grinderSuggestions = const [],
     this.extractionMethod,
     this.extractionMethodNote = '',
     this.extractionDuration,
@@ -64,6 +66,9 @@ class RecipeCreationState extends Equatable {
   final bool searchingIngredients;
   final Ingredient? selectedIngredient;
 
+  /// The ingredient id being copied onto this account, if a tap is in flight.
+  final UuidValue? adoptingIngredientId;
+
   /// The draft being registered; kept after a failure so it can be retried.
   final IngredientDraft? ingredientDraft;
   final bool registeringIngredient;
@@ -73,6 +78,9 @@ class RecipeCreationState extends Equatable {
   final double? doseGrams;
   final String grindSize;
   final String grinderModel;
+
+  /// Models from the caller's recipes and from recipes on their teams.
+  final List<String> grinderSuggestions;
   final ExtractionMethod? extractionMethod;
   final String extractionMethodNote;
 
@@ -114,6 +122,7 @@ class RecipeCreationState extends Equatable {
     List<Ingredient>? ingredientResults,
     bool? searchingIngredients,
     ValueGetter<Ingredient?>? selectedIngredient,
+    ValueGetter<UuidValue?>? adoptingIngredientId,
     ValueGetter<IngredientDraft?>? ingredientDraft,
     bool? registeringIngredient,
     String? title,
@@ -121,6 +130,7 @@ class RecipeCreationState extends Equatable {
     ValueGetter<double?>? doseGrams,
     String? grindSize,
     String? grinderModel,
+    List<String>? grinderSuggestions,
     ValueGetter<ExtractionMethod?>? extractionMethod,
     String? extractionMethodNote,
     ValueGetter<Duration?>? extractionDuration,
@@ -150,6 +160,9 @@ class RecipeCreationState extends Equatable {
       selectedIngredient: selectedIngredient != null
           ? selectedIngredient()
           : this.selectedIngredient,
+      adoptingIngredientId: adoptingIngredientId != null
+          ? adoptingIngredientId()
+          : this.adoptingIngredientId,
       ingredientDraft: ingredientDraft != null
           ? ingredientDraft()
           : this.ingredientDraft,
@@ -160,6 +173,7 @@ class RecipeCreationState extends Equatable {
       doseGrams: doseGrams != null ? doseGrams() : this.doseGrams,
       grindSize: grindSize ?? this.grindSize,
       grinderModel: grinderModel ?? this.grinderModel,
+      grinderSuggestions: grinderSuggestions ?? this.grinderSuggestions,
       extractionMethod: extractionMethod != null
           ? extractionMethod()
           : this.extractionMethod,
@@ -194,6 +208,7 @@ class RecipeCreationState extends Equatable {
     ingredientResults,
     searchingIngredients,
     selectedIngredient,
+    adoptingIngredientId,
     ingredientDraft,
     registeringIngredient,
     title,
@@ -201,6 +216,7 @@ class RecipeCreationState extends Equatable {
     doseGrams,
     grindSize,
     grinderModel,
+    grinderSuggestions,
     extractionMethod,
     extractionMethodNote,
     extractionDuration,

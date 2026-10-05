@@ -284,6 +284,57 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
     return access;
   }
 
+  /// Grinder models from the caller's recipes and from recipes on the
+  /// caller's teams. One spelling per folded name, from the newest recipe.
+  Future<List<String>> listGrinderModels(
+    Session session,
+    String query,
+    int limit,
+  ) async {
+    final capped = limit.clamp(1, 30);
+    final pattern = '${_escapeLike(query.trim().toLowerCase())}%';
+    final callerId = session.callerId;
+    final teamIds = await teamIdsOf(session, callerId);
+
+    final recipes = await Recipe.db.find(
+      session,
+      where: (t) {
+        final name = t.grinderModel.ilike(pattern);
+        final mine = t.ownerId.equals(callerId);
+        if (teamIds.isEmpty) return mine & name;
+        return (mine | t.teamId.inSet(teamIds)) & name;
+      },
+      orderByList: (t) => [t.updatedAt.desc(), t.id.desc()],
+    );
+
+    final spelling = <String, String>{};
+    final onTeam = <String>{};
+    for (final recipe in recipes) {
+      final model = recipe.grinderModel.trim();
+      final key = model.toLowerCase();
+      spelling.putIfAbsent(key, () => model);
+      if (recipe.teamId != null && teamIds.contains(recipe.teamId)) {
+        onTeam.add(key);
+      }
+    }
+    final ordered = spelling.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    final shared = [
+      for (final entry in ordered)
+        if (onTeam.contains(entry.key)) entry,
+    ];
+    final personal = [
+      for (final entry in ordered)
+        if (!onTeam.contains(entry.key)) entry,
+    ];
+    final sharedKept = shared.take(capped).toList();
+    final kept = [
+      ...sharedKept,
+      ...personal.take(capped - sharedKept.length),
+    ]..sort((a, b) => a.key.compareTo(b.key));
+    return [for (final entry in kept) entry.value];
+  }
+
   /// Team recipes, most recently updated first. Membership required.
   Future<List<Recipe>> listForTeam(
     Session session,
@@ -397,3 +448,7 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
     return withTeamFavoriteFlags(session, teamId, named);
   }
 }
+
+/// PostgreSQL's default LIKE escape character is a backslash.
+String _escapeLike(String value) =>
+    value.replaceAllMapped(RegExp(r'[\\%_]'), (m) => '\\${m[0]}');

@@ -9,8 +9,15 @@ class FakeIngredientRepository implements IngredientRepository {
 
   final List<Ingredient> ingredients;
 
+  /// Owner id used for [register] and for copies made by [adopt].
+  final UuidValue selfId = const Uuid().v7obj();
+
   /// When set, the next call throws it once.
   Object? nextError;
+
+  /// When set, [adopt] waits for it before copying. Tests use this to pause
+  /// a tap that is still in flight.
+  Future<void>? pendingAdopt;
 
   @override
   Future<List<Ingredient>> search(
@@ -46,7 +53,7 @@ class FakeIngredientRepository implements IngredientRepository {
     }
     final ingredient = Ingredient(
       id: const Uuid().v7obj(),
-      ownerId: const Uuid().v7obj(),
+      ownerId: selfId,
       kind: draft.kind,
       name: name,
       nameKey: key,
@@ -57,6 +64,44 @@ class FakeIngredientRepository implements IngredientRepository {
     );
     ingredients.add(ingredient);
     return ingredient;
+  }
+
+  @override
+  Future<Ingredient> adopt(UuidValue id) async {
+    _throwIfFailing();
+    final gate = pendingAdopt;
+    if (gate != null) await gate;
+    Ingredient? source;
+    for (final ingredient in ingredients) {
+      if (ingredient.id == id) source = ingredient;
+    }
+    if (source == null) {
+      throw BrewingException(
+        code: BrewingErrorCode.notFound,
+        message: 'Ingredient not found',
+      );
+    }
+    if (source.ownerId == selfId) return source;
+    for (final existing in ingredients) {
+      if (existing.ownerId == selfId &&
+          existing.kind == source.kind &&
+          existing.nameKey == source.nameKey) {
+        return existing;
+      }
+    }
+    final copy = Ingredient(
+      id: const Uuid().v7obj(),
+      ownerId: selfId,
+      kind: source.kind,
+      name: source.name,
+      nameKey: source.nameKey,
+      origin: source.origin,
+      roaster: source.roaster,
+      roastLevel: source.roastLevel,
+      processing: source.processing,
+    );
+    ingredients.add(copy);
+    return copy;
   }
 
   void _throwIfFailing() {

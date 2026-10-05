@@ -26,9 +26,9 @@ BrewSync is a collaborative brewing journal application designed to help users t
 ### Feature 2: 5-Step Recipe Creation & Editing
 **Description:** A guided wizard to log a new brewing session or edit an existing one.
 **Requirements:**
-*   **Step 1: Bean/Leaf Selection:** Search, select, or register a new coffee bean, matcha grade, or tea leaf (Origin, Roaster, Roast Level, Processing).
+*   **Step 1: Bean/Leaf Selection:** Search, select, or register a new coffee bean, matcha grade, or tea leaf (Origin, Roaster, Roast Level, Processing). Search includes the signed-in user's own ingredients and any ingredient used by a recipe on a team they belong to.
 *   **Step 2: Extraction Parameters & Timer:** 
-    *   Inputs: Recipe Title, Water Temperature, Coffee/Tea Dose (grams), Grind Size, Grinder Model, Extraction Method (e.g., V60, Espresso, French Press).
+    *   Inputs: Recipe Title, Water Temperature, Coffee/Tea Dose (grams), Grind Size, Grinder Model, Extraction Method (e.g., V60, Espresso, French Press). The grinder field suggests models from the user's own recipes and from recipes on their teams, and the user can still type a model that is not in that list.
     *   Interactive Tool: A built-in stopwatch UI to measure and record the actual extraction time dynamically during the brew.
 *   **Step 3: Flavor Map:** A visual UI (radar chart or flavor wheel) to input tasting notes (e.g., Acidity, Sweetness, Body, Bitterness, Specific flavor tags).
 *   **Step 4: Additional Steps (Optional):** Add an ordered list of extra instructions that sit outside the extraction parameters. Each item is free text the user writes, for example "use 150ml of whole milk", "use 100g of ice", or "add cinnamon and stir". The user can add, edit, reorder, and remove items, and can skip this step. Leading and trailing spaces are trimmed. An item that is empty after trimming is refused. The same wording may appear more than once. Editing a recipe restores the list in its saved order. Removing every item leaves the recipe with no extra instructions.
@@ -50,6 +50,7 @@ BrewSync is a collaborative brewing journal application designed to help users t
 *   **Team roles:** The team creator assigns a role on the invite. Membership and role are stored in the database and checked inside endpoint methods (`requireLogin`, then viewer vs editor). Serverpod's built-in scopes stay reserved for account-level access such as admin.
     *   *Viewer:* Can only read recipes.
     *   *Editor:* Can read, create, and update recipes within the team, including the extra-instruction list. A save replaces that list in full, so the team sees the latest ordered list.
+*   **Shared beans and grinders:** When a recipe is on the team — created there, saved there as a new version, or added from a member's existing recipes — its coffee bean, matcha, or tea and its grinder model become available to every member of that team while they create a recipe. Viewers and editors see the same choices. Search in the bean/leaf step lists those ingredients together with the member's own. The grinder field suggests those models together with models from the member's own recipes. A teammate's recipes that are not on the team stay out of both. Choosing a team ingredient the member does not already have copies its name, origin, roaster, roast, and processing onto their account. If they already have that kind and name, that existing ingredient is kept and its details are not overwritten. The new recipe uses the member's copy. Taking the recipe off the team, or deleting it, removes that ingredient and grinder from other members' choices unless another recipe still on the team uses them. A copy the member already saved stays in their own list. A member of more than one team sees ingredients and grinders from each of those teams.
 
 ### Feature 5: Share a Recipe
 **Description:** Let the user share a recipe from the device. Social network developer APIs are outside this Serverpod stack.
@@ -109,6 +110,10 @@ BrewSync is a collaborative brewing journal application designed to help users t
 *   **US-4.4:** As a viewer, I want to read a team recipe's extra instructions but be blocked from adding, editing, reordering, or removing them, so a read-only invite cannot change the method.
 *   **US-4.5:** As someone opening an invite, I want an expired or already-used link to fail with a clear message and leave my membership unchanged.
 *   **US-4.6:** As an editor, I want my save of a recipe's extra instructions to replace the previous list in full, so after two people edit the same recipe the team sees one ordered list.
+*   **US-4.7:** As a team member, I want a coffee bean, matcha grade, or tea leaf used by a recipe on my team to appear when I search for an ingredient, so I can use it in a new recipe without registering it again.
+*   **US-4.8:** As a team member, I want choosing that ingredient to save a copy on my account, and to keep the copy I already had when the name matches, so I can brew with it after the team recipe is removed.
+*   **US-4.9:** As a team member, I want grinder models from my team's recipes, and from my own recipes, suggested while I enter a grinder, so I can pick one instead of typing it again.
+*   **US-4.10:** As a team member, I want a teammate's personal recipes kept out of my ingredient search and grinder suggestions, and I want a recipe that leaves the team to drop its bean and grinder from those suggestions unless another team recipe still uses them.
 
 ### Social Sharing
 *   **US-5.1:** As a coffee influencer, I want to generate a summary image of my V60 recipe and send it through the device share sheet so I can post it from whichever app I choose.

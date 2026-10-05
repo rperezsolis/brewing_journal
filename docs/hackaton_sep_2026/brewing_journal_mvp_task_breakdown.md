@@ -19,6 +19,8 @@ Features are ordered so each one depends only on the features before it. The one
 
 The one exception to phase isolation is the Feature 1 `requireLogin` test: it needs a domain endpoint, so it is written in Feature 1 and first run after Feature 2's endpoints exist.
 
+**Feature 8** adds no table. A team member's ingredient search and grinder suggestions read recipes already on their teams. Selecting a shared ingredient copies it onto that member through `ingredient.adopt`.
+
 ### Command reference
 
 The dev loop runs under `serverpod start`, which watches files, regenerates code, and hot reloads the server and the app. Use the `serverpod` MCP tools while it is running. Use the CLI only when the server cannot start at all.
@@ -810,6 +812,55 @@ Do Feature 7.1 before 7.2, then 7.3, then 7.4.
   - [x] The editor stars a recipe from My recipes. The team heart stays empty. Removing that recipe from the team clears the team favorite and leaves the personal one on My recipes.
 - [x] Run `flutter test integration_test/favorites_test.dart -d macos` while `serverpod start` is up.
 - [x] Run the post-phase checklist. `dart analyze` is clean in the server and Flutter packages, and the server tests from 7.2 pass.
+
+---
+
+
+
+## Feature 8 — Team beans and grinders
+
+**Stories:** US-4.7 through US-4.10. Depends on Feature 2 (ingredient search, grinder text field) and Feature 4 (teams and `assignToTeam`). No new `.spy.yaml` model and no migration. The catalog is the ingredients and `grinderModel` values on recipes whose `teamId` is a team the caller belongs to, plus the caller's own rows.
+
+Do Feature 8.2 before 8.3, then 8.4. There is no schema phase.
+
+
+
+### 8.2 Backend API Endpoints
+
+- [x] `teamIdsOf` in `lib/src/teams/team_membership_lookup.dart`: the set of `teamId`s for `memberId`, using `team_membership_member_idx`.
+- [x] `IngredientEndpoint.search`: the caller's matches of `kind` and `nameKey` prefix, plus ingredients used by recipes on those teams. One row per `nameKey` (the caller's row wins; otherwise the earliest `createdAt`). Ordered by `nameKey`. `limit` clamped to 1..30. Team names are kept when the list is cut. A personal recipe of a teammate is excluded.
+- [x] `IngredientEndpoint.adopt(id)`: the caller's own row is returned unchanged. A row used by a recipe on one of the caller's teams is copied (name, origin, roaster, roast, processing), unless the caller already has that kind and name, in which case that row is returned and its details stay. Any other id throws `notFound`.
+- [x] `RecipeEndpoint.listGrinderModels(query, limit)`: distinct models from the caller's recipes and from recipes on the caller's teams. Folded with `trim().toLowerCase()`, spelling from the newest `updatedAt`, ordered by the folded name. Case-insensitive prefix. `limit` clamped to 1..30. Models used on a team recipe are kept when the list is cut.
+- [x] `recipe.save` for a brand-new recipe still requires the ingredient to belong to the caller. A new version may still keep the source ingredient id.
+- [x] Server tests in `test/integration/brewing/team_catalog_test.dart`:
+  - [x] A viewer on the team finds the team recipe's coffee bean, and does not find a bean that exists only on the owner's personal recipe
+  - [x] A matcha search does not return that coffee bean; a matcha team recipe does
+  - [x] `adopt` copies origin, roaster, roast, and processing onto the member and a second adopt returns the same id. Adopting when the member already has that name returns their row and leaves its origin unchanged
+  - [x] A stranger's search is empty and `adopt` of the team ingredient is `notFound`. Saving a new recipe with the owner's ingredient id is `notFound`. Saving with the adopted id succeeds
+  - [x] `listGrinderModels` includes the team grinder and the member's own grinder, collapses case variants to the newest spelling, and hides a grinder that exists only on a personal recipe
+  - [x] `assignToTeam` makes that recipe's bean and grinder visible. `removeFromTeam` hides them again. An adopted copy remains in the member's own search
+  - [x] A recipe on another team is not visible. A new version's grinder is visible while the source recipe stays on the team
+- [x] Run the post-phase checklist, then `dart test` for `team_catalog_test.dart` and `ingredient_endpoint_test.dart`.
+
+
+
+### 8.3 Flutter UI & State Management
+
+- [x] `IngredientRepository.adopt`. The fake copies a foreign row onto `selfId`, or returns the caller's existing same kind and name without changing it.
+- [x] `RecipeRepository.listGrinderModels`. The fake filters its saved recipes and `grinderCatalog`.
+- [x] `RecipeCreationCubit.selectIngredient` calls `adopt` and selects the returned row. `searchGrinderModels` stores `grinderSuggestions`.
+- [x] Step 1: tapping a search result adopts it.
+- [x] Step 2: the grinder field lists suggestions under the field (debounced, same as ingredient search). Tapping one fills the field. The suggestion that matches the current text is hidden. A model that is not listed can still be typed.
+- [x] Tests: cubit tests for adopt and grinder search; a widget test that tapping a grinder suggestion fills the field and tapping an ingredient result selects the adopted copy.
+- [x] Run the post-phase checklist. `serverpod start` hot reloaded the server and the Flutter app after the endpoint changes. The Serverpod MCP tools were not connected in this session, so `hot_restart` was not called.
+
+
+
+### 8.4 Integration Layer
+
+- [x] `ServerpodIngredientRepository.adopt` and `ServerpodRecipeRepository.listGrinderModels` call the generated client. No new registration in `app_scope.dart`.
+- [x] No `.spy.yaml` file changed, so no migration was created.
+- [x] Run the post-phase checklist. `dart analyze` is clean in the server and Flutter packages.
 
 ---
 

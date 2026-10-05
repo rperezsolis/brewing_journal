@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +11,8 @@ import '../../../core/duration_format.dart';
 import '../cubit/recipe_creation_cubit.dart';
 import '../cubit/recipe_creation_state.dart';
 import '../recipe_limits.dart';
+
+const _grinderSearchDebounce = Duration(milliseconds: 250);
 
 /// Step 2: the extraction parameters and a stopwatch that records the time.
 class StepExtraction extends StatefulWidget {
@@ -26,6 +30,7 @@ class _StepExtractionState extends State<StepExtraction> {
   late final TextEditingController _grinder;
   late final TextEditingController _note;
   late final TextEditingController _duration;
+  Timer? _grinderSearch;
 
   RecipeCreationCubit get _cubit => context.read<RecipeCreationCubit>();
 
@@ -44,10 +49,12 @@ class _StepExtractionState extends State<StepExtraction> {
           ? ''
           : formatDuration(s.extractionDuration!),
     );
+    unawaited(_cubit.searchGrinderModels(s.grinderModel));
   }
 
   @override
   void dispose() {
+    _grinderSearch?.cancel();
     for (final c in [
       _title,
       _temp,
@@ -71,6 +78,28 @@ class _StepExtractionState extends State<StepExtraction> {
 
   static double? _parseNumber(String text) =>
       double.tryParse(text.trim().replaceAll(',', '.'));
+
+  void _scheduleGrinderSearch(String query) {
+    _grinderSearch?.cancel();
+    _grinderSearch = Timer(_grinderSearchDebounce, () {
+      unawaited(_cubit.searchGrinderModels(query));
+    });
+  }
+
+  static bool _isGrinderSuggestion(String model, String current) {
+    final folded = model.trim().toLowerCase();
+    return folded.startsWith(current) && folded != current;
+  }
+
+  void _selectGrinder(String model) {
+    _grinderSearch?.cancel();
+    _grinder.value = TextEditingValue(
+      text: model,
+      selection: TextSelection.collapsed(offset: model.length),
+    );
+    _cubit.setGrinderModel(model);
+    unawaited(_cubit.searchGrinderModels(model));
+  }
 
   void _onDurationChanged(String text) {
     if (text.trim().isEmpty) {
@@ -180,12 +209,39 @@ class _StepExtractionState extends State<StepExtraction> {
             key: const Key('extraction-grinder'),
             controller: _grinder,
             maxLength: kGrindMaxLength,
-            onChanged: _cubit.setGrinderModel,
+            onChanged: (value) {
+              _cubit.setGrinderModel(value);
+              _scheduleGrinderSearch(value);
+            },
             decoration: InputDecoration(
               labelText: l10n.grinderModel,
               hintText: l10n.grinderModelHint,
               border: const OutlineInputBorder(),
             ),
+          ),
+          BlocBuilder<RecipeCreationCubit, RecipeCreationState>(
+            buildWhen: (previous, current) =>
+                previous.grinderSuggestions != current.grinderSuggestions ||
+                previous.grinderModel != current.grinderModel,
+            builder: (context, state) {
+              final current = state.grinderModel.trim().toLowerCase();
+              final suggestions = [
+                for (final model in state.grinderSuggestions)
+                  if (_isGrinderSuggestion(model, current)) model,
+              ];
+              if (suggestions.isEmpty) return const SizedBox.shrink();
+              return Column(
+                children: [
+                  for (final model in suggestions)
+                    ListTile(
+                      key: ValueKey('grinder-suggestion-$model'),
+                      dense: true,
+                      title: Text(model),
+                      onTap: () => _selectGrinder(model),
+                    ),
+                ],
+              );
+            },
           ),
           BlocBuilder<RecipeCreationCubit, RecipeCreationState>(
             buildWhen: (previous, current) =>

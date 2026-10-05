@@ -289,10 +289,14 @@ class _BottomBar extends StatelessWidget {
       buildWhen: (previous, current) =>
           previous.step != current.step ||
           previous.saveStatus != current.saveStatus ||
-          previous.pendingUpload != current.pendingUpload,
+          previous.pendingUpload != current.pendingUpload ||
+          previous.adoptingIngredientId != current.adoptingIngredientId,
       builder: (context, state) {
         final l10n = context.l10n;
-        final busy = state.isSaving || state.pendingUpload;
+        final busy =
+            state.isSaving ||
+            state.pendingUpload ||
+            state.adoptingIngredientId != null;
         return Material(
           elevation: 3,
           child: Padding(

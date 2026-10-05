@@ -7,6 +7,7 @@
 - Auth stays on `serverpod_auth_idp`. Domain endpoints set `requireLogin => true` and read `session.authenticated!.authUserId` (`UuidValue`). Account scopes are unused. Viewer vs editor is a row in `team_membership`, checked inside the method.
 - Timers, alarms, and share-card rendering run only in the Flutter app; nothing about them is sent to Serverpod. The server stores `extractionDuration` only. The share image leaves the device only through the OS share sheet or a download.
 - A recipe is owned by one `AuthUser`. `teamId` is null (personal) or one workspace. Adding an existing recipe sets `teamId`. Deleting the team nulls `teamId`; the recipe remains with the owner.
+- A team's beans and grinders are the ingredients and `grinderModel` values on recipes whose `teamId` is that team. There is no catalog table. Every member (viewer or editor) can search those ingredients and see those grinder models while creating a recipe, along with their own. Selecting a team ingredient inserts a copy owned by that member, or returns the member's existing row when the kind and name already match. A new recipe stores the member's ingredient id, so deleting the original owner does not remove another member's recipes.
 - A personal favorite is one row per user and recipe in `recipe_favorite`, not a column on `recipe`. A team favorite is a separate row per team and recipe in `team_recipe_favorite`. `titleKey` is the trimmed lower-case title. A user may have only one personal favorite per `titleKey`, and a team may have only one team favorite per `titleKey`. The two lists do not share rows, so the same name can be a personal favorite and a team favorite at the same time. Saving a second recipe with that name in the same list writes nothing until the caller passes `replace: true`, which deletes the previous row in that list in the same transaction. Deleting the recipe cascades both kinds of row. Deleting the account cascades personal rows. Deleting the team cascades that team's rows. `Recipe.isFavorite` is filled on read for the list being shown and is not stored. Saving again inserts a new recipe row and leaves the source row unchanged, so a favorite stays on the source until someone replaces it. The new row starts with no favorite rows.
 - Extra instructions are child rows. A save deletes the previous rows for that recipe and inserts the submitted list in order. Empty-after-trim is rejected. Duplicate text is allowed. Max length is 280 characters after trim (`kInstructionMaxLength`), enforced by the server and mirrored in the wizard.
 - Photos are rows written only after `session.storage.verifyUpload` on storage id `public`. The client never chooses the storage path. Public storage means a photo URL is readable by anyone holding it; paths contain a random UUID so they are not enumerable.
@@ -123,7 +124,13 @@ indexes:
     fields: ownerId, kind, nameKey
 ```
 
-`nameKey` is `name.trim().toLowerCase()`, written only by the endpoint. Every lookup is scoped to `ownerId` + `kind`, so a standalone `nameKey` index would never be used. The prefix match (`nameKey LIKE 'q%'`) filters inside that owner/kind range; a single user’s ingredient list is small enough that this does not need a `text_pattern_ops` index.
+`nameKey` is `name.trim().toLowerCase()`, written only by the endpoint. A caller's own rows are found through `ingredient_owner_kind_name_idx`. Ingredients and grinder models used on a team are not copied into a new table when a recipe joins that team. Search and grinder suggestions read the recipes that are already on the caller's teams.
+
+`ingredient.search` loads the caller's ingredients of `kind` whose `nameKey` starts with `query.trim().toLowerCase()`, and the ingredients referenced by recipes whose `teamId` is a team the caller belongs to. Membership uses `team_membership_member_idx`. Those recipes use `recipe_team_updated_idx`, and their ingredients use `recipe_ingredient_idx`. A teammate's personal recipe (`teamId` null) is not included. A member of several teams sees ingredients from each of them. Results are one row per `nameKey`: the caller's row wins when they already have that name; otherwise the team row with the earliest `createdAt` wins, and the smaller id breaks a tie. The merged list is ordered by `nameKey`. `limit` is clamped to 1..30. When more names match than `limit`, names that come from a team recipe are kept and the caller's extra names are dropped, so a shared bean is not crowded out by a long personal list. The prefix match does not need a `text_pattern_ops` index. One member's ingredients and one team's recipes are small enough to scan.
+
+`ingredient.adopt` is how a member uses a team ingredient on a new recipe. The caller's own id is returned unchanged. An unknown id, or an ingredient that is not referenced by a recipe on one of the caller's teams, throws `notFound`, so a private ingredient is not confirmed. Otherwise the caller's existing `(kind, nameKey)` row is returned and its origin, roaster, roast, and processing stay as they are. When the caller has no such row, a copy of those fields is inserted with the caller as `owner`. `recipe.save` for a brand-new recipe still requires `ingredientId` to belong to the caller, so the wizard adopts before it saves. A new version may still keep the source recipe's `ingredientId`. Deleting the original owner therefore only removes that owner's ingredients and recipes. Another member's copy and recipes stay. `onDelete=NoAction` on `recipe.ingredient` keeps working, because a recipe never points at another user's ingredient unless it is a new version that intentionally kept the source id. That source id is already the case the delete rule was written for: the owner's account deletion removes their recipes in the same statement.
+
+Grinder models stay a string on `recipe`. `recipe.listGrinderModels` returns distinct models from the caller's recipes and from recipes on the caller's teams. Distinct means `trim().toLowerCase()`. The spelling shown is the one on the recipe with the latest `updatedAt`. The prefix is case-insensitive. An empty query returns every distinct model. `limit` is clamped to 1..30, and the list is ordered by the folded name. When more models match than `limit`, models used on a team recipe are kept and models that appear only on the caller's personal recipes are dropped. Removing a recipe from the team, or deleting it, drops its ingredient and grinder from other members' results unless another recipe still on the team uses them. A copy already adopted stays on that member's own search.
 
 ### `lib/src/brewing/recipe.spy.yaml`
 
@@ -486,8 +493,9 @@ A single helper, `RecipeAccessPolicy.resolve(session, recipe)`, returns `RecipeA
 
 | Method | Parameters | Returns | Contract |
 | --- | --- | --- | --- |
-| `search` | `BeverageKind kind`, `String query`, `int limit` | `List<Ingredient>` | `ownerId = caller`, `kind`, `nameKey` prefix of `query.trim().toLowerCase()`. `limit` clamped to 1..30. Index `ingredient_owner_kind_name_idx`. |
+| `search` | `BeverageKind kind`, `String query`, `int limit` | `List<Ingredient>` | Caller's ingredients of `kind` whose `nameKey` starts with `query.trim().toLowerCase()`, plus ingredients used by recipes on the caller's teams. One row per `nameKey` (the caller's row wins). Ordered by `nameKey`. `limit` clamped to 1..30. Team names are kept when the list is cut. |
 | `register` | `IngredientDraft draft` | `Ingredient` | Trim `name` (1..120). Empty name → `validation`. If `(owner, kind, nameKey)` already exists, return that row instead of inserting a duplicate. Otherwise insert with caller as `owner`. |
+| `adopt` | `UuidValue id` | `Ingredient` | Caller's own id is returned unchanged. A team ingredient is copied onto the caller, or the caller's existing same kind and name is returned without changing its details. Anything else → `notFound`. |
 
 ### `RecipeEndpoint` → `client.recipe`
 
@@ -496,6 +504,7 @@ A single helper, `RecipeAccessPolicy.resolve(session, recipe)`, returns `RecipeA
 | `save` | `RecipeDraft draft` | `RecipeDetail` | 5-step commit. See below. |
 | `get` | `UuidValue id`, `{UuidValue? teamId}` | `RecipeDetail` | One query with includes: ingredient, instructions ordered by `sortOrder`, flavor tags, photos ordered by `sortOrder`. Fills `photos[].publicUrl` and `access`. `teamId` is an optional named argument, so existing `get(id)` calls stay personal. Null fills `recipe.isFavorite` from the caller's personal rows. Set fills it from that team's rows; the caller must be a member and `recipe.teamId` must match, else `notFound`. |
 | `listMine` | `int limit`, `int offset` | `List<Recipe>` | `ownerId = caller` (personal and team recipes the caller owns), `orderBy updatedAt desc`. `limit` clamped to 1..50. Index `recipe_owner_updated_idx`. Each row has the caller's personal `isFavorite`. |
+| `listGrinderModels` | `String query`, `int limit` | `List<String>` | Distinct grinder models from the caller's recipes and from recipes on the caller's teams. Folded with `trim().toLowerCase()`, spelling from the newest `updatedAt`, ordered by the folded name. Prefix is case-insensitive. `limit` clamped to 1..30. Models used on a team recipe are kept when the list is cut. |
 | `listFavorites` | `int limit`, `int offset` | `List<Recipe>` | The caller's personal favorites among recipes they own, same order and clamp as `listMine`. An empty favorite set returns `[]` without a recipe query. Team favorites are not included. |
 | `listForTeam` | `UuidValue teamId`, `int limit`, `int offset` | `List<Recipe>` | Membership required (viewer or editor), else `notFound`. `teamId` match, `orderBy updatedAt desc, id desc`. Index `recipe_team_updated_idx`. Viewer and editor receive the same rows; `RecipeAccess` is not on this list. Each row's `isFavorite` is that team's favorite, the same value for every member. |
 | `listTeamFavorites` | `UuidValue teamId`, `int limit`, `int offset` | `List<Recipe>` | Membership required, else `notFound`. Recipes on that team that have a `team_recipe_favorite` row for it, same order and clamp as `listForTeam`. An empty set returns `[]` without a recipe query. A recipe whose `teamId` no longer matches is excluded. |
@@ -511,7 +520,7 @@ A single helper, `RecipeAccessPolicy.resolve(session, recipe)`, returns `RecipeA
 `save` transaction (`session.db.transaction`):
 
 1. When `draft.id` is set, load that source recipe and require edit access. No read access → `notFound`; read-only → `forbidden`. The source row is not modified.
-2. Resolve ingredient. For a brand-new recipe, `ingredientId` must belong to the caller. For a new version, it must belong to the caller or equal the source's `ingredientId`, so a team editor can save another member’s recipe without re-picking the bean. Anything else → `notFound`.
+2. Resolve ingredient. For a brand-new recipe, `ingredientId` must belong to the caller. The wizard calls `ingredient.adopt` before save when the member picked a teammate's bean, and the draft carries the copy's id. For a new version, the id must belong to the caller or equal the source's `ingredientId`, so a team editor can save another member’s recipe without re-picking the bean. Anything else → `notFound`.
 3. Validate: title (1..120), grind size and grinder model (1..80) after trim; `waterTempC` in `1..100`; `doseGrams` in `0.1..500`; `extractionDuration` null or `1s..2h`; scores in `0..5`; `extractionMethod == other` requires a non-empty note; tags 1..40 characters, at most 12; each instruction `trim()` length in `1..280`, at most 30 items. Failures → `validation`, with the field name in `message`.
 4. Insert a `recipe` row. A brand-new recipe uses the caller as owner, and `teamId` only when the caller is an editor of that team (else `forbidden`). A new version uses a new id, the caller as owner, and the source's `teamId`. Favorite rows are not copied. The source's personal and team favorites stay on the source, so a new version with the same title conflicts until someone passes `replace: true`.
 5. Insert instructions with `sortOrder = index` of the trimmed list (possibly empty), and insert distinct `tagKey` rows. Copy the source's photos onto the new id when saving a version.
@@ -595,6 +604,7 @@ RecipeCreationState
   doseGrams: double?
   grindSize: String
   grinderModel: String
+  grinderSuggestions: List<String>
   extractionMethod: ExtractionMethod?
   extractionMethodNote: String
   extractionDuration: Duration? // last stopwatch reading; null if never started
@@ -614,8 +624,9 @@ Intent methods:
 | --- | --- |
 | `startNew({UuidValue? teamId})` | Empty state, `canEdit = true`, `teamId` as given (from a team screen). |
 | `load(UuidValue id)` | `recipe.get`. Copies fields, instructions in `sortOrder`, tags, photos, `access.canEdit`. `step = ingredient`. When `canEdit` is false, the route shows Brew Mode instead of the wizard. |
-| `searchIngredients(BeverageKind, String)` | `ingredient.search`. |
-| `selectIngredient(Ingredient)` / `registerIngredient(IngredientDraft)` | Sets `selectedIngredient`. Register calls `ingredient.register`. |
+| `searchIngredients(BeverageKind, String)` | `ingredient.search`. Includes the caller's ingredients and ingredients used on their teams. |
+| `selectIngredient(Ingredient)` / `registerIngredient(IngredientDraft)` | Sets `selectedIngredient`. Select calls `ingredient.adopt`, so a teammate's row is stored as the caller's copy. Register calls `ingredient.register`. |
+| `searchGrinderModels(String)` | `recipe.listGrinderModels`. The extraction step shows matches under the grinder field. Tapping one fills the field. A typed model that is not suggested is still saved. |
 | `setExtraction(...)` | Field updates only. |
 | `startStopwatch()` / `stopStopwatch()` / `resetStopwatch()` | Internal `Stopwatch` plus a 100ms `Timer.periodic` that emits `stopwatchElapsed`. `stop` cancels the timer and writes `extractionDuration = stopwatch.elapsed`. `reset` sets `extractionDuration = null`. `close()` cancels the timer. This is separate from `BrewTimerCubit`. |
 | `setExtractionDuration(Duration?)` | Manual entry or clearing, for a user who timed the brew elsewhere. |

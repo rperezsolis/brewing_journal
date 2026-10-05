@@ -135,11 +135,20 @@ class _StepIngredientState extends State<StepIngredient> {
                 subtitle: ingredientDetails(ingredient, l10n).isEmpty
                     ? null
                     : Text(ingredientDetails(ingredient, l10n)),
-                trailing: ingredient.id == selected?.id
+                trailing: ingredient.id == state.adoptingIngredientId
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : ingredient.id == selected?.id
                     ? Icon(Icons.check, color: theme.colorScheme.primary)
                     : null,
-                selected: ingredient.id == selected?.id,
-                onTap: () => _cubit.selectIngredient(ingredient),
+                selected:
+                    ingredient.id == selected?.id ||
+                    ingredient.id == state.adoptingIngredientId,
+                onTap: state.adoptingIngredientId == null
+                    ? () => unawaited(_cubit.selectIngredient(ingredient))
+                    : null,
               ),
             if (state.ingredientResults.isEmpty && !state.searchingIngredients)
               Padding(
