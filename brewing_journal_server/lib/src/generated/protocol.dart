@@ -41,6 +41,7 @@ import 'brewing/recipe_photo.dart' as _i9xtdqqg;
 import 'brewing/roast_level.dart' as _ilmoykyi;
 import 'brewing/team_recipe_favorite.dart' as _intarog7;
 import 'brewing/upload_ticket.dart' as _ivpdymeq;
+import 'rate_limit/rate_limit_exception.dart' as _ijrm85le;
 import 'teams/invite_link.dart' as _ih3460lx;
 import 'teams/team.dart' as _im6wd3ml;
 import 'teams/team_invite.dart' as _ixubbi3v;
@@ -65,6 +66,7 @@ export 'brewing/recipe_photo.dart';
 export 'brewing/roast_level.dart';
 export 'brewing/team_recipe_favorite.dart';
 export 'brewing/upload_ticket.dart';
+export 'rate_limit/rate_limit_exception.dart';
 export 'teams/invite_link.dart';
 export 'teams/team.dart';
 export 'teams/team_invite.dart';
@@ -1185,6 +1187,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _ivpdymeq.UploadTicket) {
       return _ivpdymeq.UploadTicket.fromJson(data) as T;
     }
+    if (t == _ijrm85le.RateLimitException) {
+      return _ijrm85le.RateLimitException.fromJson(data) as T;
+    }
     if (t == _ih3460lx.InviteLink) {
       return _ih3460lx.InviteLink.fromJson(data) as T;
     }
@@ -1265,6 +1270,10 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _is.getType<_ivpdymeq.UploadTicket?>()) {
       return (data != null ? _ivpdymeq.UploadTicket.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_ijrm85le.RateLimitException?>()) {
+      return (data != null ? _ijrm85le.RateLimitException.fromJson(data) : null)
+          as T;
     }
     if (t == _is.getType<_ih3460lx.InviteLink?>()) {
       return (data != null ? _ih3460lx.InviteLink.fromJson(data) : null) as T;
@@ -1425,6 +1434,7 @@ class Protocol extends _is.DatabaseSerializationManager {
       _ilmoykyi.RoastLevel => 'RoastLevel',
       _intarog7.TeamRecipeFavorite => 'TeamRecipeFavorite',
       _ivpdymeq.UploadTicket => 'UploadTicket',
+      _ijrm85le.RateLimitException => 'RateLimitException',
       _ih3460lx.InviteLink => 'InviteLink',
       _im6wd3ml.Team => 'Team',
       _ixubbi3v.TeamInvite => 'TeamInvite',
@@ -1484,6 +1494,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'TeamRecipeFavorite';
       case _ivpdymeq.UploadTicket():
         return 'UploadTicket';
+      case _ijrm85le.RateLimitException():
+        return 'RateLimitException';
       case _ih3460lx.InviteLink():
         return 'InviteLink';
       case _im6wd3ml.Team():
@@ -1575,6 +1587,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'UploadTicket') {
       return deserialize<_ivpdymeq.UploadTicket>(data['data']);
+    }
+    if (dataClassName == 'RateLimitException') {
+      return deserialize<_ijrm85le.RateLimitException>(data['data']);
     }
     if (dataClassName == 'InviteLink') {
       return deserialize<_ih3460lx.InviteLink>(data['data']);

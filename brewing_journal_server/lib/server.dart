@@ -6,6 +6,8 @@ import 'package:serverpod_cloud_storage/serverpod_cloud_storage.dart';
 
 import 'src/cache_busting.dart';
 import 'src/generated/serverpod.dart';
+import 'src/rate_limit/rate_limit_config.dart';
+import 'src/rate_limit/rate_limit_interceptor.dart';
 import 'src/web/routes/app_config_route.dart';
 
 /// The starting point of the Serverpod server.
@@ -13,6 +15,20 @@ void run(List<String> args) async {
   // Initialize Serverpod. The generated Serverpod class is already connected
   // with your project's generated code.
   final pod = Serverpod(args);
+
+  // Counts RPC calls before they reach endpoint methods. Serverpod rebuilds
+  // the generated connectors on hot reload, and this start hook runs again
+  // after that rebuild. Add an endpoint name, `module.endpoint`, or
+  // `endpoint.method` to [RateLimitConfig.bypassEndpoints] to skip a webhook
+  // or other internal call.
+  pod.experimental.registerStartHook(
+    const RateLimitInterceptor(
+      config: RateLimitConfig(
+        maxRequests: 100,
+        window: Duration(seconds: 60),
+      ),
+    ).install,
+  );
 
   // Initialize authentication services for the server.
   // Token managers will be used to validate and issue authentication keys,

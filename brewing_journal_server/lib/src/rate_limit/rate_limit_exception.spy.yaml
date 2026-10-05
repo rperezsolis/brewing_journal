@@ -1,0 +1,4 @@
+exception: RateLimitException
+fields:
+  message: String
+  retryAfterSeconds: int
