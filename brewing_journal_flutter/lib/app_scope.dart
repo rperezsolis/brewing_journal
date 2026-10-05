@@ -21,6 +21,8 @@ import 'data/repositories/serverpod_recipe_repository.dart';
 import 'data/repositories/serverpod_team_repository.dart';
 import 'data/repositories/team_repository.dart';
 import 'data/services/alarm_player.dart';
+import 'data/services/amplitude_analytics_service.dart';
+import 'data/services/analytics_service.dart';
 import 'data/services/share_service.dart';
 import 'ui/features/auth/cubit/auth_cubit.dart';
 import 'ui/features/auth/cubit/auth_state.dart';
@@ -29,14 +31,15 @@ import 'ui/features/teams/cubit/teams_cubit.dart';
 
 /// App-level repositories, backed by the global Serverpod [client].
 class AppRepositories {
-  AppRepositories()
+  AppRepositories({AnalyticsService? analytics})
     : auth = ServerpodAuthRepository(client.auth),
       ingredients = ServerpodIngredientRepository(client.ingredient),
       recipes = ServerpodRecipeRepository(client.recipe),
       recipeMedia = ServerpodRecipeMediaRepository(client.recipeMedia),
       teams = ServerpodTeamRepository(client.team),
       alarm = AudioAlarmPlayer(),
-      share = SharePlusShareService();
+      share = SharePlusShareService(),
+      analytics = analytics ?? AmplitudeAnalyticsService();
 
   AppRepositories.custom({
     required this.auth,
@@ -46,6 +49,7 @@ class AppRepositories {
     required this.teams,
     required this.alarm,
     required this.share,
+    required this.analytics,
   });
 
   /// In-memory repositories, for tests and previews.
@@ -53,6 +57,7 @@ class AppRepositories {
     AuthRepository? auth,
     AlarmPlayer? alarm,
     ShareService? share,
+    AnalyticsService? analytics,
   }) {
     final ingredients = FakeIngredientRepository();
     return AppRepositories.custom(
@@ -63,6 +68,7 @@ class AppRepositories {
       teams: FakeTeamRepository(),
       alarm: alarm ?? FakeAlarmPlayer(),
       share: share ?? FakeShareService(),
+      analytics: analytics ?? const NoOpAnalyticsService(),
     );
   }
 
@@ -73,6 +79,7 @@ class AppRepositories {
   final TeamRepository teams;
   final AlarmPlayer alarm;
   final ShareService share;
+  final AnalyticsService analytics;
 }
 
 /// Provides the app-level repositories and session-scoped Cubits to every
@@ -101,6 +108,7 @@ class _AppScopeState extends State<AppScope> {
   late final TeamsCubit _teams;
   late final StreamSubscription<AuthState> _authSubscription;
   AuthStatus? _lastStatus;
+  var _trackedAppOpen = false;
 
   @override
   void initState() {
@@ -113,6 +121,7 @@ class _AppScopeState extends State<AppScope> {
 
   void _onAuthChanged(AuthState auth) {
     if (auth.status == _lastStatus) return;
+    final previous = _lastStatus;
     _lastStatus = auth.status;
     switch (auth.status) {
       case AuthStatus.authenticated:
@@ -123,6 +132,30 @@ class _AppScopeState extends State<AppScope> {
         _teams.reset();
       case AuthStatus.unknown:
         break;
+    }
+    if (auth.status != AuthStatus.unknown) {
+      unawaited(_syncAnalytics(auth.status, previous));
+    }
+  }
+
+  /// Binds the Amplitude user id to the Serverpod account, then records
+  /// `App Opened` once per process after the session is known.
+  Future<void> _syncAnalytics(AuthStatus status, AuthStatus? previous) async {
+    final shouldTrack = !_trackedAppOpen;
+    if (shouldTrack) _trackedAppOpen = true;
+
+    final analytics = widget.repositories.analytics;
+    if (status == AuthStatus.authenticated) {
+      final userId = widget.repositories.auth.currentUserId?.uuid;
+      if (userId != null) await analytics.setUserId(userId);
+    } else if (previous == AuthStatus.authenticated) {
+      await analytics.reset();
+    }
+
+    if (shouldTrack) {
+      await analytics.trackAppOpened(
+        signedIn: status == AuthStatus.authenticated,
+      );
     }
   }
 
@@ -152,6 +185,9 @@ class _AppScopeState extends State<AppScope> {
         RepositoryProvider<TeamRepository>.value(value: repositories.teams),
         RepositoryProvider<AlarmPlayer>.value(value: repositories.alarm),
         RepositoryProvider<ShareService>.value(value: repositories.share),
+        RepositoryProvider<AnalyticsService>.value(
+          value: repositories.analytics,
+        ),
       ],
       child: MultiBlocProvider(
         providers: [

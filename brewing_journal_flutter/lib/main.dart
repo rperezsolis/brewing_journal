@@ -7,6 +7,10 @@ import 'package:go_router/go_router.dart';
 
 import 'app_scope.dart';
 import 'client.dart';
+import 'data/services/amplitude_analytics_service.dart';
+import 'data/services/analytics_service.dart';
+import 'data/services/flutter_test_env_stub.dart'
+    if (dart.library.io) 'data/services/flutter_test_env_io.dart';
 import 'router.dart';
 import 'ui/core/l10n.dart';
 import 'ui/core/locale_resolution.dart';
@@ -18,7 +22,11 @@ Future<void> main() async {
   usePathUrlStrategy();
   await initializeClient();
 
-  final repositories = AppRepositories();
+  final AnalyticsService analytics = isFlutterTestEnvironment
+      ? const NoOpAnalyticsService()
+      : AmplitudeAnalyticsService();
+  await analytics.start();
+  final repositories = AppRepositories(analytics: analytics);
   final authCubit = AuthCubit(repositories.auth);
   unawaited(authCubit.start());
 

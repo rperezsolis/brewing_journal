@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:brewing_journal_flutter/app_scope.dart';
 import 'package:brewing_journal_flutter/client.dart';
+import 'package:brewing_journal_flutter/data/services/analytics_service.dart';
 import 'package:brewing_journal_flutter/main.dart' as app;
 import 'package:brewing_journal_flutter/router.dart';
 import 'package:brewing_journal_flutter/ui/features/auth/cubit/auth_cubit.dart';
@@ -237,7 +238,9 @@ class AuthHarness {
 
   Future<void> _mountFresh(WidgetTester tester) async {
     client.authSessionManager = createAuthSessionManager();
-    final repositories = AppRepositories();
+    final repositories = AppRepositories(
+      analytics: const NoOpAnalyticsService(),
+    );
     final authCubit = AuthCubit(repositories.auth);
     unawaited(authCubit.start());
     await tester.pumpWidget(
