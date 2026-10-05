@@ -46,6 +46,9 @@ void main() {
       'grind size of 81 characters': (d) =>
           d.copyWith(grindSize: 'a' * (kGrindMaxLength + 1)),
       'blank grinder model': (d) => d.copyWith(grinderModel: ''),
+      'note of 281 characters': (d) => d.copyWith(
+        extractionMethodNote: 'a' * (kExtractionNoteMaxLength + 1),
+      ),
     };
 
     for (final MapEntry(key: name, value: change) in invalid.entries) {
@@ -76,6 +79,9 @@ void main() {
           d.copyWith(flavorTags: [for (var i = 0; i < kMaxTags; i++) 'tag $i']),
       'title of 120 characters': (d) =>
           d.copyWith(title: 'a' * kTitleMaxLength),
+      'note of 280 characters': (d) => d.copyWith(
+        extractionMethodNote: 'a' * kExtractionNoteMaxLength,
+      ),
     };
 
     for (final MapEntry(key: name, value: change) in boundaries.entries) {

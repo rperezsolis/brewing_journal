@@ -264,6 +264,7 @@ class _RegisterIngredientSheetState extends State<RegisterIngredientSheet> {
             TextField(
               key: const Key('ingredient-origin'),
               controller: _origin,
+              maxLength: kIngredientDetailMaxLength,
               decoration: InputDecoration(
                 labelText: l10n.originOptional,
                 border: const OutlineInputBorder(),
@@ -272,6 +273,7 @@ class _RegisterIngredientSheetState extends State<RegisterIngredientSheet> {
             const SizedBox(height: 16),
             TextField(
               controller: _roaster,
+              maxLength: kIngredientDetailMaxLength,
               decoration: InputDecoration(
                 labelText: l10n.roasterOptional,
                 border: const OutlineInputBorder(),
@@ -297,6 +299,7 @@ class _RegisterIngredientSheetState extends State<RegisterIngredientSheet> {
             const SizedBox(height: 16),
             TextField(
               controller: _processing,
+              maxLength: kIngredientDetailMaxLength,
               decoration: InputDecoration(
                 labelText: l10n.processingOptional,
                 hintText: l10n.processingHint,

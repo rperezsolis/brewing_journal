@@ -62,3 +62,7 @@ serverpod:
       displayName: "Brewing journal app"
       auto_launch: true
       target: lib/main.dart
+      # Fixed port so development auth cookies can allow this origin.
+      # `serverpod start` otherwise picks a new port on every launch.
+      web-hostname: localhost
+      web-port: 8090

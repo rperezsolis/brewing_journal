@@ -74,9 +74,8 @@ ValidatedRecipe validateRecipeDraft(RecipeDraft draft) {
     }
   }
 
-  final note = draft.extractionMethodNote?.trim();
-  if (draft.extractionMethod == ExtractionMethod.other &&
-      (note == null || note.isEmpty)) {
+  final note = _extractionNote(draft.extractionMethodNote);
+  if (draft.extractionMethod == ExtractionMethod.other && note == null) {
     throw validationError(
       'extractionMethodNote',
       'is required when the method is other',
@@ -87,7 +86,7 @@ ValidatedRecipe validateRecipeDraft(RecipeDraft draft) {
     title: title,
     grindSize: grindSize,
     grinderModel: grinderModel,
-    extractionMethodNote: (note == null || note.isEmpty) ? null : note,
+    extractionMethodNote: note,
     tags: validateTags(draft.flavorTags),
     instructions: validateInstructions(draft.instructions),
   );
@@ -116,6 +115,18 @@ List<String> validateInstructions(List<String> instructions) {
     for (final instruction in instructions)
       validateText('instructions', instruction, kInstructionMaxLength),
   ];
+}
+
+String? _extractionNote(String? raw) {
+  final note = raw?.trim();
+  if (note == null || note.isEmpty) return null;
+  if (note.length > kExtractionNoteMaxLength) {
+    throw validationError(
+      'extractionMethodNote',
+      'must be at most $kExtractionNoteMaxLength characters',
+    );
+  }
+  return note;
 }
 
 void _checkRange(String field, double value, double min, double max) {

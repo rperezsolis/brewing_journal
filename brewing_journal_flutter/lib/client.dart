@@ -1,4 +1,5 @@
 import 'package:brewing_journal_client/brewing_journal_client.dart';
+import 'package:flutter/foundation.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 import 'package:serverpod_flutter/serverpod_flutter.dart';
 
@@ -26,6 +27,9 @@ Future<void> initializeClient() async {
   client = Client(await serverUrl)
     ..connectivityMonitor = FlutterConnectivityMonitor()
     ..authSessionManager = createAuthSessionManager();
+  // HttpOnly cookies exist only in the browser. Native builds keep the
+  // session in secure storage. Must be set before the first call.
+  if (kIsWeb) client.cookieAuth = true;
 }
 
 /// Session storage for this app.

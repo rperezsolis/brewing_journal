@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:brewing_journal_server/src/brewing/recipe_limits.dart';
+import 'package:brewing_journal_server/src/brewing/recipe_storage.dart';
 import 'package:brewing_journal_server/src/generated/protocol.dart';
 import 'package:test/test.dart';
 
@@ -172,9 +171,9 @@ void main() {
           a.sessionBuilder,
           inserted.recipe.id!,
         );
-        final bytes = ByteData.sublistView(Uint8List.fromList([0xFF, 0xD8, 7]));
+        final bytes = jpegPhotoBytes();
         await sessionBuilder.build().storage.storeFile(
-          storageId: 'public',
+          storageId: kPhotoStorageId,
           path: ticket.path,
           byteData: bytes,
         );
@@ -192,7 +191,7 @@ void main() {
         expect(saved.photos.single.storagePath, isNot(ticket.path));
         expect(saved.photos.single.recipeId, saved.recipe.id);
         final copied = await sessionBuilder.build().storage.retrieveFile(
-          storageId: 'public',
+          storageId: kPhotoStorageId,
           path: saved.photos.single.storagePath,
         );
         expect(copied.lengthInBytes, bytes.lengthInBytes);

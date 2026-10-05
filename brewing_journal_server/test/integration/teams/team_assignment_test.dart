@@ -1,5 +1,4 @@
-import 'dart:typed_data';
-
+import 'package:brewing_journal_server/src/brewing/recipe_storage.dart';
 import 'package:brewing_journal_server/src/generated/protocol.dart';
 import 'package:test/test.dart';
 
@@ -189,11 +188,9 @@ void main() {
         recipe.recipe.id!,
       );
       await sessionBuilder.build().storage.storeFile(
-        storageId: 'public',
+        storageId: kPhotoStorageId,
         path: ticket.path,
-        byteData: ByteData.sublistView(
-          Uint8List.fromList([0xFF, 0xD8, 1]),
-        ),
+        byteData: jpegPhotoBytes(),
       );
       final photo = await endpoints.recipeMedia.confirmUpload(
         owner.sessionBuilder,

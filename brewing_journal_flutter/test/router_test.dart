@@ -14,36 +14,34 @@ void main() {
   String? redirect(AuthStatus status, String location) =>
       authRedirect(status, Uri.parse(location));
 
+  setUp(resetAuthRedirect);
+
   group('authRedirect while unknown', () {
-    test('sends a deep link to splash, keeping it as from', () {
-      expect(
-        redirect(AuthStatus.unknown, '/invite/abc'),
-        '/splash?from=%2Finvite%2Fabc',
-      );
+    test('sends a deep link to splash and restores it after sign-in', () {
+      expect(redirect(AuthStatus.unknown, '/invite/abc'), '/splash');
+      expect(redirect(AuthStatus.unauthenticated, '/splash'), '/sign-in');
+      expect(redirect(AuthStatus.authenticated, '/sign-in'), '/invite/abc');
+      expect(redirect(AuthStatus.authenticated, '/sign-in'), '/invite/abc');
+      expect(redirect(AuthStatus.authenticated, '/invite/abc'), isNull);
     });
 
-    test('sends home to splash without from', () {
+    test('sends home to splash without storing a return path', () {
       expect(redirect(AuthStatus.unknown, '/'), '/splash');
+      expect(redirect(AuthStatus.authenticated, '/splash'), '/');
     });
 
     test('stays on splash', () {
-      expect(redirect(AuthStatus.unknown, '/splash?from=%2Fx'), isNull);
+      expect(redirect(AuthStatus.unknown, '/splash'), isNull);
     });
   });
 
   group('authRedirect while unauthenticated', () {
-    test('keeps from when leaving splash', () {
-      expect(
-        redirect(AuthStatus.unauthenticated, '/splash?from=%2Fsome%2Fpath'),
-        '/sign-in?from=%2Fsome%2Fpath',
-      );
-    });
-
-    test('sends a protected route to sign-in with from', () {
+    test('sends a protected route to sign-in without a from query', () {
       expect(
         redirect(AuthStatus.unauthenticated, '/some/path?q=1'),
-        '/sign-in?from=%2Fsome%2Fpath%3Fq%3D1',
+        '/sign-in',
       );
+      expect(redirect(AuthStatus.authenticated, '/sign-in'), '/some/path?q=1');
     });
 
     test('stays on sign-in', () {
@@ -52,26 +50,20 @@ void main() {
   });
 
   group('authRedirect while authenticated', () {
-    test('goes from sign-in to from', () {
-      expect(
-        redirect(AuthStatus.authenticated, '/sign-in?from=%2Fsome%2Fpath'),
-        '/some/path',
-      );
+    test('goes from sign-in to home when nothing was stored', () {
+      expect(redirect(AuthStatus.authenticated, '/sign-in'), '/');
     });
 
-    test('goes from splash to home when there is no from', () {
-      expect(redirect(AuthStatus.authenticated, '/splash'), '/');
-    });
+    test('ignores an external return path', () {
+      expect(
+        redirect(AuthStatus.unauthenticated, 'https://evil.com'),
+        '/sign-in',
+      );
+      expect(redirect(AuthStatus.authenticated, '/sign-in'), '/');
 
-    test('ignores a from that leaves the app', () {
-      expect(
-        redirect(AuthStatus.authenticated, '/sign-in?from=https://evil.com'),
-        '/',
-      );
-      expect(
-        redirect(AuthStatus.authenticated, '/sign-in?from=%2F%2Fevil.com'),
-        '/',
-      );
+      resetAuthRedirect();
+      expect(redirect(AuthStatus.unauthenticated, '//evil.com'), '/sign-in');
+      expect(redirect(AuthStatus.authenticated, '/sign-in'), '/');
     });
 
     test('leaves other routes alone', () {

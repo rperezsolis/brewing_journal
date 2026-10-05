@@ -5,6 +5,7 @@ import '../common/session_auth.dart';
 import '../generated/protocol.dart';
 import '../teams/team_membership_lookup.dart';
 import 'recipe_access_policy.dart';
+import 'recipe_limits.dart';
 import 'recipe_authors.dart';
 import 'recipe_favorites.dart';
 import 'recipe_storage.dart';
@@ -305,6 +306,7 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
         return (mine | t.teamId.inSet(teamIds)) & name;
       },
       orderByList: (t) => [t.updatedAt.desc(), t.id.desc()],
+      limit: kCatalogScanLimit,
     );
 
     final spelling = <String, String>{};

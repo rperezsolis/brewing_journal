@@ -1,9 +1,15 @@
+import 'dart:typed_data';
+
 import 'package:brewing_journal_server/src/generated/protocol.dart';
 import 'package:serverpod/serverpod.dart';
 import 'package:test/test.dart';
 
 import '../test_tools/serverpod_test_tools.dart';
 import 'test_users.dart';
+
+/// Smallest byte sequence confirmUpload accepts as a JPEG.
+ByteData jpegPhotoBytes() =>
+    ByteData.sublistView(Uint8List.fromList(const [0xFF, 0xD8, 0xFF]));
 
 Matcher throwsBrewing(BrewingErrorCode code) =>
     throwsA(isA<BrewingException>().having((e) => e.code, 'code', code));

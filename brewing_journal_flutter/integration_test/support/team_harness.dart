@@ -297,7 +297,8 @@ class TeamHarness {
 
   /// Opens an invite while signed out and stops on the sign-in screen.
   ///
-  /// The original path is kept as `from`, so the next sign-in returns to it.
+  /// The invite path is remembered in memory, so the next sign-in returns to
+  /// it without putting the token in the sign-in URL.
   Future<void> openInviteSignedOut(WidgetTester tester, String url) async {
     final path = invitePath(url);
     await go(tester, path);
@@ -307,7 +308,8 @@ class TeamHarness {
       'sign-in',
     );
     expect(uri(tester).path, '/sign-in');
-    expect(uri(tester).queryParameters['from'], path);
+    expect(uri(tester).queryParameters['from'], isNull);
+    expect(uri(tester).toString(), isNot(contains(path)));
     expect(find.text(l10n.teamInvite), findsNothing);
   }
 

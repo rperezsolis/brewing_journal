@@ -30,6 +30,7 @@ class IngredientEndpoint extends AuthenticatedEndpoint {
           t.kind.equals(kind) &
           t.nameKey.like(pattern),
       orderBy: (t) => t.nameKey,
+      limit: kCatalogScanLimit,
     );
 
     final sharedIds = await _ingredientIdsOnCallerTeams(session, callerId);
@@ -67,10 +68,10 @@ class IngredientEndpoint extends AuthenticatedEndpoint {
       kind: draft.kind,
       name: name,
       nameKey: nameKeyOf(name),
-      origin: _optional(draft.origin),
-      roaster: _optional(draft.roaster),
+      origin: _detail('origin', draft.origin),
+      roaster: _detail('roaster', draft.roaster),
       roastLevel: draft.roastLevel,
-      processing: _optional(draft.processing),
+      processing: _detail('processing', draft.processing),
     );
   }
 
@@ -109,6 +110,8 @@ Future<Set<UuidValue>> _ingredientIdsOnCallerTeams(
   final recipes = await Recipe.db.find(
     session,
     where: (t) => t.teamId.inSet(teamIds),
+    orderByList: (t) => [t.updatedAt.desc(), t.id.desc()],
+    limit: kTeamRecipeScanLimit,
   );
   return recipes.map((recipe) => recipe.ingredientId).toSet();
 }
@@ -176,9 +179,16 @@ BrewingException _notFound() => BrewingException(
 
 String nameKeyOf(String name) => name.trim().toLowerCase();
 
-String? _optional(String? value) {
+String? _detail(String field, String? value) {
   final trimmed = value?.trim();
-  return (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+  if (trimmed == null || trimmed.isEmpty) return null;
+  if (trimmed.length > kIngredientDetailMaxLength) {
+    throw validationError(
+      field,
+      'must be at most $kIngredientDetailMaxLength characters',
+    );
+  }
+  return trimmed;
 }
 
 /// PostgreSQL's default LIKE escape character is a backslash.

@@ -2,20 +2,37 @@ import 'package:serverpod/serverpod.dart';
 
 import '../generated/protocol.dart';
 
-/// Every recipe photo lives in the `public` storage.
-const kPhotoStorageId = 'public';
+/// Every recipe photo lives in the private storage.
+///
+/// Download links are short-lived and issued only after the caller is allowed
+/// to read the recipe. A public URL would keep working after that access ends.
+const kPhotoStorageId = 'private';
 
-/// Fills [RecipePhoto.publicUrl] for each photo. A photo whose file is missing
-/// gets `null` instead of failing the whole read.
+const _photoUrlTtl = Duration(minutes: 15);
+
+/// Fills [RecipePhoto.publicUrl] with a temporary download URL. A photo whose
+/// file is missing gets `null` instead of failing the whole read.
 Future<List<RecipePhoto>> withPublicUrls(
   Session session,
   List<RecipePhoto> photos,
 ) async {
   if (photos.isEmpty) return photos;
-  final urls = await session.storage.publicDownloadUrls(
-    storageId: kPhotoStorageId,
-    paths: [for (final photo in photos) photo.storagePath],
-  );
+  final urls = <Uri?>[];
+  for (final photo in photos) {
+    try {
+      urls.add(
+        await session.storage.temporaryDownloadUrl(
+          storageId: kPhotoStorageId,
+          path: photo.storagePath,
+          options: const TemporaryDownloadUrlOptions(
+            expirationDuration: _photoUrlTtl,
+          ),
+        ),
+      );
+    } on CloudStorageException {
+      urls.add(null);
+    }
+  }
   return [
     for (var i = 0; i < photos.length; i++)
       photos[i].copyWith(publicUrl: urls[i]),

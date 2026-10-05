@@ -270,6 +270,7 @@ class _StepExtractionState extends State<StepExtraction> {
                   TextField(
                     key: const Key('extraction-method-note'),
                     controller: _note,
+                    maxLength: kExtractionNoteMaxLength,
                     onChanged: _cubit.setExtractionMethodNote,
                     decoration: InputDecoration(
                       labelText: l10n.describeTheMethod,

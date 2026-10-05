@@ -1,5 +1,4 @@
-import 'dart:typed_data';
-
+import 'package:brewing_journal_server/src/brewing/recipe_storage.dart';
 import 'package:brewing_journal_server/src/generated/protocol.dart';
 import 'package:test/test.dart';
 
@@ -28,9 +27,9 @@ void main() {
       );
       final session = sessionBuilder.build();
       await session.storage.storeFile(
-        storageId: 'public',
+        storageId: kPhotoStorageId,
         path: ticket.path,
-        byteData: ByteData(4),
+        byteData: jpegPhotoBytes(),
       );
       await endpoints.recipeMedia.confirmUpload(
         a.sessionBuilder,
@@ -64,7 +63,7 @@ void main() {
       );
       expect(
         await session.storage.fileExists(
-          storageId: 'public',
+          storageId: kPhotoStorageId,
           path: ticket.path,
         ),
         isFalse,

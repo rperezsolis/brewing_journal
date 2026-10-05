@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:brewing_journal_server/src/brewing/recipe_limits.dart';
+import 'package:brewing_journal_server/src/brewing/recipe_storage.dart';
 import 'package:brewing_journal_server/src/generated/protocol.dart';
 import 'package:serverpod/serverpod.dart';
 import 'package:test/test.dart';
@@ -21,9 +22,9 @@ void main() {
 
     Future<void> storeFile(String path) =>
         sessionBuilder.build().storage.storeFile(
-          storageId: 'public',
+          storageId: kPhotoStorageId,
           path: path,
-          byteData: ByteData.sublistView(Uint8List.fromList([0xFF, 0xD8, 1])),
+          byteData: jpegPhotoBytes(),
         );
 
     Future<RecipePhoto> upload() async {
@@ -59,10 +60,13 @@ void main() {
         expect(photo.id, isNotNull);
         expect(photo.recipeId, recipeId);
         expect(photo.sortOrder, 0);
-        expect(photo.publicUrl, isNotNull);
+        expect(photo.publicUrl.toString(), contains('temporaryFile'));
 
         final detail = await endpoints.recipe.get(a.sessionBuilder, recipeId);
-        expect(detail.photos.single.publicUrl, isNotNull);
+        expect(
+          detail.photos.single.publicUrl.toString(),
+          contains('temporaryFile'),
+        );
       },
     );
 
@@ -178,8 +182,40 @@ void main() {
         expect(await RecipePhoto.db.findById(session, photo.id!), isNull);
         expect(
           await session.storage.fileExists(
-            storageId: 'public',
+            storageId: kPhotoStorageId,
             path: photo.storagePath,
+          ),
+          isFalse,
+        );
+      },
+    );
+
+    test(
+      'when the file is not a jpeg then validation and it is removed',
+      () async {
+        final ticket = await endpoints.recipeMedia.createUploadDescription(
+          a.sessionBuilder,
+          recipeId,
+        );
+        final session = sessionBuilder.build();
+        await session.storage.storeFile(
+          storageId: kPhotoStorageId,
+          path: ticket.path,
+          byteData: ByteData.sublistView(Uint8List.fromList([1, 2, 3, 4])),
+        );
+
+        await expectLater(
+          endpoints.recipeMedia.confirmUpload(
+            a.sessionBuilder,
+            recipeId,
+            ticket.path,
+          ),
+          throwsBrewing(BrewingErrorCode.validation),
+        );
+        expect(
+          await session.storage.fileExists(
+            storageId: kPhotoStorageId,
+            path: ticket.path,
           ),
           isFalse,
         );

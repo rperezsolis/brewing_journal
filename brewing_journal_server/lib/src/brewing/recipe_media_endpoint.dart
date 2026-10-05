@@ -30,6 +30,7 @@ class RecipeMediaEndpoint extends AuthenticatedEndpoint {
       path: path,
       options: const UploadOptions(
         preventOverwrite: true,
+        maxFileSize: kMaxPhotoBytes,
         metadata: FileMetadata(contentType: 'image/jpeg'),
       ),
     );
@@ -72,6 +73,7 @@ class RecipeMediaEndpoint extends AuthenticatedEndpoint {
         message: 'The photo could not be verified',
       );
     }
+    await _requireJpeg(session, path);
 
     for (var attempt = 0; ; attempt++) {
       try {
@@ -132,4 +134,29 @@ class RecipeMediaEndpoint extends AuthenticatedEndpoint {
 
   Future<RecipePhoto> _withUrl(Session session, RecipePhoto photo) async =>
       (await withPublicUrls(session, [photo])).single;
+}
+
+/// JPEG files start with the SOI marker and the next marker byte.
+Future<void> _requireJpeg(Session session, String path) async {
+  final stat = await session.storage.statFile(
+    storageId: kPhotoStorageId,
+    path: path,
+  );
+  final bytes = await session.storage.retrieveFile(
+    storageId: kPhotoStorageId,
+    path: path,
+  );
+  final header = bytes.buffer.asUint8List(
+    bytes.offsetInBytes,
+    bytes.lengthInBytes,
+  );
+  final isJpeg =
+      stat.size <= kMaxPhotoBytes &&
+      header.length >= 3 &&
+      header[0] == 0xFF &&
+      header[1] == 0xD8 &&
+      header[2] == 0xFF;
+  if (isJpeg) return;
+  await deletePhotoFiles(session, [path]);
+  throw validationError('path', 'must be a JPEG image of at most 2 MB');
 }

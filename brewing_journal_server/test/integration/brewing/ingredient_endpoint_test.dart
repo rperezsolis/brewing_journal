@@ -1,3 +1,4 @@
+import 'package:brewing_journal_server/src/brewing/recipe_limits.dart';
 import 'package:brewing_journal_server/src/generated/protocol.dart';
 import 'package:test/test.dart';
 
@@ -70,6 +71,20 @@ void main() {
         expect(second.id, first.id);
       },
     );
+
+    test('when origin is too long then validation', () async {
+      await expectLater(
+        endpoints.ingredient.register(
+          a.sessionBuilder,
+          IngredientDraft(
+            kind: BeverageKind.coffee,
+            name: 'Kenya',
+            origin: 'a' * (kIngredientDetailMaxLength + 1),
+          ),
+        ),
+        throwsBrewing(BrewingErrorCode.validation),
+      );
+    });
 
     test('when registering an empty name then it gives validation', () async {
       await expectLater(

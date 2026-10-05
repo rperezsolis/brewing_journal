@@ -157,35 +157,53 @@ UuidValue? _parseId(String? value) {
   }
 }
 
-/// Sends the user to `/splash` or `/sign-in` until they are signed in, and
-/// carries the original location as `from` on every hop so it survives both.
+/// Path to restore after sign-in. Kept in memory so an invite token in the
+/// path is not copied into the sign-in URL.
+String? _returnAfterSignIn;
+
+@visibleForTesting
+void resetAuthRedirect() {
+  _returnAfterSignIn = null;
+}
+
+/// Sends the user to `/splash` or `/sign-in` until they are signed in.
+///
+/// The return path is remembered here, not in a query parameter, and reading
+/// it does not clear it: GoRouter may call this more than once before the
+/// navigation completes. It is cleared once the signed-in user arrives there.
 String? authRedirect(AuthStatus status, Uri uri) {
   final path = uri.path;
   final onGate = path == Routes.splash || path == Routes.signIn;
-  final target = onGate ? _safeFrom(uri) : uri.toString();
 
   switch (status) {
     case AuthStatus.unknown:
-      return path == Routes.splash ? null : _withFrom(Routes.splash, target);
+      if (path == Routes.splash) return null;
+      _remember(uri);
+      return Routes.splash;
     case AuthStatus.unauthenticated:
-      return path == Routes.signIn ? null : _withFrom(Routes.signIn, target);
+      if (path == Routes.signIn) return null;
+      _remember(uri);
+      return Routes.signIn;
     case AuthStatus.authenticated:
-      return onGate ? (target ?? Routes.home) : null;
+      if (!onGate) {
+        if (_returnAfterSignIn == uri.toString()) {
+          _returnAfterSignIn = null;
+        }
+        return null;
+      }
+      return _returnAfterSignIn ?? Routes.home;
   }
 }
 
-/// Only in-app paths are accepted, so `from` can't point outside the app.
-String? _safeFrom(Uri uri) {
-  final from = uri.queryParameters['from'];
-  if (from == null || !from.startsWith('/') || from.startsWith('//')) {
-    return null;
+void _remember(Uri uri) {
+  if (uri.path == Routes.splash ||
+      uri.path == Routes.signIn ||
+      uri.path == Routes.home) {
+    return;
   }
-  return from;
-}
-
-String _withFrom(String path, String? from) {
-  if (from == null || from == Routes.home) return path;
-  return Uri(path: path, queryParameters: {'from': from}).toString();
+  final target = uri.toString();
+  if (!target.startsWith('/') || target.startsWith('//')) return;
+  _returnAfterSignIn = target;
 }
 
 /// Adapts a [Stream] to the [Listenable] that `refreshListenable` expects.

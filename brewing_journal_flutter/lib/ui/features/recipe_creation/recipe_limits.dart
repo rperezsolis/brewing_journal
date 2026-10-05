@@ -11,6 +11,8 @@ const kGrindMaxLength = 80;
 const kMaxPhotos = 6;
 
 const kIngredientNameMaxLength = 120;
+const kIngredientDetailMaxLength = 120;
+const kExtractionNoteMaxLength = 280;
 const kMinWaterTempC = 1.0;
 const kMaxWaterTempC = 100.0;
 const kMinDoseGrams = 0.1;
