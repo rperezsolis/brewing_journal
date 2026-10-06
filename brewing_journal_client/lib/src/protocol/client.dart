@@ -270,6 +270,29 @@ class EndpointJwtRefresh extends _iacc.EndpointRefreshJwtTokens {
       );
 }
 
+/// Saves the signed-in user's preferred name.
+///
+/// [UserProfile.userName] is the first name or nickname. [UserProfile.fullName]
+/// is a separate full name. Email registration creates the profile with only
+/// the email, so sign-up writes the preferred name here.
+/// {@category Endpoint}
+class EndpointUserProfileEdit extends _isc.EndpointRef {
+  EndpointUserProfileEdit(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'userProfileEdit';
+
+  /// Stores [userName] as the signed-in user's preferred name.
+  ///
+  /// Blank values are rejected. Surrounding whitespace is removed.
+  _ida.Future<_iacc.UserProfileModel> changeUserName(String userName) =>
+      caller.callServerEndpoint<_iacc.UserProfileModel>(
+        'userProfileEdit',
+        'changeUserName',
+        {'userName': userName},
+      );
+}
+
 /// The caller's coffee beans, tea leaves, and matcha grades, plus ingredients
 /// used by recipes on the caller's teams.
 /// {@category Endpoint}
@@ -647,6 +670,7 @@ class Client extends _isc.ServerpodClientShared {
        ) {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
+    userProfileEdit = EndpointUserProfileEdit(this);
     ingredient = EndpointIngredient(this);
     recipe = EndpointRecipe(this);
     recipeMedia = EndpointRecipeMedia(this);
@@ -657,6 +681,8 @@ class Client extends _isc.ServerpodClientShared {
   late final EndpointEmailIdp emailIdp;
 
   late final EndpointJwtRefresh jwtRefresh;
+
+  late final EndpointUserProfileEdit userProfileEdit;
 
   late final EndpointIngredient ingredient;
 
@@ -672,6 +698,7 @@ class Client extends _isc.ServerpodClientShared {
   Map<String, _isc.EndpointRef> get endpointRefLookup => {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
+    'userProfileEdit': userProfileEdit,
     'ingredient': ingredient,
     'recipe': recipe,
     'recipeMedia': recipeMedia,

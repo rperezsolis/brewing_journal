@@ -10,6 +10,7 @@ void main() {
 
     expect(email.title, 'Sign in with Email');
     expect(email.emailLabel, 'Email');
+    expect(l10n.authPreferredName, 'Preferred name');
     expect(email.passwordLabel, 'Password');
     expect(email.forgotPassword, 'Forgot Password');
     expect(email.signUp, 'Create Account');
@@ -25,6 +26,10 @@ void main() {
       final email = emailSignInTextsFor(lookupAppLocalizations(locale));
       expect(email.title, 'Iniciar sesión con correo electrónico');
       expect(email.emailLabel, 'Correo electrónico');
+      expect(
+        lookupAppLocalizations(locale).authPreferredName,
+        'Nombre preferido',
+      );
       expect(email.passwordLabel, 'Contraseña');
       expect(email.forgotPassword, 'Olvidé mi contraseña');
       expect(email.signUp, 'Crear cuenta');
@@ -36,6 +41,10 @@ void main() {
       final email = emailSignInTextsFor(lookupAppLocalizations(locale));
       expect(email.title, 'Entrar com e-mail');
       expect(email.emailLabel, 'E-mail');
+      expect(
+        lookupAppLocalizations(locale).authPreferredName,
+        'Nome preferido',
+      );
       expect(email.passwordLabel, 'Senha');
       expect(email.forgotPassword, 'Esqueci a senha');
       expect(email.signUp, 'Criar conta');

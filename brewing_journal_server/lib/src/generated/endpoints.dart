@@ -25,6 +25,7 @@ import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _iais;
 import '../auth/email_idp_endpoint.dart' as _iuc1hd5t;
 import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
+import '../auth/user_profile_edit_endpoint.dart' as _ije0zjyg;
 import '../brewing/ingredient_endpoint.dart' as _iow895b6;
 import '../brewing/recipe_endpoint.dart' as _i34apttk;
 import '../brewing/recipe_media_endpoint.dart' as _i76lspal;
@@ -44,6 +45,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'jwtRefresh',
+          null,
+        ),
+      'userProfileEdit': _ije0zjyg.UserProfileEditEndpoint()
+        ..initialize(
+          server,
+          'userProfileEdit',
           null,
         ),
       'ingredient': _iow895b6.IngredientEndpoint()
@@ -273,6 +280,33 @@ class Endpoints extends _is.EndpointDispatch {
                       .refreshAccessToken(
                         session,
                         refreshToken: params['refreshToken'],
+                      ),
+        ),
+      },
+    );
+    connectors['userProfileEdit'] = _is.EndpointConnector(
+      name: 'userProfileEdit',
+      endpoint: endpoints['userProfileEdit']!,
+      methodConnectors: {
+        'changeUserName': _is.MethodConnector(
+          name: 'changeUserName',
+          params: {
+            'userName': _is.ParameterDescription(
+              name: 'userName',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['userProfileEdit']
+                          as _ije0zjyg.UserProfileEditEndpoint)
+                      .changeUserName(
+                        session,
+                        params['userName'],
                       ),
         ),
       },

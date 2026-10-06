@@ -190,6 +190,7 @@
   "viewersCantChangeTeamFavorites": "Leitores não podem alterar os favoritos da equipe.",
   "authSignInWithEmail": "Entrar com e-mail",
   "authEmail": "E-mail",
+  "authPreferredName": "Nome preferido",
   "authPassword": "Senha",
   "authForgotPassword": "Esqueci a senha",
   "authCreateAccount": "Criar conta",

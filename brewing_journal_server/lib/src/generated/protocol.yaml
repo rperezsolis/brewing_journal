@@ -9,6 +9,8 @@ emailIdp:
   - hasAccount:
 jwtRefresh:
   - refreshAccessToken:
+userProfileEdit:
+  - changeUserName:
 ingredient:
   - search:
   - register:

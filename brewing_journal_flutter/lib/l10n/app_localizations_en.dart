@@ -648,6 +648,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authEmail => 'Email';
 
   @override
+  String get authPreferredName => 'Preferred name';
+
+  @override
   String get authPassword => 'Password';
 
   @override

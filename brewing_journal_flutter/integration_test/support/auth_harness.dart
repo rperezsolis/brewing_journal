@@ -4,9 +4,11 @@ import 'dart:io';
 import 'package:brewing_journal_flutter/app_scope.dart';
 import 'package:brewing_journal_flutter/client.dart';
 import 'package:brewing_journal_flutter/data/services/analytics_service.dart';
+import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
 import 'package:brewing_journal_flutter/main.dart' as app;
 import 'package:brewing_journal_flutter/router.dart';
 import 'package:brewing_journal_flutter/ui/core/analytics/analytics_route_observer.dart';
+import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
 import 'package:brewing_journal_flutter/ui/features/auth/cubit/auth_cubit.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_list/view/recipe_list_screen.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +16,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:postgres/postgres.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
+import 'package:serverpod_auth_idp_flutter/widgets.dart';
 
 /// Drives the email sign-in UI against the development server.
 ///
@@ -25,8 +28,22 @@ class AuthHarness {
   var _accountSequence = 0;
   Connection? _db;
 
+  /// Preferred name used when a test does not pass its own.
+  static const defaultPreferredName = 'Test Brewer';
+
   /// Email of the account created by [signUp], when one has been created.
   String? accountEmail;
+
+  /// Preferred name stored for [accountEmail], when [signUp] has finished.
+  String? accountPreferredName;
+
+  /// Copy for the device language, matching [BrewSyncApp].
+  AppLocalizations get l10n => lookupAppLocalizations(
+    resolveBrewSyncLocales(
+      WidgetsBinding.instance.platformDispatcher.locales,
+      AppLocalizations.supportedLocales,
+    ),
+  );
 
   String freshEmail() {
     _accountSequence += 1;
@@ -74,27 +91,32 @@ class AuthHarness {
   Future<void> signUp(
     WidgetTester tester,
     String email,
-    String password,
-  ) async {
-    await _enterField(tester, 'Email', email);
+    String password, {
+    String preferredName = defaultPreferredName,
+  }) async {
+    final name = preferredName.trim();
+    await _enterPreferredName(tester, name);
+    await _enterField(tester, l10n.authEmail, email);
     _blockPastedVerificationCode(tester);
     try {
       final code = await _continueToVerification(tester, email);
       await _submitCode(tester, code);
       await _waitFor(
         tester,
-        find.text('Set account password'),
+        find.text(l10n.authSetAccountPasswordTitle),
         'Set account password',
       );
-      await _enterField(tester, 'Password', password);
-      await _tapButton(tester, 'Sign up');
+      await _enterField(tester, l10n.authPassword, password);
+      await _tapButton(tester, l10n.authCreateAccount);
       await _waitFor(
         tester,
         find.byType(RecipeListScreen),
         'the journal',
       );
       expect(find.byKey(const ValueKey('sign-in')), findsNothing);
+      await _waitForPreferredName(email, name);
       accountEmail = email;
+      accountPreferredName = name;
     } finally {
       _restoreClipboard(tester);
     }
@@ -104,7 +126,8 @@ class AuthHarness {
     WidgetTester tester,
     String email,
   ) async {
-    await _enterField(tester, 'Email', email);
+    await _enterPreferredName(tester, defaultPreferredName);
+    await _enterField(tester, l10n.authEmail, email);
     _blockPastedVerificationCode(tester);
     try {
       final code = await _continueToVerification(tester, email);
@@ -114,7 +137,7 @@ class AuthHarness {
         find.textContaining('Invalid verification code'),
         'the invalid-code error',
       );
-      expect(find.text('Verify account'), findsOneWidget);
+      expect(find.text(l10n.authVerifyAccountTitle), findsOneWidget);
       expect(find.byType(RecipeListScreen), findsNothing);
       expect(find.byKey(const ValueKey('sign-in')), findsOneWidget);
     } finally {
@@ -132,9 +155,9 @@ class AuthHarness {
     String password,
   ) async {
     await showLogin(tester);
-    await _enterField(tester, 'Email', email);
-    await _enterField(tester, 'Password', password);
-    await _tapButton(tester, 'Sign in');
+    await _enterField(tester, l10n.authEmail, email);
+    await _enterLoginPassword(tester, password);
+    await _tapButton(tester, l10n.authSignIn);
     await _waitUntil(
       tester,
       () => find.byKey(const ValueKey('sign-in')).evaluate().isEmpty,
@@ -153,17 +176,17 @@ class AuthHarness {
   }
 
   Future<void> showLogin(WidgetTester tester) async {
-    if (find.text('Sign In with email').evaluate().isNotEmpty) return;
-    await tester.tap(find.widgetWithText(TextButton, 'Sign in'));
+    if (find.text(l10n.authSignInWithEmail).evaluate().isNotEmpty) return;
+    await tester.tap(find.widgetWithText(TextButton, l10n.authSignIn));
     await tester.pump();
     await _waitFor(
       tester,
-      find.text('Sign In with email'),
+      find.text(l10n.authSignInWithEmail),
       'Sign In with email',
     );
     await _waitUntil(
       tester,
-      () => find.text('Sign Up with email').evaluate().isEmpty,
+      () => find.byKey(const ValueKey('preferred-name')).evaluate().isEmpty,
       'the sign-up form to leave',
     );
   }
@@ -180,15 +203,15 @@ class AuthHarness {
       messenger.clearSnackBars();
     }
     await tester.pump();
-    await _enterField(tester, 'Email', email);
-    await _enterField(tester, 'Password', password);
-    await _tapButton(tester, 'Sign in');
+    await _enterField(tester, l10n.authEmail, email);
+    await _enterLoginPassword(tester, password);
+    await _tapButton(tester, l10n.authSignIn);
     await _waitFor(
       tester,
       find.textContaining('Invalid email or password'),
       'the invalid-credentials error',
     );
-    expect(find.text('Sign In with email'), findsOneWidget);
+    expect(find.text(l10n.authSignInWithEmail), findsOneWidget);
     expect(find.byType(RecipeListScreen), findsNothing);
   }
 
@@ -277,6 +300,26 @@ class AuthHarness {
     fail('A restored session did not open the journal.');
   }
 
+  /// The login form's password field keeps the package's English label.
+  Future<void> _enterLoginPassword(WidgetTester tester, String value) async {
+    final field = find.descendant(
+      of: find.byType(PasswordField),
+      matching: find.byType(TextField),
+    );
+    expect(field, findsOneWidget, reason: 'No password field.');
+    await tester.ensureVisible(field);
+    await tester.enterText(field, value);
+    await tester.pump();
+  }
+
+  Future<void> _enterPreferredName(WidgetTester tester, String name) async {
+    final field = find.byKey(const ValueKey('preferred-name'));
+    expect(field, findsOneWidget, reason: 'No preferred name field.');
+    await tester.ensureVisible(field);
+    await tester.enterText(field, name);
+    await tester.pump();
+  }
+
   Future<void> _enterField(
     WidgetTester tester,
     String label,
@@ -358,16 +401,22 @@ class AuthHarness {
     WidgetTester tester,
     String email,
   ) async {
-    await _tapButton(tester, 'Continue');
+    await _tapButton(tester, l10n.authContinue);
     final codeFuture = registrationCode(email);
     final deadline = DateTime.now().add(const Duration(seconds: 20));
     while (DateTime.now().isBefore(deadline)) {
       await tester.pump(const Duration(milliseconds: 16));
-      if (find.text('Set account password').evaluate().isNotEmpty) {
+      if (find.text(l10n.authSetAccountPasswordTitle).evaluate().isNotEmpty) {
         fail('A pasted verification code finished registration.');
       }
-      final onVerify = find.text('Verify account').evaluate().isNotEmpty;
-      final signingUp = find.text('Sign Up with email').evaluate().isNotEmpty;
+      final onVerify = find
+          .text(l10n.authVerifyAccountTitle)
+          .evaluate()
+          .isNotEmpty;
+      final signingUp = find
+          .byKey(const ValueKey('preferred-name'))
+          .evaluate()
+          .isNotEmpty;
       if (onVerify && !signingUp) {
         return codeFuture;
       }
@@ -397,7 +446,9 @@ class AuthHarness {
     final deadline = DateTime.now().add(const Duration(milliseconds: 800));
     while (DateTime.now().isBefore(deadline)) {
       await tester.pump(const Duration(milliseconds: 100));
-      if (find.text('Set account password').evaluate().isNotEmpty) return;
+      if (find.text(l10n.authSetAccountPasswordTitle).evaluate().isNotEmpty) {
+        return;
+      }
       if (find
           .textContaining('Invalid verification code')
           .evaluate()
@@ -405,7 +456,7 @@ class AuthHarness {
         return;
       }
     }
-    await _tapButton(tester, 'Verify');
+    await _tapButton(tester, l10n.authVerify);
   }
 
   String _differentCode(String code) {
@@ -413,6 +464,26 @@ class AuthHarness {
     chars[0] = chars[0] == '2' ? '3' : '2';
     final changed = chars.join();
     return changed == code ? '33333333' : changed;
+  }
+
+  /// Waits until sign-up has stored [name] as this account's user name.
+  Future<void> _waitForPreferredName(String email, String name) async {
+    final db = await _database();
+    final deadline = DateTime.now().add(const Duration(seconds: 10));
+    while (DateTime.now().isBefore(deadline)) {
+      final rows = await db.execute(
+        Sql.named(
+          'SELECT "userName" FROM serverpod_auth_core_profile '
+          'WHERE email = @email:text',
+        ),
+        parameters: {'email': email.toLowerCase()},
+      );
+      if (rows.isNotEmpty && rows.first.first == name) return;
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    }
+    throw StateError(
+      'Preferred name "$name" was not stored for $email.',
+    );
   }
 
   Future<String> registrationCode(String email) async {

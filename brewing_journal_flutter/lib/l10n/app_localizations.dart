@@ -1248,6 +1248,12 @@ abstract class AppLocalizations {
   /// **'Email'**
   String get authEmail;
 
+  /// Label for the required name field on the sign-up form
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred name'**
+  String get authPreferredName;
+
   /// Label for the password field
   ///
   /// In en, this message translates to:

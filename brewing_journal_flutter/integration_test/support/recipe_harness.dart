@@ -565,13 +565,18 @@ class RecipeHarness {
   }
 
   Future<void> expectOnList(WidgetTester tester, String title) async {
+    final list = find.byType(RecipeListScreen);
     await _waitFor(
       tester,
-      find.descendant(
-        of: find.byType(RecipeListScreen),
-        matching: find.text(title),
-      ),
+      find.descendant(of: list, matching: find.text(title)),
       title,
+    );
+    final name = auth.accountPreferredName;
+    if (name == null) return;
+    expect(
+      find.descendant(of: list, matching: find.textContaining(name)),
+      findsAtLeastNWidgets(1),
+      reason: 'The recipe tile should show the preferred name.',
     );
   }
 

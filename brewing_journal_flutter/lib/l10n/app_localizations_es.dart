@@ -656,6 +656,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get authEmail => 'Correo electrónico';
 
   @override
+  String get authPreferredName => 'Nombre preferido';
+
+  @override
   String get authPassword => 'Contraseña';
 
   @override
@@ -1409,6 +1412,9 @@ class AppLocalizationsEs419 extends AppLocalizationsEs {
 
   @override
   String get authEmail => 'Correo electrónico';
+
+  @override
+  String get authPreferredName => 'Nombre preferido';
 
   @override
   String get authPassword => 'Contraseña';

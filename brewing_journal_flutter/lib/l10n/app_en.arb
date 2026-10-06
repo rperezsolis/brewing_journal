@@ -506,6 +506,8 @@
   "@authSignInWithEmail": { "description": "Title of the email sign-in form" },
   "authEmail": "Email",
   "@authEmail": { "description": "Label for the email field" },
+  "authPreferredName": "Preferred name",
+  "@authPreferredName": { "description": "Label for the required name field on the sign-up form" },
   "authPassword": "Password",
   "@authPassword": { "description": "Label for the password field" },
   "authForgotPassword": "Forgot Password",

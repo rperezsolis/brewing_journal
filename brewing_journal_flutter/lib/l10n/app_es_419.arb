@@ -190,6 +190,7 @@
   "viewersCantChangeTeamFavorites": "Los lectores no pueden cambiar los favoritos del equipo.",
   "authSignInWithEmail": "Iniciar sesión con correo electrónico",
   "authEmail": "Correo electrónico",
+  "authPreferredName": "Nombre preferido",
   "authPassword": "Contraseña",
   "authForgotPassword": "Olvidé mi contraseña",
   "authCreateAccount": "Crear cuenta",

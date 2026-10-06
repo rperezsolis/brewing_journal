@@ -32,13 +32,36 @@ void main() {
     });
 
     test(
-      'when the owner has a profile then each recipe shows that name',
+      'when the profile has a preferred name then that name is the author',
+      () async {
+        final b = await createTestUser(sessionBuilder);
+        await UserProfile.db.insertRow(
+          sessionBuilder.build(),
+          UserProfile(
+            authUserId: b.authUserId,
+            userName: 'Ada',
+            email: 'ada@example.com',
+          ),
+        );
+        await createRecipe(endpoints, b, title: 'theirs');
+
+        final recipes = await endpoints.recipe.listMine(
+          b.sessionBuilder,
+          10,
+          0,
+        );
+        expect(recipes.single.authorName, 'Ada');
+      },
+    );
+
+    test(
+      'when the profile has a full name and a preferred name then the full name is the author',
       () async {
         await UserProfile.db.insertRow(
           sessionBuilder.build(),
           UserProfile(
             authUserId: a.authUserId,
-            userName: 'ada',
+            userName: 'Ada',
             fullName: 'Ada Lovelace',
             email: 'ada@example.com',
           ),

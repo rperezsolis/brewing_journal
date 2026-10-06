@@ -3,6 +3,7 @@ import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 
 import '../../../../client.dart';
 import '../../../core/l10n.dart';
+import 'preferred_name_email_sign_in.dart';
 import 'sign_in_localization.dart';
 
 class SignInScreen extends StatelessWidget {
@@ -13,10 +14,26 @@ class SignInScreen extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final l10n = context.l10n;
 
+    void showError(Object error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          // SignInWidget only forwards user-facing exceptions,
+          // whose toString() is the message to display.
+          content: Text(
+            error.toString(),
+            style: TextStyle(color: colors.onErrorContainer),
+          ),
+          backgroundColor: colors.errorContainer,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+
     return Scaffold(
       body: SafeArea(
-        // SignInWidget has a fixed height (~380px), so it scrolls on short
-        // screens and stays centered on tall ones.
+        // The email flow is taller than a short window, so the page scrolls
+        // there and stays centered on a tall one.
         child: LayoutBuilder(
           builder: (context, constraints) => SingleChildScrollView(
             child: ConstrainedBox(
@@ -30,20 +47,11 @@ class SignInScreen extends StatelessWidget {
                   passwordRequirementTexts: passwordRequirementTextsFor(l10n),
                   child: SignInWidget(
                     client: client,
-                    onError: (error) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          // SignInWidget only forwards user-facing exceptions,
-                          // whose toString() is the message to display.
-                          content: Text(
-                            error.toString(),
-                            style: TextStyle(color: colors.onErrorContainer),
-                          ),
-                          backgroundColor: colors.errorContainer,
-                          duration: const Duration(seconds: 5),
-                        ),
-                      );
-                    },
+                    onError: showError,
+                    emailSignInWidget: PreferredNameEmailSignIn(
+                      client: client,
+                      onError: showError,
+                    ),
                   ),
                 ),
               ),

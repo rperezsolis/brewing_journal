@@ -22,7 +22,13 @@ void main() {
 
     testWidgets('US-1.1 signs up and opens the journal', (tester) async {
       await harness.ensureSignedOut(tester);
-      await harness.signUp(tester, harness.freshEmail(), _password);
+      await harness.signUp(
+        tester,
+        harness.freshEmail(),
+        _password,
+        preferredName: 'Ada Lovelace',
+      );
+      expect(harness.accountPreferredName, 'Ada Lovelace');
       expect(find.byType(RecipeListScreen), findsOneWidget);
       expect(find.byKey(const ValueKey('sign-out')), findsOneWidget);
     });
