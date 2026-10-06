@@ -45,6 +45,7 @@ class RecipeTile extends StatelessWidget {
           ? recipe.extractionMethodNote!
           : recipe.extractionMethod.label(l10n),
       '${_formatNumber(recipe.doseGrams)} g',
+      if (recipe.waterMl != null) '${_formatNumber(recipe.waterMl!)} ml',
       '${_formatNumber(recipe.waterTempC)} °C',
     ].join(' · ');
     return Card(

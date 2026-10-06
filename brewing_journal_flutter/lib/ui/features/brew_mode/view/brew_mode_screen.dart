@@ -607,6 +607,11 @@ class _ParameterBlock extends StatelessWidget {
                   icon: Icons.scale_outlined,
                   label: '${_formatNumber(recipe.doseGrams)} g',
                 ),
+                if (recipe.waterMl != null)
+                  _FactChip(
+                    icon: Icons.water_drop_outlined,
+                    label: '${_formatNumber(recipe.waterMl!)} ml',
+                  ),
                 _FactChip(
                   icon: Icons.thermostat,
                   label: '${_formatNumber(recipe.waterTempC)} °C',

@@ -89,6 +89,7 @@ class RecipeEndpoint extends AuthenticatedEndpoint {
             title: valid.title,
             waterTempC: draft.waterTempC,
             doseGrams: draft.doseGrams,
+            waterMl: draft.waterMl,
             grindSize: valid.grindSize,
             grinderModel: valid.grinderModel,
             extractionMethod: draft.extractionMethod,

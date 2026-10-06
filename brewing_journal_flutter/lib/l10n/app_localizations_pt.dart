@@ -229,6 +229,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get dose => 'Dose';
 
   @override
+  String get waterQuantity => 'Quantidade de água';
+
+  @override
   String get grindSize => 'Tamanho da moagem';
 
   @override
@@ -443,6 +446,16 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String brewingSummaryWithWater(
+    String method,
+    String dose,
+    String water,
+    String temp,
+  ) {
+    return 'Preparo: $method · $dose g · $water ml · $temp °C';
+  }
+
+  @override
   String grindingSummary(String grind, String grinder) {
     return 'Moagem: $grind · $grinder';
   }
@@ -573,6 +586,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String validationDose(String min, String max) {
     return 'A dose deve estar entre $min e $max g';
+  }
+
+  @override
+  String validationWaterQuantity(String min, String max) {
+    return 'A quantidade de água deve estar entre $min e $max ml';
   }
 
   @override
@@ -986,6 +1004,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get dose => 'Dose';
 
   @override
+  String get waterQuantity => 'Quantidade de água';
+
+  @override
   String get grindSize => 'Tamanho da moagem';
 
   @override
@@ -1200,6 +1221,16 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   }
 
   @override
+  String brewingSummaryWithWater(
+    String method,
+    String dose,
+    String water,
+    String temp,
+  ) {
+    return 'Preparo: $method · $dose g · $water ml · $temp °C';
+  }
+
+  @override
   String grindingSummary(String grind, String grinder) {
     return 'Moagem: $grind · $grinder';
   }
@@ -1330,6 +1361,11 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String validationDose(String min, String max) {
     return 'A dose deve estar entre $min e $max g';
+  }
+
+  @override
+  String validationWaterQuantity(String min, String max) {
+    return 'A quantidade de água deve estar entre $min e $max ml';
   }
 
   @override

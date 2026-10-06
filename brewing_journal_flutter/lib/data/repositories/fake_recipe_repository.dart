@@ -49,6 +49,7 @@ class FakeRecipeRepository implements RecipeRepository {
       title: draft.title.trim(),
       waterTempC: draft.waterTempC,
       doseGrams: draft.doseGrams,
+      waterMl: draft.waterMl,
       grindSize: draft.grindSize.trim(),
       grinderModel: draft.grinderModel.trim(),
       extractionMethod: draft.extractionMethod,

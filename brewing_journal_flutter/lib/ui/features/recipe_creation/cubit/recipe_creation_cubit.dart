@@ -66,6 +66,7 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
         title: recipe.title,
         waterTempC: recipe.waterTempC,
         doseGrams: recipe.doseGrams,
+        waterMl: recipe.waterMl,
         grindSize: recipe.grindSize,
         grinderModel: recipe.grinderModel,
         extractionMethod: recipe.extractionMethod,
@@ -188,6 +189,8 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
       emit(state.copyWith(waterTempC: () => value));
 
   void setDose(double? value) => emit(state.copyWith(doseGrams: () => value));
+
+  void setWater(double? value) => emit(state.copyWith(waterMl: () => value));
 
   void setGrindSize(String value) => emit(state.copyWith(grindSize: value));
 
@@ -444,6 +447,7 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
       case RecipeWizardStep.extraction:
         final temp = s.waterTempC;
         final dose = s.doseGrams;
+        final water = s.waterMl;
         final duration = s.extractionDuration;
         if (s.title.trim().isEmpty) return validationMessage('addTitle');
         if (temp == null || temp < kMinWaterTempC || temp > kMaxWaterTempC) {
@@ -456,6 +460,12 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
           return validationMessage('dose', [
             formatLimit(kMinDoseGrams),
             formatLimit(kMaxDoseGrams),
+          ]);
+        }
+        if (water == null || water < kMinWaterMl || water > kMaxWaterMl) {
+          return validationMessage('waterMl', [
+            formatLimit(kMinWaterMl),
+            formatLimit(kMaxWaterMl),
           ]);
         }
         if (s.grindSize.trim().isEmpty) {
@@ -514,6 +524,7 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
       title: s.title.trim(),
       waterTempC: s.waterTempC!,
       doseGrams: s.doseGrams!,
+      waterMl: s.waterMl!,
       grindSize: s.grindSize.trim(),
       grinderModel: s.grinderModel.trim(),
       extractionMethod: s.extractionMethod!,

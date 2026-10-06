@@ -57,6 +57,7 @@ String? localizeValidation(AppLocalizations l10n, String message) {
       int.parse(args[1]),
     ),
     'dose' => l10n.validationDose(args[0], args[1]),
+    'waterMl' => l10n.validationWaterQuantity(args[0], args[1]),
     'addGrindSize' => l10n.validationAddGrindSize,
     'addGrinder' => l10n.validationAddGrinder,
     'chooseMethod' => l10n.validationChooseMethod,

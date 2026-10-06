@@ -28,6 +28,7 @@ class RecipeCreationState extends Equatable {
     this.title = '',
     this.waterTempC,
     this.doseGrams,
+    this.waterMl,
     this.grindSize = '',
     this.grinderModel = '',
     this.grinderSuggestions = const [],
@@ -76,6 +77,7 @@ class RecipeCreationState extends Equatable {
   final String title;
   final double? waterTempC;
   final double? doseGrams;
+  final double? waterMl;
   final String grindSize;
   final String grinderModel;
 
@@ -128,6 +130,7 @@ class RecipeCreationState extends Equatable {
     String? title,
     ValueGetter<double?>? waterTempC,
     ValueGetter<double?>? doseGrams,
+    ValueGetter<double?>? waterMl,
     String? grindSize,
     String? grinderModel,
     List<String>? grinderSuggestions,
@@ -171,6 +174,7 @@ class RecipeCreationState extends Equatable {
       title: title ?? this.title,
       waterTempC: waterTempC != null ? waterTempC() : this.waterTempC,
       doseGrams: doseGrams != null ? doseGrams() : this.doseGrams,
+      waterMl: waterMl != null ? waterMl() : this.waterMl,
       grindSize: grindSize ?? this.grindSize,
       grinderModel: grinderModel ?? this.grinderModel,
       grinderSuggestions: grinderSuggestions ?? this.grinderSuggestions,
@@ -214,6 +218,7 @@ class RecipeCreationState extends Equatable {
     title,
     waterTempC,
     doseGrams,
+    waterMl,
     grindSize,
     grinderModel,
     grinderSuggestions,

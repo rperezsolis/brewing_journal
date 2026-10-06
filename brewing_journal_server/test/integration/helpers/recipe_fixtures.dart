@@ -34,6 +34,7 @@ RecipeDraft sampleDraft(
   title: 'Morning V60',
   waterTempC: 93,
   doseGrams: 15,
+  waterMl: 250,
   grindSize: 'Medium-fine',
   grinderModel: 'Comandante C40',
   extractionMethod: ExtractionMethod.v60,

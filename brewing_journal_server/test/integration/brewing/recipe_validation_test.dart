@@ -25,6 +25,8 @@ void main() {
       'temperature 101': (d) => d.copyWith(waterTempC: 101),
       'dose 0': (d) => d.copyWith(doseGrams: 0),
       'dose 501': (d) => d.copyWith(doseGrams: 501),
+      'water 0': (d) => d.copyWith(waterMl: 0),
+      'water 5001': (d) => d.copyWith(waterMl: 5001),
       'duration 0s': (d) => d.copyWith(extractionDuration: Duration.zero),
       'duration 2h1s': (d) => d.copyWith(
         extractionDuration: const Duration(hours: 2, seconds: 1),
@@ -65,6 +67,8 @@ void main() {
           d.copyWith(waterTempC: 1, doseGrams: 0.1),
       'temperature 100 and dose 500': (d) =>
           d.copyWith(waterTempC: 100, doseGrams: 500),
+      'water 1': (d) => d.copyWith(waterMl: 1),
+      'water 5000': (d) => d.copyWith(waterMl: 5000),
       'duration 1s': (d) =>
           d.copyWith(extractionDuration: const Duration(seconds: 1)),
       'duration 2h': (d) =>
@@ -93,6 +97,11 @@ void main() {
         expect(detail.recipe.id, isNotNull);
       });
     }
+
+    test('when water is sent then it is stored', () async {
+      final detail = await endpoints.recipe.save(a.sessionBuilder, valid);
+      expect(detail.recipe.waterMl, 250);
+    });
 
     test('when no duration is sent then it is stored as null', () async {
       final detail = await endpoints.recipe.save(

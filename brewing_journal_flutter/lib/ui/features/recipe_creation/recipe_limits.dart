@@ -17,5 +17,7 @@ const kMinWaterTempC = 1.0;
 const kMaxWaterTempC = 100.0;
 const kMinDoseGrams = 0.1;
 const kMaxDoseGrams = 500.0;
+const kMinWaterMl = 1.0;
+const kMaxWaterMl = 5000.0;
 const kMaxExtractionDuration = Duration(hours: 2);
 const kMaxScore = 5;

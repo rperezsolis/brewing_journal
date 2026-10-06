@@ -55,6 +55,7 @@ ValidatedRecipe validateRecipeDraft(RecipeDraft draft) {
 
   _checkRange('waterTempC', draft.waterTempC, kMinWaterTempC, kMaxWaterTempC);
   _checkRange('doseGrams', draft.doseGrams, kMinDoseGrams, kMaxDoseGrams);
+  _checkRange('waterMl', draft.waterMl, kMinWaterMl, kMaxWaterMl);
 
   final duration = draft.extractionDuration;
   if (duration != null &&

@@ -14,7 +14,10 @@ void main() {
 
     expect(find.byKey(const Key('share-instructions')), findsNothing);
     expect(find.text('Coffee: Ethiopia Guji'), findsOneWidget);
-    expect(find.text('Brewing: V60 · 15 g · 93 °C'), findsOneWidget);
+    expect(
+      find.text('Brewing: V60 · 15 g · 250 ml · 93 °C'),
+      findsOneWidget,
+    );
     expect(
       find.text('Grinding: Medium-fine · Comandante C40'),
       findsOneWidget,
@@ -90,6 +93,7 @@ RecipeDetail _detail(List<String> instructions, {Duration? duration}) {
       title: 'Morning V60',
       waterTempC: 93,
       doseGrams: 15,
+      waterMl: 250,
       grindSize: 'Medium-fine',
       grinderModel: 'Comandante C40',
       extractionMethod: ExtractionMethod.v60,

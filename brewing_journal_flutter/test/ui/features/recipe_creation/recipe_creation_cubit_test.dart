@@ -47,6 +47,7 @@ void main() {
       ..setTitle('Morning V60')
       ..setWaterTemp(93)
       ..setDose(15)
+      ..setWater(250)
       ..setGrindSize('Medium-fine')
       ..setGrinderModel('Comandante')
       ..setExtractionMethod(ExtractionMethod.v60);
@@ -146,6 +147,7 @@ void main() {
         () => cubit.setTitle('Title'),
         () => cubit.setWaterTemp(93),
         () => cubit.setDose(15),
+        () => cubit.setWater(250),
         () => cubit.setGrindSize('fine'),
         () => cubit.setGrinderModel('Niche'),
         () => cubit.setExtractionMethod(ExtractionMethod.other),
@@ -162,7 +164,7 @@ void main() {
       expect(cubit.state.step, RecipeWizardStep.flavor);
     });
 
-    test('out-of-range temperature and dose are rejected', () async {
+    test('out-of-range temperature, dose, and water are rejected', () async {
       await fillRequired(cubit);
       cubit.next();
       cubit.setWaterTemp(101);
@@ -171,7 +173,11 @@ void main() {
         ..setWaterTemp(93)
         ..setDose(0);
       expect(cubit.next(), isFalse);
-      cubit.setDose(0.1);
+      cubit
+        ..setDose(0.1)
+        ..setWater(0);
+      expect(cubit.next(), isFalse);
+      cubit.setWater(5000);
       expect(cubit.next(), isTrue);
     });
 
@@ -302,6 +308,7 @@ void main() {
       expect(cubit.state.saveStatus, SaveStatus.success);
       expect(cubit.state.recipeId, isNotNull);
       expect(recipes.savedDrafts.single.instructions, ['stir']);
+      expect(recipes.savedDrafts.single.waterMl, 250);
       expect(recipes.savedDrafts.single.id, isNull);
     });
 

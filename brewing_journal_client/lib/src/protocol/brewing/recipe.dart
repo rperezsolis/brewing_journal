@@ -34,6 +34,7 @@ abstract class Recipe
     required this.title,
     required this.waterTempC,
     required this.doseGrams,
+    this.waterMl,
     required this.grindSize,
     required this.grinderModel,
     required this.extractionMethod,
@@ -65,6 +66,7 @@ abstract class Recipe
     required String title,
     required double waterTempC,
     required double doseGrams,
+    double? waterMl,
     required String grindSize,
     required String grinderModel,
     required _io8keuuf.ExtractionMethod extractionMethod,
@@ -115,6 +117,7 @@ abstract class Recipe
       title: jsonSerialization['title'] as String,
       waterTempC: (jsonSerialization['waterTempC'] as num).toDouble(),
       doseGrams: (jsonSerialization['doseGrams'] as num).toDouble(),
+      waterMl: (jsonSerialization['waterMl'] as num?)?.toDouble(),
       grindSize: jsonSerialization['grindSize'] as String,
       grinderModel: jsonSerialization['grinderModel'] as String,
       extractionMethod: _io8keuuf.ExtractionMethod.fromJson(
@@ -182,6 +185,9 @@ abstract class Recipe
 
   double doseGrams;
 
+  /// Milliliters of water. Null on recipes saved before this was recorded.
+  double? waterMl;
+
   String grindSize;
 
   String grinderModel;
@@ -230,6 +236,7 @@ abstract class Recipe
     String? title,
     double? waterTempC,
     double? doseGrams,
+    double? waterMl,
     String? grindSize,
     String? grinderModel,
     _io8keuuf.ExtractionMethod? extractionMethod,
@@ -261,6 +268,7 @@ abstract class Recipe
       'title': title,
       'waterTempC': waterTempC,
       'doseGrams': doseGrams,
+      if (waterMl != null) 'waterMl': waterMl,
       'grindSize': grindSize,
       'grinderModel': grinderModel,
       'extractionMethod': extractionMethod.toJson(),
@@ -299,6 +307,7 @@ abstract class Recipe
       'title': title,
       'waterTempC': waterTempC,
       'doseGrams': doseGrams,
+      if (waterMl != null) 'waterMl': waterMl,
       'grindSize': grindSize,
       'grinderModel': grinderModel,
       'extractionMethod': extractionMethod.toJson(),
@@ -347,6 +356,7 @@ class _RecipeImpl extends Recipe {
     required String title,
     required double waterTempC,
     required double doseGrams,
+    double? waterMl,
     required String grindSize,
     required String grinderModel,
     required _io8keuuf.ExtractionMethod extractionMethod,
@@ -374,6 +384,7 @@ class _RecipeImpl extends Recipe {
          title: title,
          waterTempC: waterTempC,
          doseGrams: doseGrams,
+         waterMl: waterMl,
          grindSize: grindSize,
          grinderModel: grinderModel,
          extractionMethod: extractionMethod,
@@ -407,6 +418,7 @@ class _RecipeImpl extends Recipe {
     String? title,
     double? waterTempC,
     double? doseGrams,
+    Object? waterMl = _Undefined,
     String? grindSize,
     String? grinderModel,
     _io8keuuf.ExtractionMethod? extractionMethod,
@@ -437,6 +449,7 @@ class _RecipeImpl extends Recipe {
       title: title ?? this.title,
       waterTempC: waterTempC ?? this.waterTempC,
       doseGrams: doseGrams ?? this.doseGrams,
+      waterMl: waterMl is double? ? waterMl : this.waterMl,
       grindSize: grindSize ?? this.grindSize,
       grinderModel: grinderModel ?? this.grinderModel,
       extractionMethod: extractionMethod ?? this.extractionMethod,

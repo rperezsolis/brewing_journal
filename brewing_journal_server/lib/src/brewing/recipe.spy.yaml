@@ -8,6 +8,8 @@ fields:
   title: String
   waterTempC: double
   doseGrams: double
+  ### Milliliters of water. Null on recipes saved before this was recorded.
+  waterMl: double?
   grindSize: String
   grinderModel: String
   extractionMethod: ExtractionMethod

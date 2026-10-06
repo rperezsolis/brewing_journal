@@ -27,6 +27,7 @@ void main() {
       title: 'Morning V60',
       waterTempC: 93,
       doseGrams: 15,
+      waterMl: 250,
       grindSize: 'fine',
       grinderModel: 'Niche',
       extractionMethod: ExtractionMethod.v60,

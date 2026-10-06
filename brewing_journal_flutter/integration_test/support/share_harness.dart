@@ -123,9 +123,10 @@ class ShareHarness {
     expect(_onCard(l10n.kindAndName(kind, ingredient)), findsOneWidget);
     expect(
       _onCard(
-        l10n.brewingSummary(
+        l10n.brewingSummaryWithWater(
           method,
           RecipeHarness.dose,
+          RecipeHarness.water,
           RecipeHarness.temperature,
         ),
       ),

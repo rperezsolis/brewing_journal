@@ -28,6 +28,7 @@ class _StepExtractionState extends State<StepExtraction> {
   late final TextEditingController _title;
   late final TextEditingController _temp;
   late final TextEditingController _dose;
+  late final TextEditingController _water;
   late final TextEditingController _grind;
   late final TextEditingController _grinder;
   late final TextEditingController _note;
@@ -43,6 +44,7 @@ class _StepExtractionState extends State<StepExtraction> {
     _title = TextEditingController(text: s.title);
     _temp = TextEditingController(text: _formatNumber(s.waterTempC));
     _dose = TextEditingController(text: _formatNumber(s.doseGrams));
+    _water = TextEditingController(text: _formatNumber(s.waterMl));
     _grind = TextEditingController(text: s.grindSize);
     _grinder = TextEditingController(text: s.grinderModel);
     _note = TextEditingController(text: s.extractionMethodNote);
@@ -61,6 +63,7 @@ class _StepExtractionState extends State<StepExtraction> {
       _title,
       _temp,
       _dose,
+      _water,
       _grind,
       _grinder,
       _note,
@@ -193,6 +196,22 @@ class _StepExtractionState extends State<StepExtraction> {
                 ),
               ),
             ],
+          ),
+          gap,
+          TextField(
+            key: const Key('extraction-water'),
+            controller: _water,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+            ],
+            onChanged: (text) => _cubit.setWater(_parseNumber(text)),
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              labelText: l10n.waterQuantity,
+              suffixText: 'ml',
+              border: const OutlineInputBorder(),
+            ),
           ),
           gap,
           TextField(

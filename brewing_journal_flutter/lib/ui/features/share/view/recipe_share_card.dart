@@ -71,11 +71,18 @@ class RecipeShareCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          l10n.brewingSummary(
-                            method,
-                            _formatNumber(recipe.doseGrams),
-                            _formatNumber(recipe.waterTempC),
-                          ),
+                          recipe.waterMl == null
+                              ? l10n.brewingSummary(
+                                  method,
+                                  _formatNumber(recipe.doseGrams),
+                                  _formatNumber(recipe.waterTempC),
+                                )
+                              : l10n.brewingSummaryWithWater(
+                                  method,
+                                  _formatNumber(recipe.doseGrams),
+                                  _formatNumber(recipe.waterMl!),
+                                  _formatNumber(recipe.waterTempC),
+                                ),
                         ),
                         Text(
                           l10n.grindingSummary(

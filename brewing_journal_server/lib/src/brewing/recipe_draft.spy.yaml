@@ -6,6 +6,7 @@ fields:
   title: String
   waterTempC: double
   doseGrams: double
+  waterMl: double
   grindSize: String
   grinderModel: String
   extractionMethod: ExtractionMethod

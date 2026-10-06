@@ -24,6 +24,7 @@ abstract class RecipeDraft
     required this.title,
     required this.waterTempC,
     required this.doseGrams,
+    required this.waterMl,
     required this.grindSize,
     required this.grinderModel,
     required this.extractionMethod,
@@ -44,6 +45,7 @@ abstract class RecipeDraft
     required String title,
     required double waterTempC,
     required double doseGrams,
+    required double waterMl,
     required String grindSize,
     required String grinderModel,
     required _io8keuuf.ExtractionMethod extractionMethod,
@@ -71,6 +73,7 @@ abstract class RecipeDraft
       title: jsonSerialization['title'] as String,
       waterTempC: (jsonSerialization['waterTempC'] as num).toDouble(),
       doseGrams: (jsonSerialization['doseGrams'] as num).toDouble(),
+      waterMl: (jsonSerialization['waterMl'] as num).toDouble(),
       grindSize: jsonSerialization['grindSize'] as String,
       grinderModel: jsonSerialization['grinderModel'] as String,
       extractionMethod: _io8keuuf.ExtractionMethod.fromJson(
@@ -108,6 +111,8 @@ abstract class RecipeDraft
 
   double doseGrams;
 
+  double waterMl;
+
   String grindSize;
 
   String grinderModel;
@@ -140,6 +145,7 @@ abstract class RecipeDraft
     String? title,
     double? waterTempC,
     double? doseGrams,
+    double? waterMl,
     String? grindSize,
     String? grinderModel,
     _io8keuuf.ExtractionMethod? extractionMethod,
@@ -162,6 +168,7 @@ abstract class RecipeDraft
       'title': title,
       'waterTempC': waterTempC,
       'doseGrams': doseGrams,
+      'waterMl': waterMl,
       'grindSize': grindSize,
       'grinderModel': grinderModel,
       'extractionMethod': extractionMethod.toJson(),
@@ -188,6 +195,7 @@ abstract class RecipeDraft
       'title': title,
       'waterTempC': waterTempC,
       'doseGrams': doseGrams,
+      'waterMl': waterMl,
       'grindSize': grindSize,
       'grinderModel': grinderModel,
       'extractionMethod': extractionMethod.toJson(),
@@ -220,6 +228,7 @@ class _RecipeDraftImpl extends RecipeDraft {
     required String title,
     required double waterTempC,
     required double doseGrams,
+    required double waterMl,
     required String grindSize,
     required String grinderModel,
     required _io8keuuf.ExtractionMethod extractionMethod,
@@ -238,6 +247,7 @@ class _RecipeDraftImpl extends RecipeDraft {
          title: title,
          waterTempC: waterTempC,
          doseGrams: doseGrams,
+         waterMl: waterMl,
          grindSize: grindSize,
          grinderModel: grinderModel,
          extractionMethod: extractionMethod,
@@ -262,6 +272,7 @@ class _RecipeDraftImpl extends RecipeDraft {
     String? title,
     double? waterTempC,
     double? doseGrams,
+    double? waterMl,
     String? grindSize,
     String? grinderModel,
     _io8keuuf.ExtractionMethod? extractionMethod,
@@ -281,6 +292,7 @@ class _RecipeDraftImpl extends RecipeDraft {
       title: title ?? this.title,
       waterTempC: waterTempC ?? this.waterTempC,
       doseGrams: doseGrams ?? this.doseGrams,
+      waterMl: waterMl ?? this.waterMl,
       grindSize: grindSize ?? this.grindSize,
       grinderModel: grinderModel ?? this.grinderModel,
       extractionMethod: extractionMethod ?? this.extractionMethod,

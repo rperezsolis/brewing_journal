@@ -226,6 +226,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dose => 'Dose';
 
   @override
+  String get waterQuantity => 'Water amount';
+
+  @override
   String get grindSize => 'Grind size';
 
   @override
@@ -437,6 +440,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String brewingSummaryWithWater(
+    String method,
+    String dose,
+    String water,
+    String temp,
+  ) {
+    return 'Brewing: $method · $dose g · $water ml · $temp °C';
+  }
+
+  @override
   String grindingSummary(String grind, String grinder) {
     return 'Grinding: $grind · $grinder';
   }
@@ -565,6 +578,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String validationDose(String min, String max) {
     return 'Dose must be between $min and $max g';
+  }
+
+  @override
+  String validationWaterQuantity(String min, String max) {
+    return 'Water amount must be between $min and $max ml';
   }
 
   @override

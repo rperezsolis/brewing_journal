@@ -510,6 +510,12 @@ abstract class AppLocalizations {
   /// **'Dose'**
   String get dose;
 
+  /// Label for the water quantity field, in milliliters
+  ///
+  /// In en, this message translates to:
+  /// **'Water amount'**
+  String get waterQuantity;
+
   /// Label for the grind size field
   ///
   /// In en, this message translates to:
@@ -888,11 +894,22 @@ abstract class AppLocalizations {
   /// **'Made with BrewSync'**
   String get madeWithBrewSync;
 
-  /// Share card line for method, dose, and water temperature
+  /// Share card line for method, dose, and water temperature when no water quantity was recorded
   ///
   /// In en, this message translates to:
   /// **'Brewing: {method} · {dose} g · {temp} °C'**
   String brewingSummary(String method, String dose, String temp);
+
+  /// Share card line for method, dose, water quantity, and water temperature
+  ///
+  /// In en, this message translates to:
+  /// **'Brewing: {method} · {dose} g · {water} ml · {temp} °C'**
+  String brewingSummaryWithWater(
+    String method,
+    String dose,
+    String water,
+    String temp,
+  );
 
   /// Share card line for grind size and grinder
   ///
@@ -1103,6 +1120,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dose must be between {min} and {max} g'**
   String validationDose(String min, String max);
+
+  /// Water quantity out of range. min and max are already formatted numbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Water amount must be between {min} and {max} ml'**
+  String validationWaterQuantity(String min, String max);
 
   /// Wizard blocked because grind size is empty
   ///

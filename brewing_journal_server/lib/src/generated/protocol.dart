@@ -238,6 +238,12 @@ class Protocol extends _is.DatabaseSerializationManager {
           dartType: 'double',
         ),
         _isp.ColumnDefinition(
+          name: 'waterMl',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: true,
+          dartType: 'double?',
+        ),
+        _isp.ColumnDefinition(
           name: 'grindSize',
           columnType: _isp.ColumnType.text,
           isNullable: false,

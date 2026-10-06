@@ -157,6 +157,8 @@
   "@waterTemperature": { "description": "Label for the water temperature field" },
   "dose": "Dose",
   "@dose": { "description": "Label for the dose field" },
+  "waterQuantity": "Water amount",
+  "@waterQuantity": { "description": "Label for the water quantity field, in milliliters" },
   "grindSize": "Grind size",
   "@grindSize": { "description": "Label for the grind size field" },
   "grindSizeHint": "Medium-fine, 18 clicks…",
@@ -317,10 +319,20 @@
   "@madeWithBrewSync": { "description": "Footer of the share card" },
   "brewingSummary": "Brewing: {method} · {dose} g · {temp} °C",
   "@brewingSummary": {
-    "description": "Share card line for method, dose, and water temperature",
+    "description": "Share card line for method, dose, and water temperature when no water quantity was recorded",
     "placeholders": {
       "method": { "type": "String", "example": "V60" },
       "dose": { "type": "String", "example": "15" },
+      "temp": { "type": "String", "example": "93" }
+    }
+  },
+  "brewingSummaryWithWater": "Brewing: {method} · {dose} g · {water} ml · {temp} °C",
+  "@brewingSummaryWithWater": {
+    "description": "Share card line for method, dose, water quantity, and water temperature",
+    "placeholders": {
+      "method": { "type": "String", "example": "V60" },
+      "dose": { "type": "String", "example": "15" },
+      "water": { "type": "String", "example": "250" },
       "temp": { "type": "String", "example": "93" }
     }
   },
@@ -453,6 +465,14 @@
     "placeholders": {
       "min": { "type": "String", "example": "0.1" },
       "max": { "type": "String", "example": "500" }
+    }
+  },
+  "validationWaterQuantity": "Water amount must be between {min} and {max} ml",
+  "@validationWaterQuantity": {
+    "description": "Water quantity out of range. min and max are already formatted numbers.",
+    "placeholders": {
+      "min": { "type": "String", "example": "1" },
+      "max": { "type": "String", "example": "5000" }
     }
   },
   "validationAddGrindSize": "Add a grind size",

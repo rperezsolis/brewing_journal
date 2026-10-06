@@ -26,6 +26,7 @@ void main() {
       title: title,
       waterTempC: 93,
       doseGrams: dose,
+      waterMl: 250,
       grindSize: 'fine',
       grinderModel: 'Niche',
       extractionMethod: ExtractionMethod.v60,

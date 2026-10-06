@@ -42,6 +42,7 @@ class RecipeHarness {
   static const grinder = 'Comandante C40';
   static const temperature = '93';
   static const dose = '15';
+  static const water = '250';
 
   Directory? _photoDirectory;
   File? _oversizedPhoto;
@@ -293,6 +294,7 @@ class RecipeHarness {
     await _enter(tester, const Key('extraction-title'), title);
     await _enter(tester, const Key('extraction-temp'), temperature);
     await _enter(tester, const Key('extraction-dose'), dose);
+    await _enter(tester, const Key('extraction-water'), water);
     await _enter(tester, const Key('extraction-grind'), grind);
     await _replaceField(
       tester,
