@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 
+import '../../../core/analytics/screen_names.dart';
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/l10n.dart';
 
 /// Email sign-in that asks for a preferred name before creating an account.
@@ -154,25 +156,31 @@ class _PreferredNameRegistrationForm extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 24),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            textStyle: Theme.of(context).textTheme.bodyLarge,
-            shape: const StadiumBorder(),
-            fixedSize: const Size(double.infinity, 48),
-          ),
+        TrackedButton(
+          buttonLabel: 'continue',
+          buttonAction: 'start_registration',
+          currentScreen: ScreenNames.signIn,
           onPressed: controller.isLoading || !canContinue
               ? null
               : () => unawaited(controller.startRegistration()),
-          child: controller.isLoading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(texts.continueAction),
+          builder: (context, onPressed) => ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              textStyle: Theme.of(context).textTheme.bodyLarge,
+              shape: const StadiumBorder(),
+              fixedSize: const Size(double.infinity, 48),
+            ),
+            onPressed: onPressed,
+            child: controller.isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(texts.continueAction),
+          ),
         ),
         const SizedBox(height: 8),
         Row(
@@ -182,6 +190,8 @@ class _PreferredNameRegistrationForm extends StatelessWidget {
             const SizedBox(width: 4),
             _LinkButton(
               label: texts.signIn,
+              buttonLabel: 'sign_in',
+              buttonAction: 'open_sign_in',
               onPressed: () => controller.navigateTo(EmailFlowScreen.login),
             ),
           ],
@@ -192,9 +202,16 @@ class _PreferredNameRegistrationForm extends StatelessWidget {
 }
 
 class _LinkButton extends StatelessWidget {
-  const _LinkButton({required this.label, required this.onPressed});
+  const _LinkButton({
+    required this.label,
+    required this.buttonLabel,
+    required this.buttonAction,
+    required this.onPressed,
+  });
 
   final String label;
+  final String buttonLabel;
+  final String buttonAction;
   final VoidCallback onPressed;
 
   @override
@@ -202,20 +219,26 @@ class _LinkButton extends StatelessWidget {
     final fontSize = Theme.of(context).textTheme.bodyMedium?.fontSize ?? 0;
     return SizedBox(
       height: math.max(24, fontSize),
-      child: TextButton(
+      child: TrackedButton(
+        buttonLabel: buttonLabel,
+        buttonAction: buttonAction,
+        currentScreen: ScreenNames.signIn,
         onPressed: onPressed,
-        style: TextButton.styleFrom(
-          padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+        builder: (context, onPressed) => TextButton(
+          onPressed: onPressed,
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontSize: fontSize,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),

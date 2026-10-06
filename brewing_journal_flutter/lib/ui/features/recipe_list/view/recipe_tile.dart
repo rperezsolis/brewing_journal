@@ -2,6 +2,7 @@ import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/brewing_labels.dart';
 import '../../../core/l10n.dart';
 import '../../../core/widgets/favorite_icon_button.dart';
@@ -13,6 +14,7 @@ class RecipeTile extends StatelessWidget {
     required this.recipe,
     required this.onTap,
     required this.onFavorite,
+    required this.currentScreen,
     this.favoriteBusy = false,
     this.favoriteEnabled = true,
   });
@@ -20,6 +22,9 @@ class RecipeTile extends StatelessWidget {
   final Recipe recipe;
   final VoidCallback onTap;
   final VoidCallback onFavorite;
+
+  /// Screen that owns the list, recorded with each tap.
+  final String currentScreen;
   final bool favoriteBusy;
 
   /// When false the heart stays visible and selected, but does not respond.
@@ -46,47 +51,63 @@ class RecipeTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       clipBehavior: Clip.antiAlias,
       color: Theme.of(context).colorScheme.surfaceContainer,
-      child: ListTile(
-        isThreeLine: true,
-        titleAlignment: ListTileTitleAlignment.center,
-        leading: CircleAvatar(
-          child: Icon(switch (ingredient?.kind) {
-            BeverageKind.tea => Icons.emoji_food_beverage_outlined,
-            BeverageKind.matcha => Icons.eco_outlined,
-            _ => Icons.coffee_outlined,
-          }),
-        ),
-        title: Text(recipe.title),
-        subtitle: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.recipeByline(
-                author == null || author.isEmpty ? l10n.unknownAuthor : author,
-                updated,
+      child: TrackedButton(
+        buttonLabel: 'recipe',
+        buttonAction: 'open_recipe',
+        currentScreen: currentScreen,
+        onPressed: onTap,
+        builder: (context, onPressed) => ListTile(
+          isThreeLine: true,
+          titleAlignment: ListTileTitleAlignment.center,
+          leading: CircleAvatar(
+            child: Icon(switch (ingredient?.kind) {
+              BeverageKind.tea => Icons.emoji_food_beverage_outlined,
+              BeverageKind.matcha => Icons.eco_outlined,
+              _ => Icons.coffee_outlined,
+            }),
+          ),
+          title: Text(recipe.title),
+          subtitle: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.recipeByline(
+                  author == null || author.isEmpty
+                      ? l10n.unknownAuthor
+                      : author,
+                  updated,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(summary, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ],
+              Text(summary, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TrackedButton(
+                buttonLabel: 'favorite',
+                buttonAction: recipe.isFavorite
+                    ? 'remove_favorite'
+                    : 'save_favorite',
+                currentScreen: currentScreen,
+                onPressed: favoriteBusy || !favoriteEnabled ? null : onFavorite,
+                builder: (context, onPressed) => FavoriteIconButton(
+                  key: ValueKey('recipe-favorite-${recipe.id?.uuid}'),
+                  selected: recipe.isFavorite,
+                  tooltip: favoriteEnabled
+                      ? null
+                      : l10n.viewersCantChangeTeamFavorites,
+                  onPressed: onPressed,
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+          onTap: onPressed,
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FavoriteIconButton(
-              key: ValueKey('recipe-favorite-${recipe.id?.uuid}'),
-              selected: recipe.isFavorite,
-              tooltip: favoriteEnabled
-                  ? null
-                  : l10n.viewersCantChangeTeamFavorites,
-              onPressed: favoriteBusy || !favoriteEnabled ? null : onFavorite,
-            ),
-            const Icon(Icons.chevron_right),
-          ],
-        ),
-        onTap: onTap,
       ),
     );
   }

@@ -4,8 +4,10 @@ import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/brewing_labels.dart';
 import '../../../core/l10n.dart';
+import 'wizard_screen_name.dart';
 import '../cubit/recipe_creation_cubit.dart';
 import '../cubit/recipe_creation_state.dart';
 import '../recipe_limits.dart';
@@ -86,8 +88,17 @@ class _StepIngredientState extends State<StepIngredient> {
               ],
               selected: {state.ingredientKind},
               onSelectionChanged: (kinds) {
-                _debounce?.cancel();
-                unawaited(_cubit.searchIngredients(kinds.single, _query.text));
+                final kind = kinds.single;
+                trackButtonPress(
+                  context,
+                  buttonLabel: 'beverage_kind',
+                  buttonAction: 'select_${kind.name}',
+                  currentScreen: wizardScreenName(context),
+                  onPressed: () {
+                    _debounce?.cancel();
+                    unawaited(_cubit.searchIngredients(kind, _query.text));
+                  },
+                )?.call();
               },
             ),
             const SizedBox(height: 16),
@@ -129,26 +140,32 @@ class _StepIngredientState extends State<StepIngredient> {
             ),
             const SizedBox(height: 8),
             for (final ingredient in state.ingredientResults)
-              ListTile(
-                key: ValueKey(ingredient.id),
-                title: Text(ingredient.name),
-                subtitle: ingredientDetails(ingredient, l10n).isEmpty
-                    ? null
-                    : Text(ingredientDetails(ingredient, l10n)),
-                trailing: ingredient.id == state.adoptingIngredientId
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : ingredient.id == selected?.id
-                    ? Icon(Icons.check, color: theme.colorScheme.primary)
-                    : null,
-                selected:
-                    ingredient.id == selected?.id ||
-                    ingredient.id == state.adoptingIngredientId,
-                onTap: state.adoptingIngredientId == null
+              TrackedButton(
+                buttonLabel: 'ingredient',
+                buttonAction: 'select_ingredient',
+                currentScreen: wizardScreenName(context),
+                onPressed: state.adoptingIngredientId == null
                     ? () => unawaited(_cubit.selectIngredient(ingredient))
                     : null,
+                builder: (context, onPressed) => ListTile(
+                  key: ValueKey(ingredient.id),
+                  title: Text(ingredient.name),
+                  subtitle: ingredientDetails(ingredient, l10n).isEmpty
+                      ? null
+                      : Text(ingredientDetails(ingredient, l10n)),
+                  trailing: ingredient.id == state.adoptingIngredientId
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : ingredient.id == selected?.id
+                      ? Icon(Icons.check, color: theme.colorScheme.primary)
+                      : null,
+                  selected:
+                      ingredient.id == selected?.id ||
+                      ingredient.id == state.adoptingIngredientId,
+                  onTap: onPressed,
+                ),
               ),
             if (state.ingredientResults.isEmpty && !state.searchingIngredients)
               Padding(
@@ -165,11 +182,17 @@ class _StepIngredientState extends State<StepIngredient> {
               ),
             const SizedBox(height: 8),
             Align(
-              child: OutlinedButton.icon(
-                key: const Key('ingredient-register-open'),
+              child: TrackedButton(
+                buttonLabel: 'register_ingredient',
+                buttonAction: 'open_register_ingredient',
+                currentScreen: wizardScreenName(context),
                 onPressed: _openRegisterSheet,
-                icon: const Icon(Icons.add),
-                label: Text(l10n.registerNewKind(kindName)),
+                builder: (context, onPressed) => OutlinedButton.icon(
+                  key: const Key('ingredient-register-open'),
+                  onPressed: onPressed,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.registerNewKind(kindName)),
+                ),
               ),
             ),
           ],
@@ -307,15 +330,21 @@ class _RegisterIngredientSheetState extends State<RegisterIngredientSheet> {
               ),
             ),
             const SizedBox(height: 24),
-            FilledButton(
-              key: const Key('ingredient-register'),
+            TrackedButton(
+              buttonLabel: 'register',
+              buttonAction: 'register_ingredient',
+              currentScreen: wizardScreenName(context),
               onPressed: busy ? null : _register,
-              child: busy
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(l10n.register),
+              builder: (context, onPressed) => FilledButton(
+                key: const Key('ingredient-register'),
+                onPressed: onPressed,
+                child: busy
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.register),
+              ),
             ),
           ],
         ),

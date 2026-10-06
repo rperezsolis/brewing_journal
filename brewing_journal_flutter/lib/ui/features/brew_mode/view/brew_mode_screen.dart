@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../router.dart';
+import '../../../core/analytics/screen_names.dart';
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/brewing_labels.dart';
 import '../../../core/duration_format.dart';
 import '../../../core/error_messages.dart';
@@ -125,14 +127,26 @@ class _BrewModeViewState extends State<BrewModeView> {
           title: Text(l10n.deleteRecipeTitle),
           content: Text(l10n.deleteRecipeBody(detail.recipe.title)),
           actions: [
-            TextButton(
+            TrackedButton(
+              buttonLabel: 'cancel',
+              buttonAction: 'dismiss_delete_recipe',
+              currentScreen: ScreenNames.brewMode,
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n.cancel),
+              builder: (context, onPressed) => TextButton(
+                onPressed: onPressed,
+                child: Text(l10n.cancel),
+              ),
             ),
-            FilledButton(
-              key: const Key('brew-delete-confirm'),
+            TrackedButton(
+              buttonLabel: 'delete',
+              buttonAction: 'confirm_delete_recipe',
+              currentScreen: ScreenNames.brewMode,
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text(l10n.delete),
+              builder: (context, onPressed) => FilledButton(
+                key: const Key('brew-delete-confirm'),
+                onPressed: onPressed,
+                child: Text(l10n.delete),
+              ),
             ),
           ],
         );
@@ -196,9 +210,15 @@ class _BrewModeViewState extends State<BrewModeView> {
         title: Text(context.l10n.addToTeam),
         children: [
           for (final summary in teams)
-            SimpleDialogOption(
+            TrackedButton(
+              buttonLabel: 'team',
+              buttonAction: 'assign_recipe_to_team',
+              currentScreen: ScreenNames.brewMode,
               onPressed: () => Navigator.of(context).pop(summary.team.id),
-              child: Text(summary.team.name),
+              builder: (context, onPressed) => SimpleDialogOption(
+                onPressed: onPressed,
+                child: Text(summary.team.name),
+              ),
             ),
         ],
       ),
@@ -243,6 +263,7 @@ class _BrewModeViewState extends State<BrewModeView> {
             },
       onError: (error) => showFavoriteError(context, error, team: teamScoped),
       readError: () => detailCubit.state.error,
+      currentScreen: ScreenNames.brewMode,
       team: teamScoped,
     );
   }
@@ -284,22 +305,40 @@ class _BrewModeViewState extends State<BrewModeView> {
           return Scaffold(
             appBar: AppBar(
               title: Text(detail?.recipe.title ?? l10n.brewFallback),
+              leading: Navigator.canPop(context)
+                  ? TrackedButton(
+                      buttonLabel: 'back',
+                      buttonAction: 'navigate_back',
+                      currentScreen: ScreenNames.brewMode,
+                      onPressed: _leave,
+                      builder: (context, onPressed) =>
+                          BackButton(onPressed: onPressed),
+                    )
+                  : null,
               actions: [
                 if (detail != null) ...[
-                  FavoriteIconButton(
-                    key: const Key('brew-favorite'),
-                    selected: detail.recipe.isFavorite,
-                    tooltip:
-                        widget.teamId != null &&
-                            detail.access.role != TeamRole.editor
-                        ? l10n.viewersCantChangeTeamFavorites
-                        : null,
+                  TrackedButton(
+                    buttonLabel: 'favorite',
+                    buttonAction: detail.recipe.isFavorite
+                        ? 'remove_favorite'
+                        : 'save_favorite',
+                    currentScreen: ScreenNames.brewMode,
                     onPressed:
                         state.favoriteBusy ||
                             (widget.teamId != null &&
                                 detail.access.role != TeamRole.editor)
                         ? null
                         : () => _toggleFavorite(detail.recipe),
+                    builder: (context, onPressed) => FavoriteIconButton(
+                      key: const Key('brew-favorite'),
+                      selected: detail.recipe.isFavorite,
+                      tooltip:
+                          widget.teamId != null &&
+                              detail.access.role != TeamRole.editor
+                          ? l10n.viewersCantChangeTeamFavorites
+                          : null,
+                      onPressed: onPressed,
+                    ),
                   ),
                   if (state.assigning)
                     const Padding(
@@ -309,50 +348,80 @@ class _BrewModeViewState extends State<BrewModeView> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                     ),
-                  IconButton(
-                    key: const Key('brew-share'),
-                    tooltip: l10n.share,
-                    icon: const Icon(Icons.ios_share),
+                  TrackedButton(
+                    buttonLabel: 'share',
+                    buttonAction: 'open_share',
+                    currentScreen: ScreenNames.brewMode,
                     onPressed: detail.recipe.id == null
                         ? null
                         : () => context.push(
                             Routes.shareRecipe(detail.recipe.id!),
                             extra: detail,
                           ),
+                    builder: (context, onPressed) => IconButton(
+                      key: const Key('brew-share'),
+                      tooltip: l10n.share,
+                      icon: const Icon(Icons.ios_share),
+                      onPressed: onPressed,
+                    ),
                   ),
                   if (detail.access.canDelete && detail.recipe.teamId == null)
-                    IconButton(
-                      key: const Key('brew-add-to-team'),
-                      tooltip: l10n.addToTeam,
-                      icon: const Icon(Icons.group_add_outlined),
+                    TrackedButton(
+                      buttonLabel: 'add_to_team',
+                      buttonAction: 'open_add_to_team',
+                      currentScreen: ScreenNames.brewMode,
                       onPressed: state.assigning
                           ? null
                           : () => _addToTeam(detail),
+                      builder: (context, onPressed) => IconButton(
+                        key: const Key('brew-add-to-team'),
+                        tooltip: l10n.addToTeam,
+                        icon: const Icon(Icons.group_add_outlined),
+                        onPressed: onPressed,
+                      ),
                     ),
                   if (detail.recipe.teamId != null &&
                       (detail.access.canDelete ||
                           detail.access.role == TeamRole.editor))
-                    IconButton(
-                      key: const Key('brew-remove-from-team'),
-                      tooltip: l10n.removeFromTeam,
-                      icon: const Icon(Icons.group_remove_outlined),
+                    TrackedButton(
+                      buttonLabel: 'remove_from_team',
+                      buttonAction: 'remove_recipe_from_team',
+                      currentScreen: ScreenNames.brewMode,
                       onPressed: state.assigning
                           ? null
                           : () => _removeFromTeam(detail),
+                      builder: (context, onPressed) => IconButton(
+                        key: const Key('brew-remove-from-team'),
+                        tooltip: l10n.removeFromTeam,
+                        icon: const Icon(Icons.group_remove_outlined),
+                        onPressed: onPressed,
+                      ),
                     ),
                   if (detail.access.canEdit)
-                    IconButton(
-                      key: const Key('brew-edit'),
-                      tooltip: l10n.edit,
-                      icon: const Icon(Icons.edit_outlined),
+                    TrackedButton(
+                      buttonLabel: 'edit',
+                      buttonAction: 'open_recipe_editor',
+                      currentScreen: ScreenNames.brewMode,
                       onPressed: () => _edit(detail.recipe.id!),
+                      builder: (context, onPressed) => IconButton(
+                        key: const Key('brew-edit'),
+                        tooltip: l10n.edit,
+                        icon: const Icon(Icons.edit_outlined),
+                        onPressed: onPressed,
+                      ),
                     ),
                   if (detail.access.canDelete)
-                    IconButton(
-                      key: const Key('brew-delete'),
-                      tooltip: l10n.delete,
-                      icon: const Icon(Icons.delete_outline),
+                    TrackedButton(
+                      buttonLabel: 'delete',
+                      buttonAction: 'open_delete_recipe',
+                      currentScreen: ScreenNames.brewMode,
                       onPressed: state.deleting ? null : () => _delete(detail),
+                      builder: (context, onPressed) => IconButton(
+                        key: const Key('brew-delete'),
+                        tooltip: l10n.delete,
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: onPressed,
+                      ),
                     ),
                 ],
               ],
@@ -411,9 +480,27 @@ class _ErrorBody extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             if (isNotFound || onRetry == null)
-              FilledButton(onPressed: onBack, child: Text(context.l10n.back))
+              TrackedButton(
+                buttonLabel: 'back',
+                buttonAction: 'leave_brew',
+                currentScreen: ScreenNames.brewMode,
+                onPressed: onBack,
+                builder: (context, onPressed) => FilledButton(
+                  onPressed: onPressed,
+                  child: Text(context.l10n.back),
+                ),
+              )
             else
-              FilledButton(onPressed: onRetry, child: Text(context.l10n.retry)),
+              TrackedButton(
+                buttonLabel: 'retry',
+                buttonAction: 'reload_recipe',
+                currentScreen: ScreenNames.brewMode,
+                onPressed: onRetry,
+                builder: (context, onPressed) => FilledButton(
+                  onPressed: onPressed,
+                  child: Text(context.l10n.retry),
+                ),
+              ),
           ],
         ),
       ),
@@ -761,8 +848,18 @@ class _TimerPanel extends StatelessWidget {
                       ),
                     ],
                     selected: {state.mode},
-                    onSelectionChanged: (selected) =>
-                        cubit.setMode(selected.first),
+                    onSelectionChanged: (selected) {
+                      final mode = selected.first;
+                      trackButtonPress(
+                        context,
+                        buttonLabel: 'timer_mode',
+                        buttonAction: mode == BrewTimerMode.countDown
+                            ? 'select_count_down'
+                            : 'select_count_up',
+                        currentScreen: ScreenNames.brewMode,
+                        onPressed: () => cubit.setMode(mode),
+                      )?.call();
+                    },
                   ),
                 const SizedBox(height: 12),
                 Wrap(
@@ -771,40 +868,70 @@ class _TimerPanel extends StatelessWidget {
                   runSpacing: 8,
                   children: [
                     if (finished)
-                      FilledButton.icon(
-                        key: const Key('brew-stop-alarm'),
+                      TrackedButton(
+                        buttonLabel: 'stop_alarm',
+                        buttonAction: 'stop_timer',
+                        currentScreen: ScreenNames.brewMode,
                         onPressed: cubit.stop,
-                        icon: const Icon(Icons.notifications_off_outlined),
-                        label: Text(l10n.stopAlarm),
+                        builder: (context, onPressed) => FilledButton.icon(
+                          key: const Key('brew-stop-alarm'),
+                          onPressed: onPressed,
+                          icon: const Icon(Icons.notifications_off_outlined),
+                          label: Text(l10n.stopAlarm),
+                        ),
                       )
                     else ...[
                       if (state.phase == BrewTimerPhase.idle)
-                        FilledButton.icon(
-                          key: const Key('brew-start'),
+                        TrackedButton(
+                          buttonLabel: 'start',
+                          buttonAction: 'start_timer',
+                          currentScreen: ScreenNames.brewMode,
                           onPressed: cubit.start,
-                          icon: const Icon(Icons.play_arrow),
-                          label: Text(l10n.start),
+                          builder: (context, onPressed) => FilledButton.icon(
+                            key: const Key('brew-start'),
+                            onPressed: onPressed,
+                            icon: const Icon(Icons.play_arrow),
+                            label: Text(l10n.start),
+                          ),
                         ),
                       if (state.phase == BrewTimerPhase.running)
-                        FilledButton.icon(
-                          key: const Key('brew-pause'),
+                        TrackedButton(
+                          buttonLabel: 'pause',
+                          buttonAction: 'pause_timer',
+                          currentScreen: ScreenNames.brewMode,
                           onPressed: cubit.pause,
-                          icon: const Icon(Icons.pause),
-                          label: Text(l10n.pause),
+                          builder: (context, onPressed) => FilledButton.icon(
+                            key: const Key('brew-pause'),
+                            onPressed: onPressed,
+                            icon: const Icon(Icons.pause),
+                            label: Text(l10n.pause),
+                          ),
                         ),
                       if (state.phase == BrewTimerPhase.paused)
-                        FilledButton.icon(
-                          key: const Key('brew-resume'),
+                        TrackedButton(
+                          buttonLabel: 'resume',
+                          buttonAction: 'resume_timer',
+                          currentScreen: ScreenNames.brewMode,
                           onPressed: cubit.resume,
-                          icon: const Icon(Icons.play_arrow),
-                          label: Text(l10n.resume),
+                          builder: (context, onPressed) => FilledButton.icon(
+                            key: const Key('brew-resume'),
+                            onPressed: onPressed,
+                            icon: const Icon(Icons.play_arrow),
+                            label: Text(l10n.resume),
+                          ),
                         ),
                       if (state.phase != BrewTimerPhase.idle)
-                        OutlinedButton.icon(
-                          key: const Key('brew-stop'),
+                        TrackedButton(
+                          buttonLabel: 'stop',
+                          buttonAction: 'stop_timer',
+                          currentScreen: ScreenNames.brewMode,
                           onPressed: cubit.stop,
-                          icon: const Icon(Icons.stop),
-                          label: Text(l10n.stop),
+                          builder: (context, onPressed) => OutlinedButton.icon(
+                            key: const Key('brew-stop'),
+                            onPressed: onPressed,
+                            icon: const Icon(Icons.stop),
+                            label: Text(l10n.stop),
+                          ),
                         ),
                     ],
                   ],

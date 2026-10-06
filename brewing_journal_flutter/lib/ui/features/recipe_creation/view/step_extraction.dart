@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/brewing_labels.dart';
-import '../../../core/l10n.dart';
 import '../../../core/duration_format.dart';
+import '../../../core/l10n.dart';
+import 'wizard_screen_name.dart';
 import '../cubit/recipe_creation_cubit.dart';
 import '../cubit/recipe_creation_state.dart';
 import '../recipe_limits.dart';
@@ -233,11 +235,17 @@ class _StepExtractionState extends State<StepExtraction> {
               return Column(
                 children: [
                   for (final model in suggestions)
-                    ListTile(
-                      key: ValueKey('grinder-suggestion-$model'),
-                      dense: true,
-                      title: Text(model),
-                      onTap: () => _selectGrinder(model),
+                    TrackedButton(
+                      buttonLabel: 'grinder_suggestion',
+                      buttonAction: 'select_grinder',
+                      currentScreen: wizardScreenName(context),
+                      onPressed: () => _selectGrinder(model),
+                      builder: (context, onPressed) => ListTile(
+                        key: ValueKey('grinder-suggestion-$model'),
+                        dense: true,
+                        title: Text(model),
+                        onTap: onPressed,
+                      ),
                     ),
                 ],
               );
@@ -351,26 +359,44 @@ class _StopwatchCard extends StatelessWidget {
                   runSpacing: 8,
                   children: [
                     if (running)
-                      FilledButton.icon(
-                        key: const Key('stopwatch-stop'),
+                      TrackedButton(
+                        buttonLabel: 'stop',
+                        buttonAction: 'stop_stopwatch',
+                        currentScreen: wizardScreenName(context),
                         onPressed: cubit.stopStopwatch,
-                        icon: const Icon(Icons.stop),
-                        label: Text(l10n.stop),
+                        builder: (context, onPressed) => FilledButton.icon(
+                          key: const Key('stopwatch-stop'),
+                          onPressed: onPressed,
+                          icon: const Icon(Icons.stop),
+                          label: Text(l10n.stop),
+                        ),
                       )
                     else
-                      FilledButton.icon(
-                        key: const Key('stopwatch-start'),
+                      TrackedButton(
+                        buttonLabel: 'start',
+                        buttonAction: 'start_stopwatch',
+                        currentScreen: wizardScreenName(context),
                         onPressed: cubit.startStopwatch,
-                        icon: const Icon(Icons.play_arrow),
-                        label: Text(l10n.start),
+                        builder: (context, onPressed) => FilledButton.icon(
+                          key: const Key('stopwatch-start'),
+                          onPressed: onPressed,
+                          icon: const Icon(Icons.play_arrow),
+                          label: Text(l10n.start),
+                        ),
                       ),
-                    OutlinedButton.icon(
-                      key: const Key('stopwatch-reset'),
+                    TrackedButton(
+                      buttonLabel: 'reset',
+                      buttonAction: 'reset_stopwatch',
+                      currentScreen: wizardScreenName(context),
                       onPressed: hasReading || running
                           ? cubit.resetStopwatch
                           : null,
-                      icon: const Icon(Icons.restart_alt),
-                      label: Text(l10n.reset),
+                      builder: (context, onPressed) => OutlinedButton.icon(
+                        key: const Key('stopwatch-reset'),
+                        onPressed: onPressed,
+                        icon: const Icon(Icons.restart_alt),
+                        label: Text(l10n.reset),
+                      ),
                     ),
                   ],
                 ),

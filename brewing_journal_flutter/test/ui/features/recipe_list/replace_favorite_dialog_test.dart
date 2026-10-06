@@ -1,4 +1,5 @@
 import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
+import 'package:brewing_journal_flutter/ui/core/analytics/screen_names.dart';
 import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_list/view/replace_favorite_dialog.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +17,10 @@ void main() {
           builder: (context) {
             return Scaffold(
               body: TextButton(
-                onPressed: () => showReplaceFavoriteDialog(context),
+                onPressed: () => showReplaceFavoriteDialog(
+                  context,
+                  currentScreen: ScreenNames.recipeList,
+                ),
                 child: const Text('open'),
               ),
             );

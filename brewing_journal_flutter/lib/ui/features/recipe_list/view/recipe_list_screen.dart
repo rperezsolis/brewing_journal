@@ -32,15 +32,23 @@ class RecipeListScreen extends StatelessWidget {
             buildWhen: (previous, current) =>
                 previous.favoritesOnly != current.favoritesOnly,
             builder: (context, state) {
-              return FavoriteIconButton(
-                key: const Key('recipe-list-favorites'),
-                selected: state.favoritesOnly,
-                tooltip: state.favoritesOnly
-                    ? l10n.showAllRecipes
-                    : l10n.showFavorites,
+              return TrackedButton(
+                buttonLabel: 'favorites_filter',
+                buttonAction: state.favoritesOnly
+                    ? 'show_all_recipes'
+                    : 'show_favorites',
+                currentScreen: ScreenNames.recipeList,
                 onPressed: () => context
                     .read<RecipeListCubit>()
                     .setFavoritesOnly(!state.favoritesOnly),
+                builder: (context, onPressed) => FavoriteIconButton(
+                  key: const Key('recipe-list-favorites'),
+                  selected: state.favoritesOnly,
+                  tooltip: state.favoritesOnly
+                      ? l10n.showAllRecipes
+                      : l10n.showFavorites,
+                  onPressed: onPressed,
+                ),
               );
             },
           ),
@@ -124,6 +132,7 @@ class RecipeListScreen extends StatelessWidget {
                   return RecipeTile(
                     recipe: recipe,
                     favoriteBusy: state.favoriteBusyIds.contains(recipe.id),
+                    currentScreen: ScreenNames.recipeList,
                     onTap: () => context.push(Routes.recipe(recipe.id!)),
                     onFavorite: () {
                       unawaited(_toggleFavorite(context, recipe));
@@ -149,6 +158,7 @@ Future<void> _toggleFavorite(BuildContext context, Recipe recipe) {
     remove: () => cubit.removeFavorite(recipe.id!),
     onError: (error) => showFavoriteError(context, error),
     readError: () => cubit.state.error,
+    currentScreen: ScreenNames.recipeList,
   );
 }
 

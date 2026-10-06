@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/l10n.dart';
 import '../../../core/widgets/flavor_radar_chart.dart';
+import 'wizard_screen_name.dart';
 import '../cubit/recipe_creation_cubit.dart';
 import '../cubit/recipe_creation_state.dart';
 import '../recipe_limits.dart';
@@ -92,10 +94,16 @@ class _StepFlavorState extends State<StepFlavor> {
               runSpacing: 8,
               children: [
                 for (final tag in state.flavorTags)
-                  InputChip(
-                    label: Text(tag),
-                    onDeleted: () => cubit.setFlavor(
+                  TrackedButton(
+                    buttonLabel: 'flavor_tag',
+                    buttonAction: 'remove_flavor_tag',
+                    currentScreen: wizardScreenName(context),
+                    onPressed: () => cubit.setFlavor(
                       tags: [...state.flavorTags]..remove(tag),
+                    ),
+                    builder: (context, onPressed) => InputChip(
+                      label: Text(tag),
+                      onDeleted: onPressed,
                     ),
                   ),
               ],
@@ -112,12 +120,18 @@ class _StepFlavorState extends State<StepFlavor> {
                     ? l10n.addTagHint
                     : l10n.atMostTags(kMaxTags),
                 border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  tooltip: l10n.addTag,
-                  icon: const Icon(Icons.add),
+                suffixIcon: TrackedButton(
+                  buttonLabel: 'add_tag',
+                  buttonAction: 'add_flavor_tag',
+                  currentScreen: wizardScreenName(context),
                   onPressed: state.flavorTags.length < kMaxTags
                       ? _addTag
                       : null,
+                  builder: (context, onPressed) => IconButton(
+                    tooltip: l10n.addTag,
+                    icon: const Icon(Icons.add),
+                    onPressed: onPressed,
+                  ),
                 ),
               ),
             ),

@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../router.dart';
+import '../../../core/analytics/screen_names.dart';
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/brewing_labels.dart';
 import '../../../core/error_messages.dart';
 import '../../../core/l10n.dart';
@@ -24,7 +26,19 @@ class InviteAcceptScreen extends StatelessWidget {
       child: BlocBuilder<InviteAcceptCubit, InviteAcceptState>(
         builder: (context, state) {
           return Scaffold(
-            appBar: AppBar(title: Text(l10n.teamInvite)),
+            appBar: AppBar(
+              title: Text(l10n.teamInvite),
+              leading: Navigator.canPop(context)
+                  ? TrackedButton(
+                      buttonLabel: 'back',
+                      buttonAction: 'navigate_back',
+                      currentScreen: ScreenNames.invite,
+                      onPressed: () => Navigator.maybePop(context),
+                      builder: (context, onPressed) =>
+                          BackButton(onPressed: onPressed),
+                    )
+                  : null,
+            ),
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -85,7 +99,10 @@ class _Result extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         if (showOpenTeam)
-          FilledButton(
+          TrackedButton(
+            buttonLabel: 'open_team',
+            buttonAction: 'open_team',
+            currentScreen: ScreenNames.invite,
             onPressed: () async {
               await context.read<TeamsCubit>().load();
               if (!context.mounted) return;
@@ -96,12 +113,21 @@ class _Result extends StatelessWidget {
                 context.go(Routes.teams);
               }
             },
-            child: Text(context.l10n.openTeam),
+            builder: (context, onPressed) => FilledButton(
+              onPressed: onPressed,
+              child: Text(context.l10n.openTeam),
+            ),
           )
         else
-          FilledButton(
+          TrackedButton(
+            buttonLabel: 'go_home',
+            buttonAction: 'navigate_home',
+            currentScreen: ScreenNames.invite,
             onPressed: () => context.go(Routes.home),
-            child: Text(context.l10n.goHome),
+            builder: (context, onPressed) => FilledButton(
+              onPressed: onPressed,
+              child: Text(context.l10n.goHome),
+            ),
           ),
       ],
     );

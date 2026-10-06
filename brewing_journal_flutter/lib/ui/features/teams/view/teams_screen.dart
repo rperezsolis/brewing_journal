@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../data/repositories/auth_repository.dart';
 import '../../../../router.dart';
+import '../../../core/analytics/screen_names.dart';
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/brewing_labels.dart';
 import '../../../core/error_messages.dart';
 import '../../../core/l10n.dart';
@@ -22,25 +24,43 @@ class TeamsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(l10n.teams),
         actions: [
-          IconButton(
-            key: const Key('teams-join'),
-            tooltip: l10n.joinWithInvite,
-            icon: const Icon(Icons.mail_outline),
+          TrackedButton(
+            buttonLabel: 'join_invite',
+            buttonAction: 'open_join_invite',
+            currentScreen: ScreenNames.teams,
             onPressed: () => _joinWithInvite(context),
+            builder: (context, onPressed) => IconButton(
+              key: const Key('teams-join'),
+              tooltip: l10n.joinWithInvite,
+              icon: const Icon(Icons.mail_outline),
+              onPressed: onPressed,
+            ),
           ),
-          IconButton(
-            tooltip: l10n.signOut,
-            icon: const Icon(Icons.logout),
+          TrackedButton(
+            buttonLabel: 'sign_out',
+            buttonAction: 'sign_out',
+            currentScreen: ScreenNames.teams,
             onPressed: () => context.read<AuthCubit>().signOut(),
+            builder: (context, onPressed) => IconButton(
+              tooltip: l10n.signOut,
+              icon: const Icon(Icons.logout),
+              onPressed: onPressed,
+            ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'teams-create',
-        key: const Key('teams-create'),
+      floatingActionButton: TrackedButton(
+        buttonLabel: 'create_team',
+        buttonAction: 'open_create_team',
+        currentScreen: ScreenNames.teams,
         onPressed: () => _createTeam(context),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.createTeam),
+        builder: (context, onPressed) => FloatingActionButton.extended(
+          heroTag: 'teams-create',
+          key: const Key('teams-create'),
+          onPressed: onPressed,
+          icon: const Icon(Icons.add),
+          label: Text(l10n.createTeam),
+        ),
       ),
       body: BlocConsumer<TeamsCubit, TeamsState>(
         listenWhen: (previous, current) =>
@@ -67,9 +87,15 @@ class TeamsScreen extends StatelessWidget {
                 child: CircularProgressIndicator(),
               ),
               TeamsStatus.failure => Center(
-                child: FilledButton(
+                child: TrackedButton(
+                  buttonLabel: 'retry',
+                  buttonAction: 'reload_teams',
+                  currentScreen: ScreenNames.teams,
                   onPressed: cubit.load,
-                  child: Text(context.l10n.retry),
+                  builder: (context, onPressed) => FilledButton(
+                    onPressed: onPressed,
+                    child: Text(context.l10n.retry),
+                  ),
                 ),
               ),
               TeamsStatus.success => Center(
@@ -91,18 +117,25 @@ class TeamsScreen extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 8),
                   clipBehavior: Clip.antiAlias,
                   color: Theme.of(context).colorScheme.surfaceContainer,
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      child: Icon(Icons.groups_outlined),
+                  child: TrackedButton(
+                    buttonLabel: 'team',
+                    buttonAction: 'open_team',
+                    currentScreen: ScreenNames.teams,
+                    onPressed: () =>
+                        context.push(Routes.team(summary.team.id!)),
+                    builder: (context, onPressed) => ListTile(
+                      leading: const CircleAvatar(
+                        child: Icon(Icons.groups_outlined),
+                      ),
+                      title: Text(summary.team.name),
+                      subtitle: Text(
+                        owned
+                            ? l10n.ownerRole(summary.role.label(l10n))
+                            : summary.role.label(l10n),
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: onPressed,
                     ),
-                    title: Text(summary.team.name),
-                    subtitle: Text(
-                      owned
-                          ? l10n.ownerRole(summary.role.label(l10n))
-                          : summary.role.label(l10n),
-                    ),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push(Routes.team(summary.team.id!)),
                   ),
                 );
               },
@@ -164,13 +197,25 @@ class _CreateTeamDialogState extends State<_CreateTeamDialog> {
         onSubmitted: (value) => Navigator.of(context).pop(value.trim()),
       ),
       actions: [
-        TextButton(
+        TrackedButton(
+          buttonLabel: 'cancel',
+          buttonAction: 'dismiss_create_team',
+          currentScreen: ScreenNames.teams,
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
+          builder: (context, onPressed) => TextButton(
+            onPressed: onPressed,
+            child: Text(l10n.cancel),
+          ),
         ),
-        FilledButton(
+        TrackedButton(
+          buttonLabel: 'create',
+          buttonAction: 'create_team',
+          currentScreen: ScreenNames.teams,
           onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
-          child: Text(l10n.create),
+          builder: (context, onPressed) => FilledButton(
+            onPressed: onPressed,
+            child: Text(l10n.create),
+          ),
         ),
       ],
     );
@@ -207,14 +252,27 @@ class _JoinInviteDialogState extends State<_JoinInviteDialog> {
             Navigator.of(context).pop(inviteTokenFromInput(value)),
       ),
       actions: [
-        TextButton(
+        TrackedButton(
+          buttonLabel: 'cancel',
+          buttonAction: 'dismiss_join_invite',
+          currentScreen: ScreenNames.teams,
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
+          builder: (context, onPressed) => TextButton(
+            onPressed: onPressed,
+            child: Text(l10n.cancel),
+          ),
         ),
-        FilledButton(
-          onPressed: () =>
-              Navigator.of(context).pop(inviteTokenFromInput(_controller.text)),
-          child: Text(l10n.join),
+        TrackedButton(
+          buttonLabel: 'join',
+          buttonAction: 'join_with_invite',
+          currentScreen: ScreenNames.teams,
+          onPressed: () => Navigator.of(
+            context,
+          ).pop(inviteTokenFromInput(_controller.text)),
+          builder: (context, onPressed) => FilledButton(
+            onPressed: onPressed,
+            child: Text(l10n.join),
+          ),
         ),
       ],
     );

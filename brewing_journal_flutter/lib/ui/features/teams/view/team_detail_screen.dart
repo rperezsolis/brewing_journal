@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../data/repositories/auth_repository.dart';
 import '../../../../router.dart';
+import '../../../core/analytics/screen_names.dart';
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/brewing_labels.dart';
 import '../../../core/error_messages.dart';
 import '../../../core/l10n.dart';
@@ -83,20 +85,29 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(name),
+          leading: _backButton(context),
           actions: [
             BlocBuilder<RecipeListCubit, RecipeListState>(
               buildWhen: (previous, current) =>
                   previous.favoritesOnly != current.favoritesOnly,
               builder: (context, state) {
-                return FavoriteIconButton(
-                  key: const Key('team-list-favorites'),
-                  selected: state.favoritesOnly,
-                  tooltip: state.favoritesOnly
-                      ? l10n.showAllTeamRecipes
-                      : l10n.showTeamFavorites,
+                return TrackedButton(
+                  buttonLabel: 'favorites_filter',
+                  buttonAction: state.favoritesOnly
+                      ? 'show_all_recipes'
+                      : 'show_favorites',
+                  currentScreen: ScreenNames.teamDetail,
                   onPressed: () => context
                       .read<RecipeListCubit>()
                       .setFavoritesOnly(!state.favoritesOnly),
+                  builder: (context, onPressed) => FavoriteIconButton(
+                    key: const Key('team-list-favorites'),
+                    selected: state.favoritesOnly,
+                    tooltip: state.favoritesOnly
+                        ? l10n.showAllTeamRecipes
+                        : l10n.showTeamFavorites,
+                    onPressed: onPressed,
+                  ),
                 );
               },
             ),
@@ -111,21 +122,33 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
                 ),
               ),
             if (isOwner)
-              IconButton(
-                key: const Key('team-invite'),
-                tooltip: l10n.invite,
-                icon: const Icon(Icons.person_add_outlined),
+              TrackedButton(
+                buttonLabel: 'invite',
+                buttonAction: 'open_invite_sheet',
+                currentScreen: ScreenNames.teamDetail,
                 onPressed: () => showInviteSheet(context, teamId),
+                builder: (context, onPressed) => IconButton(
+                  key: const Key('team-invite'),
+                  tooltip: l10n.invite,
+                  icon: const Icon(Icons.person_add_outlined),
+                  onPressed: onPressed,
+                ),
               ),
           ],
         ),
         floatingActionButton: isEditor
-            ? FloatingActionButton.extended(
-                heroTag: 'team-new-recipe',
-                key: const Key('team-new-recipe'),
+            ? TrackedButton(
+                buttonLabel: 'new_recipe',
+                buttonAction: 'open_recipe_wizard',
+                currentScreen: ScreenNames.teamDetail,
                 onPressed: () => _openNewRecipe(context),
-                icon: const Icon(Icons.add),
-                label: Text(l10n.newRecipe),
+                builder: (context, onPressed) => FloatingActionButton.extended(
+                  heroTag: 'team-new-recipe',
+                  key: const Key('team-new-recipe'),
+                  onPressed: onPressed,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.newRecipe),
+                ),
               )
             : null,
         body: BlocBuilder<RecipeListCubit, RecipeListState>(
@@ -138,9 +161,15 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
                   child: CircularProgressIndicator(),
                 ),
                 RecipeListStatus.failure => Center(
-                  child: FilledButton(
+                  child: TrackedButton(
+                    buttonLabel: 'retry',
+                    buttonAction: 'reload_recipes',
+                    currentScreen: ScreenNames.teamDetail,
                     onPressed: cubit.load,
-                    child: Text(errorMessage(state.error ?? Object(), l10n)),
+                    builder: (context, onPressed) => FilledButton(
+                      onPressed: onPressed,
+                      child: Text(errorMessage(state.error ?? Object(), l10n)),
+                    ),
                   ),
                 ),
                 RecipeListStatus.success => Center(
@@ -171,6 +200,7 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
                     recipe: recipe,
                     favoriteBusy: state.favoriteBusyIds.contains(recipe.id),
                     favoriteEnabled: favoritesEnabled,
+                    currentScreen: ScreenNames.teamDetail,
                     onTap: () => _openRecipe(context, recipe.id!),
                     onFavorite: () {
                       unawaited(_toggleFavorite(context, recipe));
@@ -195,7 +225,19 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
       remove: () => cubit.removeFavorite(recipe.id!),
       onError: (error) => showFavoriteError(context, error, team: true),
       readError: () => cubit.state.error,
+      currentScreen: ScreenNames.teamDetail,
       team: true,
+    );
+  }
+
+  Widget? _backButton(BuildContext context) {
+    if (!Navigator.canPop(context)) return null;
+    return TrackedButton(
+      buttonLabel: 'back',
+      buttonAction: 'navigate_back',
+      currentScreen: ScreenNames.teamDetail,
+      onPressed: () => Navigator.maybePop(context),
+      builder: (context, onPressed) => BackButton(onPressed: onPressed),
     );
   }
 

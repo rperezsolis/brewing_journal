@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../data/services/share_service.dart';
 import '../../../../router.dart';
+import '../../../core/analytics/screen_names.dart';
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/error_messages.dart';
 import '../../../core/l10n.dart';
 import '../../recipe_detail/cubit/recipe_detail_cubit.dart';
@@ -78,7 +80,10 @@ class _ShareLoadError extends StatelessWidget {
         failure is BrewingException &&
         failure.code == BrewingErrorCode.notFound;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.share)),
+      appBar: AppBar(
+        title: Text(l10n.share),
+        leading: _shareBackButton(context),
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -98,14 +103,29 @@ class _ShareLoadError extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               if (isNotFound || onRetry == null)
-                FilledButton(
+                TrackedButton(
+                  buttonLabel: 'back',
+                  buttonAction: 'leave_share',
+                  currentScreen: ScreenNames.recipeShare,
                   onPressed: () => context.canPop()
                       ? context.pop()
                       : context.go(Routes.home),
-                  child: Text(l10n.back),
+                  builder: (context, onPressed) => FilledButton(
+                    onPressed: onPressed,
+                    child: Text(l10n.back),
+                  ),
                 )
               else
-                FilledButton(onPressed: onRetry, child: Text(l10n.retry)),
+                TrackedButton(
+                  buttonLabel: 'retry',
+                  buttonAction: 'reload_recipe',
+                  currentScreen: ScreenNames.recipeShare,
+                  onPressed: onRetry,
+                  builder: (context, onPressed) => FilledButton(
+                    onPressed: onPressed,
+                    child: Text(l10n.retry),
+                  ),
+                ),
             ],
           ),
         ),
@@ -202,13 +222,24 @@ class _SharePreviewState extends State<SharePreview> {
               action: SnackBarAction(
                 label: context.l10n.retry,
                 textColor: colors.onErrorContainer,
-                onPressed: () => context.read<ShareCubit>().download(),
+                onPressed: () {
+                  trackButtonPress(
+                    context,
+                    buttonLabel: 'retry',
+                    buttonAction: 'download_share_image',
+                    currentScreen: ScreenNames.recipeShare,
+                    onPressed: () => context.read<ShareCubit>().download(),
+                  )?.call();
+                },
               ),
             ),
           );
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(context.l10n.share)),
+        appBar: AppBar(
+          title: Text(context.l10n.share),
+          leading: _shareBackButton(context),
+        ),
         body: Column(
           children: [
             Expanded(
@@ -242,29 +273,41 @@ class _SharePreviewState extends State<SharePreview> {
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         const SizedBox(height: 8),
-                        OutlinedButton.icon(
-                          key: const Key('share-download'),
+                        TrackedButton(
+                          buttonLabel: 'download',
+                          buttonAction: 'download_share_image',
+                          currentScreen: ScreenNames.recipeShare,
                           onPressed: () =>
                               context.read<ShareCubit>().download(),
-                          icon: const Icon(Icons.download_outlined),
-                          label: Text(l10n.downloadImage),
+                          builder: (context, onPressed) => OutlinedButton.icon(
+                            key: const Key('share-download'),
+                            onPressed: onPressed,
+                            icon: const Icon(Icons.download_outlined),
+                            label: Text(l10n.downloadImage),
+                          ),
                         ),
                         const SizedBox(height: 8),
                       ],
-                      KeyedSubtree(
-                        key: const Key('share-submit'),
-                        child: FilledButton.icon(
-                          key: _shareButtonKey,
-                          onPressed: busy ? null : _share,
-                          icon: busy
-                              ? const SizedBox.square(
-                                  dimension: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.ios_share),
-                          label: Text(l10n.share),
+                      TrackedButton(
+                        buttonLabel: 'share',
+                        buttonAction: 'share_recipe_image',
+                        currentScreen: ScreenNames.recipeShare,
+                        onPressed: busy ? null : _share,
+                        builder: (context, onPressed) => KeyedSubtree(
+                          key: const Key('share-submit'),
+                          child: FilledButton.icon(
+                            key: _shareButtonKey,
+                            onPressed: onPressed,
+                            icon: busy
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.ios_share),
+                            label: Text(l10n.share),
+                          ),
                         ),
                       ),
                     ],
@@ -277,4 +320,15 @@ class _SharePreviewState extends State<SharePreview> {
       ),
     );
   }
+}
+
+Widget? _shareBackButton(BuildContext context) {
+  if (!Navigator.canPop(context)) return null;
+  return TrackedButton(
+    buttonLabel: 'back',
+    buttonAction: 'navigate_back',
+    currentScreen: ScreenNames.recipeShare,
+    onPressed: () => Navigator.maybePop(context),
+    builder: (context, onPressed) => BackButton(onPressed: onPressed),
+  );
 }

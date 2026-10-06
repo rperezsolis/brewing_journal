@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/l10n.dart';
 import '../cubit/recipe_creation_cubit.dart';
+import 'wizard_screen_name.dart';
 import '../cubit/recipe_creation_state.dart';
 import '../recipe_limits.dart';
 
@@ -30,9 +32,11 @@ class _StepInstructionsState extends State<StepInstructions> {
   }
 
   Future<void> _edit(int index, String text) async {
+    final screen = wizardScreenName(context);
     final updated = await showDialog<String>(
       context: context,
-      builder: (_) => _EditInstructionDialog(initial: text),
+      builder: (_) =>
+          _EditInstructionDialog(initial: text, currentScreen: screen),
     );
     if (updated != null) _cubit.updateInstruction(index, updated);
   }
@@ -60,10 +64,16 @@ class _StepInstructionsState extends State<StepInstructions> {
                       style: theme.textTheme.titleLarge,
                     ),
                   ),
-                  TextButton(
-                    key: const Key('instructions-skip'),
+                  TrackedButton(
+                    buttonLabel: 'skip',
+                    buttonAction: 'skip_instructions',
+                    currentScreen: wizardScreenName(context),
                     onPressed: _cubit.skipInstructions,
-                    child: Text(l10n.skip),
+                    builder: (context, onPressed) => TextButton(
+                      key: const Key('instructions-skip'),
+                      onPressed: onPressed,
+                      child: Text(l10n.skip),
+                    ),
                   ),
                 ],
               ),
@@ -90,11 +100,17 @@ class _StepInstructionsState extends State<StepInstructions> {
                       ? l10n.atMostSteps(kMaxInstructions)
                       : l10n.addAStep,
                   border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    key: const Key('instruction-add'),
-                    tooltip: l10n.addStep,
-                    icon: const Icon(Icons.add),
+                  suffixIcon: TrackedButton(
+                    buttonLabel: 'add_step',
+                    buttonAction: 'add_instruction',
+                    currentScreen: wizardScreenName(context),
                     onPressed: full ? null : _add,
+                    builder: (context, onPressed) => IconButton(
+                      key: const Key('instruction-add'),
+                      tooltip: l10n.addStep,
+                      icon: const Icon(Icons.add),
+                      onPressed: onPressed,
+                    ),
                   ),
                 ),
               ),
@@ -116,32 +132,50 @@ class _StepInstructionsState extends State<StepInstructions> {
                       onReorderItem: _cubit.moveInstruction,
                       itemBuilder: (context, index) {
                         final text = instructions[index];
-                        return ListTile(
+                        return TrackedButton(
                           key: ValueKey('instruction-$index'),
-                          leading: ReorderableDragStartListener(
-                            index: index,
-                            child: Icon(
-                              Icons.drag_handle,
-                              semanticLabel: l10n.reorder,
+                          buttonLabel: 'instruction',
+                          buttonAction: 'edit_instruction',
+                          currentScreen: wizardScreenName(context),
+                          onPressed: () => _edit(index, text),
+                          builder: (context, onTile) => ListTile(
+                            leading: ReorderableDragStartListener(
+                              index: index,
+                              child: Icon(
+                                Icons.drag_handle,
+                                semanticLabel: l10n.reorder,
+                              ),
                             ),
-                          ),
-                          title: Text('${index + 1}. $text'),
-                          onTap: () => _edit(index, text),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                tooltip: l10n.editStep,
-                                icon: const Icon(Icons.edit_outlined),
-                                onPressed: () => _edit(index, text),
-                              ),
-                              IconButton(
-                                tooltip: l10n.removeStep,
-                                icon: const Icon(Icons.delete_outline),
-                                onPressed: () =>
-                                    _cubit.removeInstruction(index),
-                              ),
-                            ],
+                            title: Text('${index + 1}. $text'),
+                            onTap: onTile,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                TrackedButton(
+                                  buttonLabel: 'edit_step',
+                                  buttonAction: 'edit_instruction',
+                                  currentScreen: wizardScreenName(context),
+                                  onPressed: () => _edit(index, text),
+                                  builder: (context, onPressed) => IconButton(
+                                    tooltip: l10n.editStep,
+                                    icon: const Icon(Icons.edit_outlined),
+                                    onPressed: onPressed,
+                                  ),
+                                ),
+                                TrackedButton(
+                                  buttonLabel: 'remove_step',
+                                  buttonAction: 'remove_instruction',
+                                  currentScreen: wizardScreenName(context),
+                                  onPressed: () =>
+                                      _cubit.removeInstruction(index),
+                                  builder: (context, onPressed) => IconButton(
+                                    tooltip: l10n.removeStep,
+                                    icon: const Icon(Icons.delete_outline),
+                                    onPressed: onPressed,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
@@ -155,9 +189,13 @@ class _StepInstructionsState extends State<StepInstructions> {
 }
 
 class _EditInstructionDialog extends StatefulWidget {
-  const _EditInstructionDialog({required this.initial});
+  const _EditInstructionDialog({
+    required this.initial,
+    required this.currentScreen,
+  });
 
   final String initial;
+  final String currentScreen;
 
   @override
   State<_EditInstructionDialog> createState() => _EditInstructionDialogState();
@@ -191,15 +229,27 @@ class _EditInstructionDialogState extends State<_EditInstructionDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        TrackedButton(
+          buttonLabel: 'cancel',
+          buttonAction: 'dismiss_edit_instruction',
+          currentScreen: widget.currentScreen,
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
+          builder: (context, onPressed) => TextButton(
+            onPressed: onPressed,
+            child: Text(l10n.cancel),
+          ),
         ),
-        FilledButton(
+        TrackedButton(
+          buttonLabel: 'save',
+          buttonAction: 'save_instruction',
+          currentScreen: widget.currentScreen,
           onPressed: _valid
               ? () => Navigator.of(context).pop(_controller.text)
               : null,
-          child: Text(l10n.save),
+          builder: (context, onPressed) => FilledButton(
+            onPressed: onPressed,
+            child: Text(l10n.save),
+          ),
         ),
       ],
     );

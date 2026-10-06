@@ -59,14 +59,18 @@ VoidCallback? trackButtonPress(
 }) {
   if (onPressed == null) return null;
   return () {
-    final analytics = context.read<AnalyticsService>();
-    _report(
-      () => analytics.trackButtonTapped(
-        buttonLabel: buttonLabel,
-        buttonAction: buttonAction,
-        currentScreen: currentScreen,
-      ),
-    );
+    try {
+      final analytics = context.read<AnalyticsService>();
+      _report(
+        () => analytics.trackButtonTapped(
+          buttonLabel: buttonLabel,
+          buttonAction: buttonAction,
+          currentScreen: currentScreen,
+        ),
+      );
+    } on ProviderNotFoundException {
+      // A missing analytics client still lets the button do its job.
+    }
     onPressed();
   };
 }

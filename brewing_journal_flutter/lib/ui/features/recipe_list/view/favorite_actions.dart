@@ -19,6 +19,7 @@ Future<void> toggleRecipeFavorite({
   onChanged,
   required void Function(Object error) onError,
   required Object? Function() readError,
+  required String currentScreen,
   bool team = false,
 }) async {
   final id = recipe.id;
@@ -49,7 +50,11 @@ Future<void> toggleRecipeFavorite({
     return;
   }
 
-  final replace = await showReplaceFavoriteDialog(context, team: team);
+  final replace = await showReplaceFavoriteDialog(
+    context,
+    team: team,
+    currentScreen: currentScreen,
+  );
   if (!replace || !context.mounted) return;
   final replaced = await save(replace: true);
   if (!context.mounted) return;

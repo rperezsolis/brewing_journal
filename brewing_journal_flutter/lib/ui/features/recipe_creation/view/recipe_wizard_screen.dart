@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../router.dart';
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/error_messages.dart';
 import '../../../core/l10n.dart';
 import '../../recipe_list/cubit/recipe_list_cubit.dart';
@@ -18,6 +19,7 @@ import 'step_flavor.dart';
 import 'step_ingredient.dart';
 import 'step_instructions.dart';
 import 'step_media.dart';
+import 'wizard_screen_name.dart';
 
 /// The 5-step recipe wizard: a new recipe when [recipeId] is null, otherwise
 /// an edit of that recipe.
@@ -102,10 +104,16 @@ class RecipeWizardView extends StatelessWidget {
           return Scaffold(
             appBar: AppBar(
               title: Text(state.isEditing ? l10n.editRecipe : l10n.newRecipe),
-              leading: IconButton(
-                tooltip: l10n.close,
-                icon: const Icon(Icons.close),
+              leading: TrackedButton(
+                buttonLabel: 'close',
+                buttonAction: 'close_wizard',
+                currentScreen: wizardScreenName(context),
                 onPressed: () => _close(context),
+                builder: (context, onPressed) => IconButton(
+                  tooltip: l10n.close,
+                  icon: const Icon(Icons.close),
+                  onPressed: onPressed,
+                ),
               ),
             ),
             body: switch (state.loadStatus) {
@@ -212,9 +220,15 @@ class _LoadFailure extends StatelessWidget {
           Text(context.l10n.recipeCouldNotBeLoaded),
           const SizedBox(height: 16),
           if (id != null)
-            FilledButton(
+            TrackedButton(
+              buttonLabel: 'retry',
+              buttonAction: 'reload_recipe',
+              currentScreen: wizardScreenName(context),
               onPressed: () => context.read<RecipeCreationCubit>().load(id),
-              child: Text(context.l10n.retry),
+              builder: (context, onPressed) => FilledButton(
+                onPressed: onPressed,
+                child: Text(context.l10n.retry),
+              ),
             ),
         ],
       ),
@@ -238,35 +252,41 @@ class _StepIndicator extends StatelessWidget {
         children: [
           for (final step in RecipeWizardStep.values)
             Expanded(
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: () => context.read<RecipeCreationCubit>().goTo(step),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 14,
-                        backgroundColor: step.index <= current.index
-                            ? colors.primary
-                            : colors.surfaceContainerHighest,
-                        foregroundColor: step.index <= current.index
-                            ? colors.onPrimary
-                            : colors.onSurfaceVariant,
-                        child: step.index < current.index
-                            ? const Icon(Icons.check, size: 16)
-                            : Text('${step.index + 1}'),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        RecipeWizardView.stepLabel(context.l10n, step),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          fontWeight: step == current
-                              ? FontWeight.bold
-                              : FontWeight.normal,
+              child: TrackedButton(
+                buttonLabel: 'wizard_step',
+                buttonAction: 'go_to_${step.name}',
+                currentScreen: wizardScreenName(context),
+                onPressed: () => context.read<RecipeCreationCubit>().goTo(step),
+                builder: (context, onPressed) => InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: onPressed,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 14,
+                          backgroundColor: step.index <= current.index
+                              ? colors.primary
+                              : colors.surfaceContainerHighest,
+                          foregroundColor: step.index <= current.index
+                              ? colors.onPrimary
+                              : colors.onSurfaceVariant,
+                          child: step.index < current.index
+                              ? const Icon(Icons.check, size: 16)
+                              : Text('${step.index + 1}'),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          RecipeWizardView.stepLabel(context.l10n, step),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: step == current
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -303,30 +323,48 @@ class _BottomBar extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                OutlinedButton(
+                TrackedButton(
+                  buttonLabel: 'back',
+                  buttonAction: 'previous_step',
+                  currentScreen: wizardScreenName(context),
                   onPressed: state.step.index == 0 || busy ? null : cubit.back,
-                  child: Text(l10n.back),
+                  builder: (context, onPressed) => OutlinedButton(
+                    onPressed: onPressed,
+                    child: Text(l10n.back),
+                  ),
                 ),
                 const Spacer(),
                 if (state.isLastStep)
-                  FilledButton.icon(
-                    key: const Key('wizard-finish'),
+                  TrackedButton(
+                    buttonLabel: 'finish',
+                    buttonAction: 'save_recipe',
+                    currentScreen: wizardScreenName(context),
                     onPressed: busy
                         ? null
                         : () => _finish(context, openedAsEdit),
-                    icon: state.isSaving
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.check),
-                    label: Text(l10n.finish),
+                    builder: (context, onPressed) => FilledButton.icon(
+                      key: const Key('wizard-finish'),
+                      onPressed: onPressed,
+                      icon: state.isSaving
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.check),
+                      label: Text(l10n.finish),
+                    ),
                   )
                 else
-                  FilledButton(
-                    key: const Key('wizard-next'),
+                  TrackedButton(
+                    buttonLabel: 'next',
+                    buttonAction: 'next_step',
+                    currentScreen: wizardScreenName(context),
                     onPressed: busy ? null : cubit.next,
-                    child: Text(l10n.next),
+                    builder: (context, onPressed) => FilledButton(
+                      key: const Key('wizard-next'),
+                      onPressed: onPressed,
+                      child: Text(l10n.next),
+                    ),
                   ),
               ],
             ),

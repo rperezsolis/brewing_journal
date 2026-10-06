@@ -1,5 +1,6 @@
 import 'package:brewing_journal_client/brewing_journal_client.dart';
 import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
+import 'package:brewing_journal_flutter/ui/core/analytics/screen_names.dart';
 import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_list/view/recipe_tile.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +50,12 @@ void main() {
         home: Scaffold(
           body: ListView(
             children: [
-              RecipeTile(recipe: recipe, onTap: () {}, onFavorite: () {}),
+              RecipeTile(
+                recipe: recipe,
+                currentScreen: ScreenNames.recipeList,
+                onTap: () {},
+                onFavorite: () {},
+              ),
             ],
           ),
         ),
@@ -95,6 +101,7 @@ void main() {
             children: [
               RecipeTile(
                 recipe: item,
+                currentScreen: ScreenNames.recipeList,
                 onTap: () => opened = true,
                 onFavorite: () => favorited = true,
               ),

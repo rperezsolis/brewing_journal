@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/l10n.dart';
 
 /// Asks whether to replace the favorite that already uses this recipe name.
@@ -8,18 +9,29 @@ import '../../../core/l10n.dart';
 Future<bool> showReplaceFavoriteDialog(
   BuildContext context, {
   bool team = false,
+  required String currentScreen,
 }) {
   return showDialog<bool>(
     context: context,
-    builder: (context) => ReplaceFavoriteDialog(team: team),
+    builder: (context) => ReplaceFavoriteDialog(
+      team: team,
+      currentScreen: currentScreen,
+    ),
   ).then((accepted) => accepted ?? false);
 }
 
 class ReplaceFavoriteDialog extends StatelessWidget {
-  const ReplaceFavoriteDialog({super.key, this.team = false});
+  const ReplaceFavoriteDialog({
+    super.key,
+    this.team = false,
+    required this.currentScreen,
+  });
 
   /// Uses the team-favorites copy when the save belongs to a team.
   final bool team;
+
+  /// Screen that opened the dialog, recorded with each button event.
+  final String currentScreen;
 
   @override
   Widget build(BuildContext context) {
@@ -39,11 +51,17 @@ class ReplaceFavoriteDialog extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
-            key: const Key('favorite-conflict-close'),
-            tooltip: l10n.close,
-            icon: const Icon(Icons.close),
+          TrackedButton(
+            buttonLabel: 'close',
+            buttonAction: 'dismiss_favorite_conflict',
+            currentScreen: currentScreen,
             onPressed: () => Navigator.of(context).pop(false),
+            builder: (context, onPressed) => IconButton(
+              key: const Key('favorite-conflict-close'),
+              tooltip: l10n.close,
+              icon: const Icon(Icons.close),
+              onPressed: onPressed,
+            ),
           ),
         ],
       ),
@@ -51,15 +69,27 @@ class ReplaceFavoriteDialog extends StatelessWidget {
         team ? l10n.favoriteNameTakenBodyTeam : l10n.favoriteNameTakenBody,
       ),
       actions: [
-        TextButton(
-          key: const Key('favorite-conflict-cancel'),
+        TrackedButton(
+          buttonLabel: 'cancel',
+          buttonAction: 'dismiss_favorite_conflict',
+          currentScreen: currentScreen,
           onPressed: () => Navigator.of(context).pop(false),
-          child: Text(l10n.cancel),
+          builder: (context, onPressed) => TextButton(
+            key: const Key('favorite-conflict-cancel'),
+            onPressed: onPressed,
+            child: Text(l10n.cancel),
+          ),
         ),
-        FilledButton(
-          key: const Key('favorite-conflict-accept'),
+        TrackedButton(
+          buttonLabel: 'accept',
+          buttonAction: 'replace_favorite',
+          currentScreen: currentScreen,
           onPressed: () => Navigator.of(context).pop(true),
-          child: Text(l10n.accept),
+          builder: (context, onPressed) => FilledButton(
+            key: const Key('favorite-conflict-accept'),
+            onPressed: onPressed,
+            child: Text(l10n.accept),
+          ),
         ),
       ],
     );

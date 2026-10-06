@@ -93,6 +93,34 @@ void main() {
 
     expect(presses, 1);
   });
+
+  testWidgets('the button still runs when analytics is not provided', (
+    tester,
+  ) async {
+    var presses = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: TrackedButton(
+            buttonLabel: 'retry',
+            buttonAction: 'reload',
+            currentScreen: 'recipe_list',
+            onPressed: () => presses += 1,
+            builder: (context, onPressed) => FilledButton(
+              onPressed: onPressed,
+              child: const Text('Retry'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Retry'));
+    await tester.pump();
+
+    expect(presses, 1);
+  });
 }
 
 class _RecordingAnalytics extends NoOpAnalyticsService {

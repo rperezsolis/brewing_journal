@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/l10n.dart';
 import '../../../core/validation_messages.dart';
+import 'wizard_screen_name.dart';
 import '../cubit/recipe_creation_cubit.dart';
 import '../cubit/recipe_creation_state.dart';
 import '../photo_encoder.dart';
@@ -164,10 +166,16 @@ class _PhotoTile extends StatelessWidget {
           Positioned(
             top: 4,
             right: 4,
-            child: IconButton.filledTonal(
-              tooltip: context.l10n.removePhoto,
-              icon: const Icon(Icons.close, size: 18),
+            child: TrackedButton(
+              buttonLabel: 'remove_photo',
+              buttonAction: 'remove_photo',
+              currentScreen: wizardScreenName(context),
               onPressed: onRemove,
+              builder: (context, onPressed) => IconButton.filledTonal(
+                tooltip: context.l10n.removePhoto,
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: onPressed,
+              ),
             ),
           ),
         ],
@@ -210,16 +218,22 @@ class _AddTile extends StatelessWidget {
     return Material(
       color: colors.surfaceContainerHigh,
       borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add_a_photo_outlined, color: colors.primary, size: 32),
-            const SizedBox(height: 8),
-            Text(context.l10n.addPhoto),
-          ],
+      child: TrackedButton(
+        buttonLabel: 'add_photo',
+        buttonAction: 'pick_photo',
+        currentScreen: wizardScreenName(context),
+        onPressed: onTap,
+        builder: (context, onPressed) => InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onPressed,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add_a_photo_outlined, color: colors.primary, size: 32),
+              const SizedBox(height: 8),
+              Text(context.l10n.addPhoto),
+            ],
+          ),
         ),
       ),
     );

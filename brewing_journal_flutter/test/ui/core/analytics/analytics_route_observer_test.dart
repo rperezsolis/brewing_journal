@@ -124,11 +124,11 @@ void main() {
     await tester.tap(find.byKey(const Key('recipe-list-new')));
     await tester.pumpAndSettle();
 
-    expect(analytics.buttons.single, (
-      'new_recipe',
-      'open_recipe_wizard',
-      ScreenNames.recipeList,
-    ));
+    expect(analytics.buttons, [
+      ('teams', 'open_teams', ScreenNames.recipeList),
+      ('my_recipes', 'open_recipe_list', ScreenNames.teams),
+      ('new_recipe', 'open_recipe_wizard', ScreenNames.recipeList),
+    ]);
     expect(analytics.screenNames.last, ScreenNames.recipeCreate);
 
     await tester.tap(find.byTooltip('Close'));

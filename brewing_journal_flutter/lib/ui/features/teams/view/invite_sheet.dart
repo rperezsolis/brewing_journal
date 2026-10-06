@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/analytics/screen_names.dart';
+import '../../../core/analytics/tracked_button.dart';
 import '../../../core/error_messages.dart';
 import '../../../core/l10n.dart';
 import '../cubit/teams_cubit.dart';
@@ -83,7 +85,16 @@ class _InviteSheetState extends State<_InviteSheet> {
                 selected: {_role},
                 onSelectionChanged: state.creatingInvite
                     ? null
-                    : (selected) => setState(() => _role = selected.first),
+                    : (selected) {
+                        final role = selected.first;
+                        trackButtonPress(
+                          context,
+                          buttonLabel: 'invite_role',
+                          buttonAction: 'select_${role.name}',
+                          currentScreen: ScreenNames.teamDetail,
+                          onPressed: () => setState(() => _role = role),
+                        )?.call();
+                      },
               ),
               const SizedBox(height: 12),
               SegmentedButton<Duration>(
@@ -105,11 +116,22 @@ class _InviteSheetState extends State<_InviteSheet> {
                 selected: {_ttl},
                 onSelectionChanged: state.creatingInvite
                     ? null
-                    : (selected) => setState(() => _ttl = selected.first),
+                    : (selected) {
+                        final ttl = selected.first;
+                        trackButtonPress(
+                          context,
+                          buttonLabel: 'invite_ttl',
+                          buttonAction: _ttlAction(ttl),
+                          currentScreen: ScreenNames.teamDetail,
+                          onPressed: () => setState(() => _ttl = ttl),
+                        )?.call();
+                      },
               ),
               const SizedBox(height: 16),
-              FilledButton(
-                key: const Key('invite-create'),
+              TrackedButton(
+                buttonLabel: 'create_invite',
+                buttonAction: 'create_invite',
+                currentScreen: ScreenNames.teamDetail,
                 onPressed: state.creatingInvite
                     ? null
                     : () => context.read<TeamsCubit>().createInvite(
@@ -117,19 +139,25 @@ class _InviteSheetState extends State<_InviteSheet> {
                         _role,
                         _ttl,
                       ),
-                child: state.creatingInvite
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.create),
+                builder: (context, onPressed) => FilledButton(
+                  key: const Key('invite-create'),
+                  onPressed: onPressed,
+                  child: state.creatingInvite
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(l10n.create),
+                ),
               ),
               if (invite != null) ...[
                 const SizedBox(height: 16),
                 SelectableText(invite.url, key: const Key('invite-url')),
                 const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  key: const Key('invite-copy'),
+                TrackedButton(
+                  buttonLabel: 'copy_invite',
+                  buttonAction: 'copy_invite_link',
+                  currentScreen: ScreenNames.teamDetail,
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: invite.url));
                     if (!context.mounted) return;
@@ -137,8 +165,12 @@ class _InviteSheetState extends State<_InviteSheet> {
                       SnackBar(content: Text(context.l10n.inviteLinkCopied)),
                     );
                   },
-                  icon: const Icon(Icons.copy),
-                  label: Text(l10n.copyLink),
+                  builder: (context, onPressed) => OutlinedButton.icon(
+                    key: const Key('invite-copy'),
+                    onPressed: onPressed,
+                    icon: const Icon(Icons.copy),
+                    label: Text(l10n.copyLink),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -152,4 +184,13 @@ class _InviteSheetState extends State<_InviteSheet> {
       ),
     );
   }
+}
+
+String _ttlAction(Duration ttl) {
+  return switch (ttl) {
+    const Duration(hours: 1) => 'select_one_hour',
+    const Duration(hours: 24) => 'select_one_day',
+    const Duration(days: 7) => 'select_one_week',
+    _ => 'select_ttl',
+  };
 }
