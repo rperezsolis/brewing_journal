@@ -69,4 +69,4 @@ authCookie:
   sameSite: lax
   secure: true
 allowedOrigins:
-  - https://app.examplepod.com # The origin serving your Flutter web app
+  - https://brew-sync.serverpod.space # The origin serving your Flutter web app
