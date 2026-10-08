@@ -22,7 +22,7 @@ void main() {
       find.text('Grinding: Medium-fine · Comandante C40'),
       findsOneWidget,
     );
-    expect(find.text('Made with BrewSync'), findsOneWidget);
+    expect(find.text('Made with Cata Café'), findsOneWidget);
     expect(find.byKey(const Key('share-footer')), findsOneWidget);
   });
 
@@ -36,7 +36,7 @@ void main() {
     expect(find.text('stir'), findsOneWidget);
     expect(find.text('wait'), findsNothing);
     expect(find.text('+3 more'), findsOneWidget);
-    expect(find.text('Made with BrewSync'), findsOneWidget);
+    expect(find.text('Made with Cata Café'), findsOneWidget);
   });
 
   testWidgets('a 280-character instruction does not overflow', (tester) async {
@@ -44,7 +44,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byKey(const Key('share-instructions')), findsOneWidget);
-    expect(find.text('Made with BrewSync'), findsOneWidget);
+    expect(find.text('Made with Cata Café'), findsOneWidget);
   });
 
   testWidgets('sweetness and bitterness sit beside the radar', (tester) async {
@@ -68,7 +68,7 @@ void main() {
     );
 
     expect(find.text('Timer: 3m 00s'), findsOneWidget);
-    expect(find.text('Made with BrewSync'), findsOneWidget);
+    expect(find.text('Made with Cata Café'), findsOneWidget);
   });
 }
 

@@ -9,7 +9,7 @@ class AppLocalizationsPt extends AppLocalizations {
   AppLocalizationsPt([String locale = 'pt']) : super(locale);
 
   @override
-  String get appTitle => 'BrewSync';
+  String get appTitle => 'Cata Café';
 
   @override
   String get myRecipes => 'Minhas receitas';
@@ -438,7 +438,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get downloadImage => 'Baixar imagem';
 
   @override
-  String get madeWithBrewSync => 'Feito com BrewSync';
+  String get madeWithBrewSync => 'Feito com Cata Café';
 
   @override
   String brewingSummary(String method, String dose, String temp) {
@@ -784,7 +784,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   AppLocalizationsPtBr() : super('pt_BR');
 
   @override
-  String get appTitle => 'BrewSync';
+  String get appTitle => 'Cata Café';
 
   @override
   String get myRecipes => 'Minhas receitas';
@@ -1213,7 +1213,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get downloadImage => 'Baixar imagem';
 
   @override
-  String get madeWithBrewSync => 'Feito com BrewSync';
+  String get madeWithBrewSync => 'Feito com Cata Café';
 
   @override
   String brewingSummary(String method, String dose, String temp) {

@@ -45,13 +45,25 @@ class SignInScreen extends StatelessWidget {
                   basic: basicSignInTextsFor(l10n),
                   email: emailSignInTextsFor(l10n),
                   passwordRequirementTexts: passwordRequirementTextsFor(l10n),
-                  child: SignInWidget(
-                    client: client,
-                    onError: showError,
-                    emailSignInWidget: PreferredNameEmailSignIn(
-                      client: client,
-                      onError: showError,
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/images/cata_cafe_iso_plus_logo.png',
+                        width: 300,
+                        fit: BoxFit.contain,
+                      ),
+                      SignInWidget(
+                        client: client,
+                        onError: showError,
+                        emailSignInWidget: PreferredNameEmailSignIn(
+                          client: client,
+                          onError: showError,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

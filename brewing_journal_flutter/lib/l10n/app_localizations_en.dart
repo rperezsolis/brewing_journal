@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'BrewSync';
+  String get appTitle => 'Cata Café';
 
   @override
   String get myRecipes => 'My recipes';
@@ -432,7 +432,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadImage => 'Download image';
 
   @override
-  String get madeWithBrewSync => 'Made with BrewSync';
+  String get madeWithBrewSync => 'Made with Cata Café';
 
   @override
   String brewingSummary(String method, String dose, String temp) {

@@ -105,7 +105,7 @@ abstract class AppLocalizations {
   /// Application name shown in the window title and app bars
   ///
   /// In en, this message translates to:
-  /// **'BrewSync'**
+  /// **'Cata Café'**
   String get appTitle;
 
   /// Bottom navigation label for the user's own recipes
@@ -891,7 +891,7 @@ abstract class AppLocalizations {
   /// Footer of the share card
   ///
   /// In en, this message translates to:
-  /// **'Made with BrewSync'**
+  /// **'Made with Cata Café'**
   String get madeWithBrewSync;
 
   /// Share card line for method, dose, and water temperature when no water quantity was recorded

@@ -15,9 +15,9 @@
 		<string>pt-BR</string>
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>BrewSync attaches photos of your brews to recipes.</string>
+	<string>Cata Café attaches photos of your brews to recipes.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>BrewSync takes photos of your brews for recipes.</string>
+	<string>Cata Café takes photos of your brews for recipes.</string>
 	<key>CFBundleDisplayName</key>
 	<string>Brewing Journal Flutter</string>
 	<key>CFBundleExecutable</key>

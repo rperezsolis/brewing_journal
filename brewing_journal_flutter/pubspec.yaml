@@ -89,6 +89,8 @@ flutter:
   assets:
     - assets/config.json
     - assets/sounds/brew_alarm.mp3
+    - assets/images/cata_cafe_iso_plus_logo.png
+    - assets/images/cata_cafe_iso.png
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a

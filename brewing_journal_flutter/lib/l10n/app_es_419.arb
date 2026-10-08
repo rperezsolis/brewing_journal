@@ -1,6 +1,6 @@
 {
   "@@locale": "es_419",
-  "appTitle": "BrewSync",
+  "appTitle": "Cata Café",
   "myRecipes": "Mis recetas",
   "teams": "Equipos",
   "signOut": "Cerrar sesión",
@@ -130,7 +130,7 @@
   "couldNotSaveImage": "No se pudo guardar la imagen.",
   "sharingNotSupported": "Compartir no está disponible aquí. Descarga la imagen.",
   "downloadImage": "Descargar imagen",
-  "madeWithBrewSync": "Hecho con BrewSync",
+  "madeWithBrewSync": "Hecho con Cata Café",
   "brewingSummary": "Preparación: {method} · {dose} g · {temp} °C",
   "brewingSummaryWithWater": "Preparación: {method} · {dose} g · {water} ml · {temp} °C",
   "grindingSummary": "Molienda: {grind} · {grinder}",

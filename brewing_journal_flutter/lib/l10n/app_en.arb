@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "BrewSync",
+  "appTitle": "Cata Café",
   "@appTitle": { "description": "Application name shown in the window title and app bars" },
   "myRecipes": "My recipes",
   "@myRecipes": { "description": "Bottom navigation label for the user's own recipes" },
@@ -315,7 +315,7 @@
   "@sharingNotSupported": { "description": "Shown when the platform has no share sheet" },
   "downloadImage": "Download image",
   "@downloadImage": { "description": "Button that saves the share image" },
-  "madeWithBrewSync": "Made with BrewSync",
+  "madeWithBrewSync": "Made with Cata Café",
   "@madeWithBrewSync": { "description": "Footer of the share card" },
   "brewingSummary": "Brewing: {method} · {dose} g · {temp} °C",
   "@brewingSummary": {
