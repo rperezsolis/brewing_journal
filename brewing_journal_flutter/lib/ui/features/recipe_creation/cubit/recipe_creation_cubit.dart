@@ -40,7 +40,13 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
 
   Future<void> load(UuidValue id) async {
     _cancelStopwatch();
-    emit(RecipeCreationState(loadStatus: LoadStatus.loading, recipeId: id));
+    emit(
+      RecipeCreationState(
+        loadStatus: LoadStatus.loading,
+        recipeId: id,
+        sourceRecipeId: id,
+      ),
+    );
     final RecipeDetail detail;
     try {
       detail = await _recipes.get(id);
@@ -59,6 +65,7 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     emit(
       RecipeCreationState(
         recipeId: recipe.id,
+        sourceRecipeId: recipe.id,
         teamId: recipe.teamId,
         canEdit: detail.access.canEdit,
         ingredientKind: detail.ingredient.kind,
@@ -496,7 +503,9 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
 
   // Saving and photos
 
-  /// Saves the whole wizard. On failure every field is kept.
+  /// Saves the whole wizard. On failure every field is kept, except when the
+  /// version was stored and attaching a new photo failed: the wizard then
+  /// points at that version so the source recipe stays unchanged.
   Future<bool> save() async {
     if (state.isSaving || state.adoptingIngredientId != null) return false;
     for (final step in RecipeWizardStep.values) {
@@ -514,6 +523,7 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     if (state.stopwatchRunning) stopStopwatch();
 
     final s = state;
+    final staged = [...s.stagedPhotos];
     final note = s.extractionMethodNote.trim();
     final draft = RecipeDraft(
       // An existing id is the source of a new version. The server inserts a
@@ -542,12 +552,40 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     try {
       final detail = await _recipes.save(draft);
       if (isClosed) return true;
+      final newId = detail.recipe.id!;
+      final uploaded = <RecipePhoto>[];
+      for (var i = 0; i < staged.length; i++) {
+        try {
+          uploaded.add(
+            await _media.uploadPhoto(
+              newId,
+              ByteData.sublistView(staged[i].bytes),
+              contentType: staged[i].contentType,
+            ),
+          );
+        } catch (error) {
+          if (isClosed) return false;
+          // The version exists. Keep the photos that did not upload so a
+          // retry can attach them, and leave the source recipe untouched.
+          emit(
+            state.copyWith(
+              saveStatus: SaveStatus.failure,
+              recipeId: () => newId,
+              photos: _sortedPhotos([...detail.photos, ...uploaded]),
+              stagedPhotos: staged.sublist(i),
+              error: error,
+              canEdit: detail.access.canEdit,
+            ),
+          );
+          return false;
+        }
+      }
       emit(
         state.copyWith(
           saveStatus: SaveStatus.success,
-          recipeId: () => detail.recipe.id,
-          photos: [...detail.photos]
-            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
+          recipeId: () => newId,
+          photos: _sortedPhotos([...detail.photos, ...uploaded]),
+          stagedPhotos: const [],
           canEdit: detail.access.canEdit,
         ),
       );
@@ -574,8 +612,9 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     }
   }
 
-  /// Uploads a photo. A new recipe is saved first, since a photo needs a
-  /// recipe id. The photo is appended only once the server confirms it.
+  /// Uploads a photo. A brand-new recipe is saved first, since a photo needs
+  /// a recipe id. While editing, the photo is held until the new version is
+  /// saved, so it is never stored on the source recipe.
   ///
   /// [contentType] is the type of [bytes] after any client-side conversion.
   Future<bool> addPhoto(
@@ -583,13 +622,28 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     String contentType = 'image/jpeg',
   }) async {
     if (state.pendingUpload) return false;
-    if (state.photos.length >= kMaxPhotos) {
+    if (state.photoCount >= kMaxPhotos) {
       emit(
         state.copyWith(
           error: _validation(validationMessage('tooManyPhotos', [kMaxPhotos])),
         ),
       );
       return false;
+    }
+    if (state.stagesPhotos) {
+      emit(
+        state.copyWith(
+          stagedPhotos: [
+            ...state.stagedPhotos,
+            StagedPhoto(
+              id: const Uuid().v7obj(),
+              bytes: Uint8List.sublistView(bytes),
+              contentType: contentType,
+            ),
+          ],
+        ),
+      );
+      return true;
     }
     if (state.recipeId == null && !await save()) return false;
     if (isClosed) return false;
@@ -614,6 +668,17 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
   }
 
   Future<void> removePhoto(UuidValue photoId) async {
+    if (state.stagedPhotos.any((photo) => photo.id == photoId)) {
+      emit(
+        state.copyWith(
+          stagedPhotos: [
+            for (final photo in state.stagedPhotos)
+              if (photo.id != photoId) photo,
+          ],
+        ),
+      );
+      return;
+    }
     try {
       await _media.remove(photoId);
       if (isClosed) return;
@@ -633,6 +698,9 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
 
   BrewingException _validation(String message) =>
       BrewingException(code: BrewingErrorCode.validation, message: message);
+
+  List<RecipePhoto> _sortedPhotos(List<RecipePhoto> photos) =>
+      [...photos]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
   void _cancelStopwatch() {
     _ticker?.cancel();

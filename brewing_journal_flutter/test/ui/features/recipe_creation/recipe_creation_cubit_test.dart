@@ -434,6 +434,71 @@ void main() {
       );
     });
 
+    test(
+      'a photo added while editing is stored on the new version only',
+      () async {
+        await fillRequired(cubit);
+        await cubit.save();
+        final sourceId = cubit.state.recipeId!;
+        final source = recipes.details[sourceId]!;
+        final existing = RecipePhoto(
+          id: const Uuid().v7obj(),
+          recipeId: sourceId,
+          storagePath: 'recipes/${sourceId.uuid}/old.jpg',
+          sortOrder: 0,
+          publicUrl: Uri.parse('https://example.com/old.jpg'),
+        );
+        recipes.details[sourceId] = RecipeDetail(
+          recipe: source.recipe,
+          ingredient: source.ingredient,
+          instructions: source.instructions,
+          flavorTags: source.flavorTags,
+          photos: [existing],
+          access: source.access,
+        );
+
+        final editor = build();
+        addTearDown(editor.close);
+        await editor.load(sourceId);
+
+        expect(await editor.addPhoto(bytes, contentType: 'image/webp'), isTrue);
+
+        expect(media.uploadedTo, isEmpty);
+        expect(recipes.details[sourceId]!.photos, [existing]);
+        expect(editor.state.stagedPhotos, hasLength(1));
+        expect(editor.state.photos, [existing]);
+
+        expect(await editor.save(), isTrue);
+
+        final savedId = editor.state.recipeId!;
+        expect(savedId, isNot(sourceId));
+        expect(media.uploadedTo, [savedId]);
+        expect(media.uploadedContentTypes, ['image/webp']);
+        expect(recipes.details[sourceId]!.photos, [existing]);
+        expect(
+          editor.state.photos.map((photo) => photo.recipeId).toSet(),
+          {savedId},
+        );
+        expect(editor.state.stagedPhotos, isEmpty);
+      },
+    );
+
+    test('removing a staged photo does not call the server', () async {
+      await fillRequired(cubit);
+      await cubit.save();
+      final sourceId = cubit.state.recipeId!;
+      final editor = build();
+      addTearDown(editor.close);
+      await editor.load(sourceId);
+      await editor.addPhoto(bytes);
+      await editor.removePhoto(editor.state.stagedPhotos.single.id);
+
+      expect(editor.state.stagedPhotos, isEmpty);
+      expect(media.uploadedTo, isEmpty);
+      expect(await editor.save(), isTrue);
+      expect(media.uploadedTo, isEmpty);
+    });
+
     test('removePhoto drops the row', () async {
       await fillRequired(cubit);
       await cubit.addPhoto(bytes);

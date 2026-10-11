@@ -120,12 +120,13 @@ class _StepMediaState extends State<StepMedia> {
     return BlocBuilder<RecipeCreationCubit, RecipeCreationState>(
       buildWhen: (previous, current) =>
           previous.photos != current.photos ||
+          previous.stagedPhotos != current.stagedPhotos ||
           previous.pendingUpload != current.pendingUpload ||
           previous.saveStatus != current.saveStatus,
       builder: (context, state) {
         final l10n = context.l10n;
         final canAdd =
-            state.photos.length < kMaxPhotos &&
+            state.photoCount < kMaxPhotos &&
             !state.pendingUpload &&
             !state.isSaving;
         return CustomScrollView(
@@ -159,6 +160,14 @@ class _StepMediaState extends State<StepMedia> {
                       onRemove: state.pendingUpload
                           ? null
                           : () => cubit.removePhoto(photo.id!),
+                    ),
+                  for (final staged in state.stagedPhotos)
+                    _LocalPhotoTile(
+                      key: ValueKey(staged.id),
+                      bytes: staged.bytes,
+                      onRemove: state.pendingUpload || state.isSaving
+                          ? null
+                          : () => cubit.removePhoto(staged.id),
                     ),
                   if (state.pendingUpload && _pendingPreview != null)
                     _PendingTile(bytes: _pendingPreview!),
@@ -229,6 +238,45 @@ class _PhotoTile extends StatelessWidget {
               webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
               errorBuilder: (_, _, _) => placeholder,
             ),
+          Positioned(
+            top: 4,
+            right: 4,
+            child: TrackedButton(
+              buttonLabel: 'remove_photo',
+              buttonAction: 'remove_photo',
+              currentScreen: wizardScreenName(context),
+              onPressed: onRemove,
+              builder: (context, onPressed) => IconButton.filledTonal(
+                tooltip: context.l10n.removePhoto,
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: onPressed,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LocalPhotoTile extends StatelessWidget {
+  const _LocalPhotoTile({
+    super.key,
+    required this.bytes,
+    required this.onRemove,
+  });
+
+  final Uint8List bytes;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.memory(bytes, fit: BoxFit.cover),
           Positioned(
             top: 4,
             right: 4,

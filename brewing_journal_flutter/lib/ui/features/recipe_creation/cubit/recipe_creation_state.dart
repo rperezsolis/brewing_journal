@@ -44,8 +44,10 @@ class RecipeCreationState extends Equatable {
     this.flavorTags = const [],
     this.instructions = const [],
     this.photos = const [],
+    this.stagedPhotos = const [],
     this.pendingUpload = false,
     this.canEdit = true,
+    this.sourceRecipeId,
   });
 
   final RecipeWizardStep step;
@@ -57,6 +59,10 @@ class RecipeCreationState extends Equatable {
 
   /// Null until the first successful save; set when editing.
   final UuidValue? recipeId;
+
+  /// The recipe opened for editing. A save inserts a new version and leaves
+  /// this one unchanged. Null for a recipe started from scratch.
+  final UuidValue? sourceRecipeId;
 
   /// Set for a new team recipe; ignored on update.
   final UuidValue? teamId;
@@ -102,10 +108,20 @@ class RecipeCreationState extends Equatable {
   /// Display order; duplicates kept.
   final List<String> instructions;
 
-  /// Confirmed rows only.
+  /// Confirmed rows only. Photos picked while editing [sourceRecipeId] stay
+  /// in [stagedPhotos] until the new version exists.
   final List<RecipePhoto> photos;
+
+  /// Photos picked for the version being saved, not yet stored.
+  final List<StagedPhoto> stagedPhotos;
   final bool pendingUpload;
   final bool canEdit;
+
+  int get photoCount => photos.length + stagedPhotos.length;
+
+  /// True while [recipeId] is still the opened recipe, so a photo must not
+  /// be written to it.
+  bool get stagesPhotos => sourceRecipeId != null && recipeId == sourceRecipeId;
 
   bool get isEditing => recipeId != null;
   bool get isSaving => saveStatus == SaveStatus.saving;
@@ -146,8 +162,10 @@ class RecipeCreationState extends Equatable {
     List<String>? flavorTags,
     List<String>? instructions,
     List<RecipePhoto>? photos,
+    List<StagedPhoto>? stagedPhotos,
     bool? pendingUpload,
     bool? canEdit,
+    ValueGetter<UuidValue?>? sourceRecipeId,
   }) {
     return RecipeCreationState(
       step: step ?? this.step,
@@ -194,8 +212,12 @@ class RecipeCreationState extends Equatable {
       flavorTags: flavorTags ?? this.flavorTags,
       instructions: instructions ?? this.instructions,
       photos: photos ?? this.photos,
+      stagedPhotos: stagedPhotos ?? this.stagedPhotos,
       pendingUpload: pendingUpload ?? this.pendingUpload,
       canEdit: canEdit ?? this.canEdit,
+      sourceRecipeId: sourceRecipeId != null
+          ? sourceRecipeId()
+          : this.sourceRecipeId,
     );
   }
 
@@ -234,7 +256,25 @@ class RecipeCreationState extends Equatable {
     flavorTags,
     instructions,
     photos,
+    stagedPhotos,
     pendingUpload,
     canEdit,
+    sourceRecipeId,
   ];
+}
+
+/// A photo held in the wizard until the new recipe version is saved.
+class StagedPhoto extends Equatable {
+  const StagedPhoto({
+    required this.id,
+    required this.bytes,
+    required this.contentType,
+  });
+
+  final UuidValue id;
+  final Uint8List bytes;
+  final String contentType;
+
+  @override
+  List<Object?> get props => [id, contentType];
 }
