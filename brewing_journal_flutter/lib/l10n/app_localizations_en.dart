@@ -700,7 +700,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authVerificationMessage =>
-      'A verification email has been sent. Please check your email and enter the verification code below.';
+      'A verification email has been sent. Please check your inbox and enter the verification code below. If you don\'t find it there, check your spam folder.';
 
   @override
   String get authVerify => 'Verify';

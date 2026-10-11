@@ -708,7 +708,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authVerificationMessage =>
-      'Enviamos un correo de verificación. Revisa tu correo e ingresa el código a continuación.';
+      'Enviamos un correo de verificación. Revisa tu bandeja de entrada e ingresa el código a continuación. Si no lo encuentras, revisa la carpeta de spam.';
 
   @override
   String get authVerify => 'Verificar';
@@ -1487,7 +1487,7 @@ class AppLocalizationsEs419 extends AppLocalizationsEs {
 
   @override
   String get authVerificationMessage =>
-      'Enviamos un correo de verificación. Revisa tu correo e ingresa el código a continuación.';
+      'Enviamos un correo de verificación. Revisa tu bandeja de entrada e ingresa el código a continuación. Si no lo encuentras, revisa la carpeta de spam.';
 
   @override
   String get authVerify => 'Verificar';

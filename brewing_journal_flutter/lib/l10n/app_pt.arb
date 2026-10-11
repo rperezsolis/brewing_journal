@@ -204,7 +204,7 @@
   "authAlreadyHaveAnAccount": "Já tem uma conta?",
   "authVerifyAccountTitle": "Verificar conta",
   "authVerifyResetCodeTitle": "Verificar código",
-  "authVerificationMessage": "Enviamos um e-mail de verificação. Confira seu e-mail e digite o código abaixo.",
+  "authVerificationMessage": "Enviamos um e-mail de verificação. Confira sua caixa de entrada e digite o código abaixo. Se não o encontrar, confira a pasta de spam.",
   "authVerify": "Verificar",
   "authSetAccountPasswordTitle": "Definir senha da conta",
   "authBackToSignUp": "Voltar ao cadastro",

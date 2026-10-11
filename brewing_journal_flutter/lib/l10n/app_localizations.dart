@@ -1340,7 +1340,7 @@ abstract class AppLocalizations {
   /// Instructions shown after a verification email is sent
   ///
   /// In en, this message translates to:
-  /// **'A verification email has been sent. Please check your email and enter the verification code below.'**
+  /// **'A verification email has been sent. Please check your inbox and enter the verification code below. If you don\'t find it there, check your spam folder.'**
   String get authVerificationMessage;
 
   /// Button that submits a verification code

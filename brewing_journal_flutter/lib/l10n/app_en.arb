@@ -550,7 +550,7 @@
   "@authVerifyAccountTitle": { "description": "Title of the account verification screen" },
   "authVerifyResetCodeTitle": "Verify reset code",
   "@authVerifyResetCodeTitle": { "description": "Title of the password-reset code screen" },
-  "authVerificationMessage": "A verification email has been sent. Please check your email and enter the verification code below.",
+  "authVerificationMessage": "A verification email has been sent. Please check your inbox and enter the verification code below. If you don't find it there, check your spam folder.",
   "@authVerificationMessage": { "description": "Instructions shown after a verification email is sent" },
   "authVerify": "Verify",
   "@authVerify": { "description": "Button that submits a verification code" },
