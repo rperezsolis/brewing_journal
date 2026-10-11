@@ -756,6 +756,12 @@ abstract class AppLocalizations {
   /// **'Add photo'**
   String get addPhoto;
 
+  /// Shown while a photo in an unsupported format is converted to WebP before upload
+  ///
+  /// In en, this message translates to:
+  /// **'Processing images'**
+  String get processingImages;
+
   /// Title of the delete confirmation dialog
   ///
   /// In en, this message translates to:

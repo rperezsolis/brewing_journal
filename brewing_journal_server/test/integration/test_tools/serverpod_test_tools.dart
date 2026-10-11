@@ -1228,8 +1228,9 @@ class _RecipeMediaEndpoint {
 
   _ida.Future<_ikoobncs.UploadTicket> createUploadDescription(
     _ist.TestSessionBuilder sessionBuilder,
-    _is.UuidValue recipeId,
-  ) async {
+    _is.UuidValue recipeId, {
+    String? contentType,
+  }) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
           (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
@@ -1241,7 +1242,10 @@ class _RecipeMediaEndpoint {
           createSessionCallback: (_) => _localUniqueSession,
           endpointPath: 'recipeMedia',
           methodName: 'createUploadDescription',
-          parameters: _ist.testObjectToJson({'recipeId': recipeId}),
+          parameters: _ist.testObjectToJson({
+            'recipeId': recipeId,
+            'contentType': contentType,
+          }),
           serializationManager: _serializationManager,
         );
         var _localReturnValue =

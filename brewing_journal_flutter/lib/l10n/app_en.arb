@@ -261,6 +261,10 @@
   "@removePhoto": { "description": "Tooltip for deleting a photo" },
   "addPhoto": "Add photo",
   "@addPhoto": { "description": "Label of the add-photo tile" },
+  "processingImages": "Processing images",
+  "@processingImages": {
+    "description": "Shown while a photo in an unsupported format is converted to WebP before upload"
+  },
   "deleteRecipeTitle": "Delete this recipe?",
   "@deleteRecipeTitle": { "description": "Title of the delete confirmation dialog" },
   "deleteRecipeBody": "“{title}” will be removed. This cannot be undone.",

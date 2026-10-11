@@ -2,6 +2,7 @@ import 'package:serverpod/serverpod.dart';
 
 import '../common/authenticated_endpoint.dart';
 import '../generated/protocol.dart';
+import 'photo_format.dart';
 import 'recipe_access_policy.dart';
 import 'recipe_limits.dart';
 import 'recipe_storage.dart';
@@ -12,8 +13,9 @@ import 'recipe_validator.dart';
 class RecipeMediaEndpoint extends AuthenticatedEndpoint {
   Future<UploadTicket> createUploadDescription(
     Session session,
-    UuidValue recipeId,
-  ) async {
+    UuidValue recipeId, {
+    String? contentType,
+  }) async {
     await RecipeAccessPolicy.loadForEdit(session, recipeId);
     final count = await RecipePhoto.db.count(
       session,
@@ -23,15 +25,18 @@ class RecipeMediaEndpoint extends AuthenticatedEndpoint {
       throw validationError('photos', 'at most $kMaxPhotos photos');
     }
 
+    final extension = photoExtensionForContentType(contentType);
     // A v4 (not v7) UUID, so public URLs carry no timestamp.
-    final path = 'recipes/${recipeId.uuid}/${const Uuid().v4()}.jpg';
+    final path = 'recipes/${recipeId.uuid}/${const Uuid().v4()}.$extension';
     final description = await session.storage.createUploadDescription(
       storageId: kPhotoStorageId,
       path: path,
-      options: const UploadOptions(
+      options: UploadOptions(
         preventOverwrite: true,
         maxFileSize: kMaxPhotoBytes,
-        metadata: FileMetadata(contentType: 'image/jpeg'),
+        metadata: FileMetadata(
+          contentType: contentTypeForPhotoExtension(extension),
+        ),
       ),
     );
     return UploadTicket(path: path, description: description);
@@ -46,7 +51,8 @@ class RecipeMediaEndpoint extends AuthenticatedEndpoint {
   ) async {
     await RecipeAccessPolicy.loadForEdit(session, recipeId);
     final pathPattern = RegExp(
-      '^recipes/${RegExp.escape(recipeId.uuid)}/[0-9a-f-]{36}\\.jpg\$',
+      '^recipes/${RegExp.escape(recipeId.uuid)}/'
+      '[0-9a-f-]{36}\\.(jpg|png|webp)\$',
     );
     if (!pathPattern.hasMatch(path)) {
       throw validationError('path', 'is not a valid upload path');
@@ -73,7 +79,7 @@ class RecipeMediaEndpoint extends AuthenticatedEndpoint {
         message: 'The photo could not be verified',
       );
     }
-    await _requireJpeg(session, path);
+    await _requireSupportedImage(session, path);
 
     for (var attempt = 0; ; attempt++) {
       try {
@@ -136,8 +142,9 @@ class RecipeMediaEndpoint extends AuthenticatedEndpoint {
       (await withPublicUrls(session, [photo])).single;
 }
 
-/// JPEG files start with the SOI marker and the next marker byte.
-Future<void> _requireJpeg(Session session, String path) async {
+/// Accepts JPEG, PNG, and WebP, and only when the bytes match the path
+/// extension. Anything else is deleted so a rejected upload leaves no file.
+Future<void> _requireSupportedImage(Session session, String path) async {
   final stat = await session.storage.statFile(
     storageId: kPhotoStorageId,
     path: path,
@@ -150,13 +157,15 @@ Future<void> _requireJpeg(Session session, String path) async {
     bytes.offsetInBytes,
     bytes.lengthInBytes,
   );
-  final isJpeg =
+  final extension = photoExtension(path);
+  final accepted =
+      extension != null &&
       stat.size <= kMaxPhotoBytes &&
-      header.length >= 3 &&
-      header[0] == 0xFF &&
-      header[1] == 0xD8 &&
-      header[2] == 0xFF;
-  if (isJpeg) return;
+      photoBytesMatchExtension(header, extension);
+  if (accepted) return;
   await deletePhotoFiles(session, [path]);
-  throw validationError('path', 'must be a JPEG image of at most 2 MB');
+  throw validationError(
+    'path',
+    'must be a JPEG, PNG, or WebP image of at most 2 MB',
+  );
 }

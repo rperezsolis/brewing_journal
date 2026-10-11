@@ -104,7 +104,7 @@ void main() {
       final forged = [
         'recipes/${other.uuid}/${const Uuid().v4()}.jpg',
         'recipes/${recipeId.uuid}/../secret.jpg',
-        'recipes/${recipeId.uuid}/${const Uuid().v4()}.png',
+        'recipes/${recipeId.uuid}/${const Uuid().v4()}.heic',
       ];
       for (final path in forged) {
         await expectLater(
@@ -190,8 +190,68 @@ void main() {
       },
     );
 
+    test('when content type is webp then the path ends in webp', () async {
+      final ticket = await endpoints.recipeMedia.createUploadDescription(
+        a.sessionBuilder,
+        recipeId,
+        contentType: 'image/webp',
+      );
+      expect(ticket.path, endsWith('.webp'));
+    });
+
+    test('when confirming a png upload then a row is returned', () async {
+      final ticket = await endpoints.recipeMedia.createUploadDescription(
+        a.sessionBuilder,
+        recipeId,
+        contentType: 'image/png',
+      );
+      await sessionBuilder.build().storage.storeFile(
+        storageId: kPhotoStorageId,
+        path: ticket.path,
+        byteData: pngPhotoBytes(),
+      );
+
+      final photo = await endpoints.recipeMedia.confirmUpload(
+        a.sessionBuilder,
+        recipeId,
+        ticket.path,
+      );
+      expect(photo.storagePath, endsWith('.png'));
+    });
+
+    test('when confirming a webp upload then a row is returned', () async {
+      final ticket = await endpoints.recipeMedia.createUploadDescription(
+        a.sessionBuilder,
+        recipeId,
+        contentType: 'image/webp',
+      );
+      await sessionBuilder.build().storage.storeFile(
+        storageId: kPhotoStorageId,
+        path: ticket.path,
+        byteData: webpPhotoBytes(),
+      );
+
+      final photo = await endpoints.recipeMedia.confirmUpload(
+        a.sessionBuilder,
+        recipeId,
+        ticket.path,
+      );
+      expect(photo.storagePath, endsWith('.webp'));
+    });
+
+    test('when the content type is not allowed then validation', () async {
+      await expectLater(
+        endpoints.recipeMedia.createUploadDescription(
+          a.sessionBuilder,
+          recipeId,
+          contentType: 'image/heic',
+        ),
+        throwsBrewing(BrewingErrorCode.validation),
+      );
+    });
+
     test(
-      'when the file is not a jpeg then validation and it is removed',
+      'when the file does not match its extension then validation and it is removed',
       () async {
         final ticket = await endpoints.recipeMedia.createUploadDescription(
           a.sessionBuilder,

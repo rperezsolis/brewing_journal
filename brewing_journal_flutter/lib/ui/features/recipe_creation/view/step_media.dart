@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:brewing_journal_client/brewing_journal_client.dart';
@@ -16,7 +17,10 @@ import '../recipe_limits.dart';
 
 /// Step 5 (optional): photos of the cup, the crema, or the packaging.
 class StepMedia extends StatefulWidget {
-  const StepMedia({super.key});
+  const StepMedia({super.key, this.encodeWebp});
+
+  /// Replaces the platform WebP encoder. Production leaves this null.
+  final WebpEncoder? encodeWebp;
 
   @override
   State<StepMedia> createState() => _StepMediaState();
@@ -28,18 +32,30 @@ class _StepMediaState extends State<StepMedia> {
 
   Future<void> _pickAndUpload() async {
     final cubit = context.read<RecipeCreationCubit>();
-    final ByteData bytes;
+    final XFile? file;
     try {
-      final file = await ImagePicker().pickImage(
+      file = await ImagePicker().pickImage(
         source: ImageSource.gallery,
-        maxWidth: 2048,
-        maxHeight: 2048,
-        imageQuality: 85,
+        maxWidth: kPhotoMaxEdge.toDouble(),
+        maxHeight: kPhotoMaxEdge.toDouble(),
+        imageQuality: kPhotoJpegQuality,
       );
-      if (file == null) return;
-      bytes = await encodePhotoAsJpeg(file);
+    } catch (error, stackTrace) {
+      _reportPickFailure(error, stackTrace);
+      if (!mounted) return;
+      cubit.reportError(error);
+      return;
+    }
+    if (file == null || !mounted) return;
+
+    final PreparedPhoto prepared;
+    try {
+      final raw = await file.readAsBytes();
+      if (!mounted) return;
+      prepared = await _prepareForUpload(raw);
     } on FormatException catch (error, stackTrace) {
       _reportPickFailure(error, stackTrace);
+      if (!mounted) return;
       cubit.reportError(
         BrewingException(
           code: BrewingErrorCode.validation,
@@ -49,13 +65,41 @@ class _StepMediaState extends State<StepMedia> {
       return;
     } catch (error, stackTrace) {
       _reportPickFailure(error, stackTrace);
+      if (!mounted) return;
       cubit.reportError(error);
       return;
     }
     if (!mounted) return;
-    setState(() => _pendingPreview = Uint8List.sublistView(bytes));
-    await cubit.addPhoto(bytes);
+    setState(() => _pendingPreview = Uint8List.sublistView(prepared.bytes));
+    await cubit.addPhoto(prepared.bytes, contentType: prepared.contentType);
     if (mounted) setState(() => _pendingPreview = null);
+  }
+
+  /// JPEG and PNG upload as picked. Other formats are converted to WebP
+  /// while a dialog explains the wait; the original bytes are not uploaded.
+  Future<PreparedPhoto> _prepareForUpload(Uint8List raw) async {
+    if (storesWithoutConversion(raw)) {
+      return preparePhotoBytes(raw, encodeWebp: widget.encodeWebp);
+    }
+
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final route = DialogRoute<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const PopScope(
+        canPop: false,
+        child: _ProcessingImagesDialog(),
+      ),
+    );
+    unawaited(navigator.push(route));
+    await WidgetsBinding.instance.endOfFrame;
+    try {
+      return await preparePhotoBytes(raw, encodeWebp: widget.encodeWebp);
+    } finally {
+      if (route.isActive && navigator.mounted) {
+        navigator.removeRoute(route);
+      }
+    }
   }
 
   void _reportPickFailure(Object error, StackTrace stackTrace) {
@@ -129,6 +173,28 @@ class _StepMediaState extends State<StepMedia> {
           ],
         );
       },
+    );
+  }
+}
+
+class _ProcessingImagesDialog extends StatelessWidget {
+  const _ProcessingImagesDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(
+            context.l10n.processingImages,
+            key: const Key('processing-images'),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }

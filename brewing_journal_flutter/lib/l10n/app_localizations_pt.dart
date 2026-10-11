@@ -365,6 +365,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get addPhoto => 'Adicionar foto';
 
   @override
+  String get processingImages => 'Processando imagens';
+
+  @override
   String get deleteRecipeTitle => 'Excluir esta receita?';
 
   @override
@@ -1138,6 +1141,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get addPhoto => 'Adicionar foto';
+
+  @override
+  String get processingImages => 'Processando imagens';
 
   @override
   String get deleteRecipeTitle => 'Excluir esta receita?';

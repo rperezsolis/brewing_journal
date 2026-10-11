@@ -361,6 +361,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addPhoto => 'Add photo';
 
   @override
+  String get processingImages => 'Processing images';
+
+  @override
   String get deleteRecipeTitle => 'Delete this recipe?';
 
   @override

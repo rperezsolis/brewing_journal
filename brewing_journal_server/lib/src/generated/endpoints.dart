@@ -768,6 +768,11 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<_is.UuidValue>(),
               nullable: false,
             ),
+            'contentType': _is.ParameterDescription(
+              name: 'contentType',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
           },
           call:
               (
@@ -778,6 +783,7 @@ class Endpoints extends _is.EndpointDispatch {
                       .createUploadDescription(
                         session,
                         params['recipeId'],
+                        contentType: params['contentType'],
                       ),
         ),
         'confirmUpload': _is.MethodConnector(

@@ -574,9 +574,14 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     }
   }
 
-  /// Uploads a JPEG. A new recipe is saved first, since a photo needs a
+  /// Uploads a photo. A new recipe is saved first, since a photo needs a
   /// recipe id. The photo is appended only once the server confirms it.
-  Future<bool> addPhoto(ByteData bytes) async {
+  ///
+  /// [contentType] is the type of [bytes] after any client-side conversion.
+  Future<bool> addPhoto(
+    ByteData bytes, {
+    String contentType = 'image/jpeg',
+  }) async {
     if (state.pendingUpload) return false;
     if (state.photos.length >= kMaxPhotos) {
       emit(
@@ -591,7 +596,11 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
 
     emit(state.copyWith(pendingUpload: true));
     try {
-      final photo = await _media.uploadPhoto(state.recipeId!, bytes);
+      final photo = await _media.uploadPhoto(
+        state.recipeId!,
+        bytes,
+        contentType: contentType,
+      );
       if (isClosed) return true;
       emit(
         state.copyWith(pendingUpload: false, photos: [...state.photos, photo]),

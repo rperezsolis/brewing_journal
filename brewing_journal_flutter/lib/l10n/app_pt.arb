@@ -108,6 +108,7 @@
   "photosHelp": "Opcional. Adicione até {count} fotos da xícara, da crema ou da embalagem, ou toque em Concluir para salvar sem fotos.",
   "removePhoto": "Remover foto",
   "addPhoto": "Adicionar foto",
+  "processingImages": "Processando imagens",
   "deleteRecipeTitle": "Excluir esta receita?",
   "deleteRecipeBody": "“{title}” será removida. Essa ação não pode ser desfeita.",
   "delete": "Excluir",

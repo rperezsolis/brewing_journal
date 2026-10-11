@@ -108,6 +108,7 @@
   "photosHelp": "Opcional. Agrega hasta {count} fotos de la taza, la crema o el empaque, o toca Terminar para guardar sin fotos.",
   "removePhoto": "Quitar foto",
   "addPhoto": "Agregar foto",
+  "processingImages": "Procesando imágenes",
   "deleteRecipeTitle": "¿Eliminar esta receta?",
   "deleteRecipeBody": "Se eliminará “{title}”. Esta acción no se puede deshacer.",
   "delete": "Eliminar",

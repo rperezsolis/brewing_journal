@@ -10,8 +10,15 @@ class ServerpodRecipeMediaRepository implements RecipeMediaRepository {
   final EndpointRecipeMedia _endpoint;
 
   @override
-  Future<RecipePhoto> uploadPhoto(UuidValue recipeId, ByteData bytes) async {
-    final ticket = await _endpoint.createUploadDescription(recipeId);
+  Future<RecipePhoto> uploadPhoto(
+    UuidValue recipeId,
+    ByteData bytes, {
+    String contentType = 'image/jpeg',
+  }) async {
+    final ticket = await _endpoint.createUploadDescription(
+      recipeId,
+      contentType: contentType,
+    );
     // A FileUploader can upload only once, so each attempt needs a new one.
     final uploaded = await FileUploader(ticket.description).uploadByteData(
       bytes,

@@ -48,6 +48,7 @@ dependencies:
     sdk: flutter
   intl: any
   amplitude_flutter: ^4.7.3
+  platform_image_converter: ^2.2.0
 
 dev_dependencies:
   bloc_test: ^10.0.0

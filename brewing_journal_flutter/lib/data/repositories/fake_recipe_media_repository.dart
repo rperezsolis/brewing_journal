@@ -11,20 +11,37 @@ class FakeRecipeMediaRepository implements RecipeMediaRepository {
   /// Recipe ids passed to [uploadPhoto], in call order.
   final List<UuidValue> uploadedTo = [];
 
+  /// Content types passed to [uploadPhoto], in call order.
+  final List<String> uploadedContentTypes = [];
+
+  /// Bytes passed to [uploadPhoto], in call order.
+  final List<Uint8List> uploadedBytes = [];
+
   /// When set, the next call throws it once.
   Object? nextError;
 
   @override
-  Future<RecipePhoto> uploadPhoto(UuidValue recipeId, ByteData bytes) async {
+  Future<RecipePhoto> uploadPhoto(
+    UuidValue recipeId,
+    ByteData bytes, {
+    String contentType = 'image/jpeg',
+  }) async {
     uploadedTo.add(recipeId);
+    uploadedContentTypes.add(contentType);
+    uploadedBytes.add(Uint8List.sublistView(bytes));
     _throwIfFailing();
     final id = const Uuid().v4();
+    final extension = switch (contentType) {
+      'image/png' => 'png',
+      'image/webp' => 'webp',
+      _ => 'jpg',
+    };
     final photo = RecipePhoto(
       id: const Uuid().v7obj(),
       recipeId: recipeId,
-      storagePath: 'recipes/${recipeId.uuid}/$id.jpg',
+      storagePath: 'recipes/${recipeId.uuid}/$id.$extension',
       sortOrder: photos.where((p) => p.recipeId == recipeId).length,
-      publicUrl: Uri.parse('https://example.com/recipes/$id.jpg'),
+      publicUrl: Uri.parse('https://example.com/recipes/$id.$extension'),
     );
     photos.add(photo);
     return photo;

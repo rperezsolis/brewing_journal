@@ -1,6 +1,7 @@
 import 'package:serverpod/serverpod.dart';
 
 import '../generated/protocol.dart';
+import 'photo_format.dart';
 
 /// Every recipe photo lives in the private storage.
 ///
@@ -62,14 +63,17 @@ Future<List<RecipePhoto>> copyRecipePhotos(
         storageId: kPhotoStorageId,
         path: photo.storagePath,
       );
-      final path = 'recipes/${toRecipeId.uuid}/${const Uuid().v4()}.jpg';
+      final extension = photoExtension(photo.storagePath) ?? 'jpg';
+      final path = 'recipes/${toRecipeId.uuid}/${const Uuid().v4()}.$extension';
       await session.storage.storeFile(
         storageId: kPhotoStorageId,
         path: path,
         byteData: bytes,
-        options: const StoreFileOptions(
+        options: StoreFileOptions(
           preventOverwrite: true,
-          metadata: FileMetadata(contentType: 'image/jpeg'),
+          metadata: FileMetadata(
+            contentType: contentTypeForPhotoExtension(extension),
+          ),
         ),
       );
       stored.add(path);

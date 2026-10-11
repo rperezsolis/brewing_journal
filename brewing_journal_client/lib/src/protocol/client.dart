@@ -545,11 +545,15 @@ class EndpointRecipeMedia extends EndpointAuthenticated {
   String get name => 'recipeMedia';
 
   _ida.Future<_i1wqbnj3.UploadTicket> createUploadDescription(
-    _isc.UuidValue recipeId,
-  ) => caller.callServerEndpoint<_i1wqbnj3.UploadTicket>(
+    _isc.UuidValue recipeId, {
+    String? contentType,
+  }) => caller.callServerEndpoint<_i1wqbnj3.UploadTicket>(
     'recipeMedia',
     'createUploadDescription',
-    {'recipeId': recipeId},
+    {
+      'recipeId': recipeId,
+      'contentType': contentType,
+    },
   );
 
   /// Verifies the upload at [path] and attaches it to the recipe. Calling it
