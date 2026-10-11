@@ -511,6 +511,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteLinkCopied => 'Invite link copied';
 
   @override
+  String inviteClipboardMessage(String team, String url) {
+    return 'You\'re invited to brew with $team on Cata Café. Join us and keep recipes, tasting notes, and the cups we love in one place.\n\n$url';
+  }
+
+  @override
   String get copyLink => 'Copy';
 
   @override

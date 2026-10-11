@@ -400,6 +400,14 @@
   "@inviteTtlOneWeek": { "description": "Invite expiry of one week" },
   "inviteLinkCopied": "Invite link copied",
   "@inviteLinkCopied": { "description": "Confirmation after copying an invite link" },
+  "inviteClipboardMessage": "You're invited to brew with {team} on Cata Café. Join us and keep recipes, tasting notes, and the cups we love in one place.\n\n{url}",
+  "@inviteClipboardMessage": {
+    "description": "Invitation copied to the clipboard, followed by the invite link",
+    "placeholders": {
+      "team": { "type": "String", "example": "Morning crew" },
+      "url": { "type": "String", "example": "https://example.com/invite/token" }
+    }
+  },
   "copyLink": "Copy",
   "@copyLink": { "description": "Button that copies the invite link" },
   "singleUse": "Single use",

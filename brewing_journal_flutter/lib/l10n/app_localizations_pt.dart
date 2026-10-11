@@ -518,6 +518,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get inviteLinkCopied => 'Link do convite copiado';
 
   @override
+  String inviteClipboardMessage(String team, String url) {
+    return 'Convido você para a equipe $team no Cata Café. Venha compartilhar receitas, notas de degustação e as xícaras que mais gostamos.\n\n$url';
+  }
+
+  @override
   String get copyLink => 'Copiar';
 
   @override
@@ -1294,6 +1299,11 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get inviteLinkCopied => 'Link do convite copiado';
+
+  @override
+  String inviteClipboardMessage(String team, String url) {
+    return 'Convido você para a equipe $team no Cata Café. Venha compartilhar receitas, notas de degustação e as xícaras que mais gostamos.\n\n$url';
+  }
 
   @override
   String get copyLink => 'Copiar';

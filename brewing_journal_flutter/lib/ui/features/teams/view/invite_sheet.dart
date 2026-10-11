@@ -159,7 +159,22 @@ class _InviteSheetState extends State<_InviteSheet> {
                   buttonAction: 'copy_invite_link',
                   currentScreen: ScreenNames.teamDetail,
                   onPressed: () async {
-                    await Clipboard.setData(ClipboardData(text: invite.url));
+                    final teamName =
+                        context
+                            .read<TeamsCubit>()
+                            .state
+                            .teamById(widget.teamId)
+                            ?.team
+                            .name ??
+                        l10n.teamFallback;
+                    await Clipboard.setData(
+                      ClipboardData(
+                        text: l10n.inviteClipboardMessage(
+                          teamName,
+                          invite.url,
+                        ),
+                      ),
+                    );
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(context.l10n.inviteLinkCopied)),

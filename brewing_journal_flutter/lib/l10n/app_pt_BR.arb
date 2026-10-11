@@ -150,6 +150,7 @@
   "inviteTtlOneDay": "24 h",
   "inviteTtlOneWeek": "7 d",
   "inviteLinkCopied": "Link do convite copiado",
+  "inviteClipboardMessage": "Convido você para a equipe {team} no Cata Café. Venha compartilhar receitas, notas de degustação e as xícaras que mais gostamos.\n\n{url}",
   "copyLink": "Copiar",
   "singleUse": "Uso único",
   "teamFallback": "Equipe",

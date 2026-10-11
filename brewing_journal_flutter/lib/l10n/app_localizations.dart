@@ -1013,6 +1013,12 @@ abstract class AppLocalizations {
   /// **'Invite link copied'**
   String get inviteLinkCopied;
 
+  /// Invitation copied to the clipboard, followed by the invite link
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re invited to brew with {team} on Cata Café. Join us and keep recipes, tasting notes, and the cups we love in one place.\n\n{url}'**
+  String inviteClipboardMessage(String team, String url);
+
   /// Button that copies the invite link
   ///
   /// In en, this message translates to:
