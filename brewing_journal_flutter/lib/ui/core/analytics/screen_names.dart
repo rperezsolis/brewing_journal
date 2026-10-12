@@ -13,5 +13,6 @@ abstract final class ScreenNames {
   static const brewMode = 'brew_mode';
   static const teams = 'teams';
   static const teamDetail = 'team_detail';
+  static const teamMembers = 'team_members';
   static const notFound = 'not_found';
 }

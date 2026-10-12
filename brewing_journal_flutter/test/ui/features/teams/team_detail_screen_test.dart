@@ -96,6 +96,7 @@ void main() {
     addTearDown(tab.dispose);
     await pumpHarness(tester, tab);
     expect(find.text('No recipes on this team yet.'), findsOneWidget);
+    expect(find.byKey(const Key('team-members')), findsOneWidget);
 
     tab.value = 0;
     await tester.pump();

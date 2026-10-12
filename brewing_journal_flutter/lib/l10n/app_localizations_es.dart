@@ -786,6 +786,40 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authPasswordSpecial => 'Contiene al menos un carácter especial';
+
+  @override
+  String get teamMembers => 'Miembros del equipo';
+
+  @override
+  String get changeRole => 'Cambiar rol';
+
+  @override
+  String changeRoleToViewer(String name) {
+    return '¿Quieres cambiar el rol de $name de Editor a Lector? Los lectores no pueden agregar recetas al equipo, quitarlas ni marcarlas como favoritas.';
+  }
+
+  @override
+  String changeRoleToEditor(String name) {
+    return '¿Quieres cambiar el rol de $name de Lector a Editor? Los editores pueden agregar recetas al equipo, quitarlas y marcarlas como favoritas.';
+  }
+
+  @override
+  String get yes => 'Sí';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get memberNameFallback => 'Miembro';
+
+  @override
+  String get noTeamMembers => 'Aún no hay miembros.';
+
+  @override
+  String get cantChangeMemberRole => 'No puedes cambiar roles en este equipo.';
+
+  @override
+  String get teamNotFound => 'Equipo no encontrado.';
 }
 
 /// The translations for Spanish Castilian, as used in Latin America and the Caribbean (`es_419`).
@@ -1570,4 +1604,38 @@ class AppLocalizationsEs419 extends AppLocalizationsEs {
 
   @override
   String get authPasswordSpecial => 'Contiene al menos un carácter especial';
+
+  @override
+  String get teamMembers => 'Miembros del equipo';
+
+  @override
+  String get changeRole => 'Cambiar rol';
+
+  @override
+  String changeRoleToViewer(String name) {
+    return '¿Quieres cambiar el rol de $name de Editor a Lector? Los lectores no pueden agregar recetas al equipo, quitarlas ni marcarlas como favoritas.';
+  }
+
+  @override
+  String changeRoleToEditor(String name) {
+    return '¿Quieres cambiar el rol de $name de Lector a Editor? Los editores pueden agregar recetas al equipo, quitarlas y marcarlas como favoritas.';
+  }
+
+  @override
+  String get yes => 'Sí';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get memberNameFallback => 'Miembro';
+
+  @override
+  String get noTeamMembers => 'Aún no hay miembros.';
+
+  @override
+  String get cantChangeMemberRole => 'No puedes cambiar roles en este equipo.';
+
+  @override
+  String get teamNotFound => 'Equipo no encontrado.';
 }

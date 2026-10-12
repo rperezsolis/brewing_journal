@@ -23,4 +23,16 @@ class ServerpodTeamRepository implements TeamRepository {
   @override
   Future<TeamSummary> acceptInvite(String token) =>
       _endpoint.acceptInvite(token);
+
+  @override
+  Future<List<TeamMember>> listMembers(UuidValue teamId) =>
+      _endpoint.listMembers(teamId);
+
+  @override
+  Future<TeamMember> changeMemberRole(
+    UuidValue teamId,
+    UuidValue memberId,
+    TeamRole role,
+    String locale,
+  ) => _endpoint.changeMemberRole(teamId, memberId, role, locale);
 }

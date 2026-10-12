@@ -227,5 +227,15 @@
   "authPasswordLowercase": "Contém pelo menos uma letra minúscula",
   "authPasswordUppercase": "Contém pelo menos uma letra maiúscula",
   "authPasswordNumber": "Contém pelo menos um número",
-  "authPasswordSpecial": "Contém pelo menos um caractere especial"
+  "authPasswordSpecial": "Contém pelo menos um caractere especial",
+  "teamMembers": "Membros da equipe",
+  "changeRole": "Mudar papel",
+  "changeRoleToViewer": "Quer mudar o papel de {name} de Editor para Leitor? Leitores não podem adicionar receitas à equipe, removê-las nem marcá-las como favoritas.",
+  "changeRoleToEditor": "Quer mudar o papel de {name} de Leitor para Editor? Editores podem adicionar receitas à equipe, removê-las e marcá-las como favoritas.",
+  "yes": "Sim",
+  "no": "Não",
+  "memberNameFallback": "Membro",
+  "noTeamMembers": "Ainda não há membros.",
+  "cantChangeMemberRole": "Você não pode mudar papéis nesta equipe.",
+  "teamNotFound": "Equipe não encontrada."
 }

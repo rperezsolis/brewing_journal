@@ -40,3 +40,5 @@ team:
   - listMine:
   - createInvite:
   - acceptInvite:
+  - listMembers:
+  - changeMemberRole:

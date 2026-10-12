@@ -1,0 +1,7 @@
+class: TeamMember
+fields:
+  membershipId: UuidValue
+  userId: UuidValue
+  preferredName: String
+  email: String
+  role: TeamRole

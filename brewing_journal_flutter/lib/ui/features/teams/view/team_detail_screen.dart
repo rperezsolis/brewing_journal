@@ -121,6 +121,18 @@ class _TeamDetailViewState extends State<_TeamDetailView> {
                   ),
                 ),
               ),
+            TrackedButton(
+              buttonLabel: 'team_members',
+              buttonAction: 'open_team_members',
+              currentScreen: ScreenNames.teamDetail,
+              onPressed: () => context.push(Routes.teamMembers(teamId)),
+              builder: (context, onPressed) => IconButton(
+                key: const Key('team-members'),
+                tooltip: l10n.teamMembers,
+                icon: const Icon(Icons.groups_outlined),
+                onPressed: onPressed,
+              ),
+            ),
             if (isOwner)
               TrackedButton(
                 buttonLabel: 'invite',

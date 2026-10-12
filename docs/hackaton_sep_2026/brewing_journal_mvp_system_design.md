@@ -338,6 +338,8 @@ indexes:
 
 A role check for one team uses the unique `(teamId, memberId)` index. `team.listMine` uses `team_membership_member_idx`. One membership per user per team.
 
+The owner changes a member's role by updating this row's `role`. The owner is `team.ownerId`. An editor or viewer who is not the owner cannot change roles. The owner's own membership can change between `editor` and `viewer`; ownership stays on `team.ownerId`, so they can still invite people and change roles. Recipe and team-favorite writes keep using the membership role, so an owner who is a viewer cannot add recipes, remove them, or mark team favorites.
+
 ### `lib/src/teams/team_invite.spy.yaml`
 
 ```yaml
@@ -472,6 +474,18 @@ fields:
   role: TeamRole
 ```
 
+`lib/src/teams/team_member.spy.yaml` — one row of the Team members screen. Not a table. `preferredName` is `UserProfile.userName` with surrounding space removed, or empty when the profile has no name. `email` is `UserProfile.email`, or the `EmailAccount.email` when the profile has none, or empty when neither exists.
+
+```yaml
+class: TeamMember
+fields:
+  membershipId: UuidValue
+  userId: UuidValue
+  preferredName: String
+  email: String
+  role: TeamRole
+```
+
 ---
 
 ## 2. Backend API Endpoints (Serverpod)
@@ -570,8 +584,25 @@ A new recipe needs an id before photos can attach. The wizard therefore calls `s
 | `listMine` | — | `List<TeamSummary>` | Memberships for `memberId = caller`, include team. Index `team_membership_member_idx`. |
 | `createInvite` | `UuidValue teamId`, `TeamRole role`, `Duration ttl` | `InviteLink` | Caller must be `team.ownerId`, else `forbidden` (or `notFound` if not a member). `ttl` clamped to 15 minutes..7 days. `token` is 32 bytes from `Random.secure()`, base64url without padding. `expiresAt = now + ttl`. `url = '<webBaseUrl>/invite/' + token`. Each invite is a single row and can be used once. |
 | `acceptInvite` | `String token` | `TeamSummary` | Unknown token → `notFound`. Caller already a member → `alreadyMember`, invite not consumed. Otherwise the conditional claim from the `team_invite` section runs; losing the claim → `inviteUsed` or `inviteExpired`, with no membership write. Winning inserts a membership with the invite’s `role`. |
+| `listMembers` | `UuidValue teamId` | `List<TeamMember>` | Caller is not a member → `notFound`. Otherwise every membership of that team, ordered by `createdAt`, with preferred name and email filled as in `team_member.spy.yaml`. |
+| `changeMemberRole` | `UuidValue teamId`, `UuidValue memberId`, `TeamRole role`, `String locale` | `TeamMember` | Caller is not a member → `notFound`. Caller is a member and is not `team.ownerId` → `forbidden`. `memberId` is not a member of that team → `notFound`. The stored role already equals `role` → return the member and send no email. Otherwise update `team_membership.role` and email that member. |
 
 Invite acceptance does not use Serverpod scopes. The link is the token only; the role is the column on `team_invite`, copied onto `team_membership`.
+
+`changeMemberRole` does not use scopes either. The owner check is `team.ownerId`. The new role is the argument, which the dialog sets to the opposite of the role on the tile.
+
+### Role-change email
+
+`lib/src/teams/role_change_email.dart` builds the message. `locale` is the confirming session's language tag with `-` replaced by `_` (`en`, `es`, `es_419`, `pt`, `pt_BR`). Any other tag uses English. Spanish (`es` and `es_419`) share one copy. Portuguese (`pt` and `pt_BR`) share one copy. That matches the app's arb files, which differ only by locale tag.
+
+The subject says the role on `{team}` changed. The body greets the member, names the team, states the previous role and the new role, then the capability sentence for the new role:
+
+*   Viewer: "Viewers cannot add recipes to the team, remove them, or mark them as favorites."
+*   Editor: "Editors can add recipes to the team, remove them, and mark them as favorites."
+
+Those two sentences are the same ones in the confirmation dialog. Role names in the email match the app: Viewer/Editor, Lector/Editor, Leitor/Editor. An empty preferred name uses Member, Miembro, or Membro in that language. An empty email skips delivery and logs a warning. The role update still stands.
+
+Delivery follows auth mail. Development logs the full message and raises `session.alert` with the subject, the same channel as verification codes. Test runs record the message on `RoleChangeEmailOutbox` and do not open a network connection. Staging and production send through SMTP when `passwords.yaml` has `smtpHost`, `smtpUsername`, `smtpPassword`, and `smtpFromAddress` (`smtpPort` defaults to 587, `smtpUseSsl` defaults to false). A missing password or a send failure is logged and does not roll back the role. Development also sends when those passwords are set.
 
 ---
 
@@ -678,7 +709,12 @@ Brew Mode reads `RecipeDetail` through a separate `RecipeDetailCubit` (`get` onc
 | `RecipeListCubit` | Home and team screens | Home: `recipe.listMine`, or `recipe.listFavorites` when its filter is on. Team: `recipe.listForTeam`, or `recipe.listTeamFavorites` when its filter is on. Personal saves call `saveFavorite` / `removeFavorite`. Team saves call `saveTeamFavorite` / `removeTeamFavorite`. |
 | `RecipeDetailCubit` | Brew Mode and share | `recipe.get`. With a route `teamId`, `saveTeamFavorite` / `removeTeamFavorite`. Without one, `saveFavorite` / `removeFavorite`. `recipe.delete` when `access.canDelete`. |
 | `TeamsCubit` | Teams screen | `team.listMine`, `team.create`, `team.createInvite` (owner only) |
+| `TeamMembersCubit` | `/teams/:id/members` | `team.listMembers`, `team.changeMemberRole`. The route is a child of the team detail route and uses the root navigator, so it covers the tab bar. |
 | `InviteAcceptCubit` | `/invite/:token` route | `team.acceptInvite`; maps `inviteExpired`, `inviteUsed`, `alreadyMember`, and `notFound` to messages |
+
+The team detail app bar has a members icon (`Key('team-members')`) for every member. It pushes `/teams/:id/members`. The screen lists `TeamMember` tiles: preferred name (or the localized "Member" when the name is empty), email when present, and the role label. The owner (`team.ownerId == currentUserId`) gets a trailing edit icon (`Icons.edit_outlined`, `Key('team-member-edit-<userId>')`) on every tile. Anyone else gets the same list with no edit icon.
+
+The edit icon opens `ChangeRoleDialog`. Editor tiles ask to move to viewer. Viewer tiles ask to move to editor. The body is the localized sentence from the PRD, with the preferred name filled in. No pops false and does not call the server. Yes pops true. The cubit then calls `changeMemberRole` with the other role and `Localizations.localeOf(context).toLanguageTag()` (`-` replaced with `_`). A failure shows the usual snackbar. `forbidden` uses "You can't change roles on this team." `notFound` uses "Team not found." On success the tile shows the new role. When the changed user is the signed-in user, the screen calls `TeamsCubit.load()` so the team detail role chip, the new-recipe button, and the team hearts follow the new role.
 
 ### Favorites
 

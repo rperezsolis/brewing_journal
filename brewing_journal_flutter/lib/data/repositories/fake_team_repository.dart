@@ -14,6 +14,11 @@ class _Invite {
 class FakeTeamRepository implements TeamRepository {
   final List<TeamSummary> teams = [];
   final Map<String, _Invite> _invites = {};
+  final Map<UuidValue, List<TeamMember>> members = {};
+
+  /// Role-change notices the fake recorded. The server sends the real email.
+  final List<({String email, TeamRole role, String locale})> roleChangeEmails =
+      [];
 
   /// When set, the next call throws it once.
   Object? nextError;
@@ -40,7 +45,36 @@ class FakeTeamRepository implements TeamRepository {
       role: TeamRole.editor,
     );
     teams.add(summary);
+    members[summary.team.id!] = [
+      TeamMember(
+        membershipId: const Uuid().v7obj(),
+        userId: ownerId,
+        preferredName: 'Owner',
+        email: 'owner@example.com',
+        role: TeamRole.editor,
+      ),
+    ];
     return summary;
+  }
+
+  /// Adds a member the Team members screen can list.
+  void addMember({
+    required UuidValue teamId,
+    required UuidValue userId,
+    required String preferredName,
+    required String email,
+    TeamRole role = TeamRole.viewer,
+  }) {
+    final list = members.putIfAbsent(teamId, () => []);
+    list.add(
+      TeamMember(
+        membershipId: const Uuid().v7obj(),
+        userId: userId,
+        preferredName: preferredName,
+        email: email,
+        role: role,
+      ),
+    );
   }
 
   @override
@@ -123,6 +157,59 @@ class FakeTeamRepository implements TeamRepository {
     final summary = TeamSummary(team: team, role: invite.link.role);
     teams.add(summary);
     return summary;
+  }
+
+  @override
+  Future<List<TeamMember>> listMembers(UuidValue teamId) async {
+    _throwIfFailing();
+    _requireTeam(teamId);
+    return [...?members[teamId]];
+  }
+
+  @override
+  Future<TeamMember> changeMemberRole(
+    UuidValue teamId,
+    UuidValue memberId,
+    TeamRole role,
+    String locale,
+  ) async {
+    _throwIfFailing();
+    final team = _requireTeam(teamId);
+    if (team.team.ownerId != ownerId) {
+      throw BrewingException(
+        code: BrewingErrorCode.forbidden,
+        message: "You can't change roles on this team",
+      );
+    }
+    final list = members[teamId] ?? [];
+    final index = list.indexWhere((member) => member.userId == memberId);
+    if (index < 0) {
+      throw BrewingException(
+        code: BrewingErrorCode.notFound,
+        message: 'Member not found',
+      );
+    }
+    final current = list[index];
+    if (current.role == role) return current;
+    final updated = current.copyWith(role: role);
+    list[index] = updated;
+    roleChangeEmails.add((
+      email: updated.email,
+      role: role,
+      locale: locale,
+    ));
+    return updated;
+  }
+
+  TeamSummary _requireTeam(UuidValue teamId) {
+    final team = teams.where((item) => item.team.id == teamId).firstOrNull;
+    if (team == null) {
+      throw BrewingException(
+        code: BrewingErrorCode.notFound,
+        message: 'Team not found',
+      );
+    }
+    return team;
   }
 
   void _throwIfFailing() {

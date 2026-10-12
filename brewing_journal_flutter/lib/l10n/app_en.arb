@@ -613,5 +613,35 @@
   "authPasswordNumber": "Contains at least one number",
   "@authPasswordNumber": { "description": "Password rule requiring a digit" },
   "authPasswordSpecial": "Contains at least one special character",
-  "@authPasswordSpecial": { "description": "Password rule requiring a special character" }
+  "@authPasswordSpecial": { "description": "Password rule requiring a special character" },
+  "teamMembers": "Team members",
+  "@teamMembers": { "description": "Title of the team members screen and tooltip for the app bar button that opens it" },
+  "changeRole": "Change role",
+  "@changeRole": { "description": "Tooltip for the edit icon on a member tile, and the title of the role dialog" },
+  "changeRoleToViewer": "Do you want to change {name}'s role from Editor to Viewer? Viewers cannot add recipes to the team, remove them, or mark them as favorites.",
+  "@changeRoleToViewer": {
+    "description": "Confirmation when the owner changes an editor to a viewer",
+    "placeholders": {
+      "name": { "type": "String", "example": "Ada" }
+    }
+  },
+  "changeRoleToEditor": "Do you want to change {name}'s role from Viewer to Editor? Editors can add recipes to the team, remove them, and mark them as favorites.",
+  "@changeRoleToEditor": {
+    "description": "Confirmation when the owner changes a viewer to an editor",
+    "placeholders": {
+      "name": { "type": "String", "example": "Ada" }
+    }
+  },
+  "yes": "Yes",
+  "@yes": { "description": "Confirms the role change" },
+  "no": "No",
+  "@no": { "description": "Closes the role dialog without changing the role" },
+  "memberNameFallback": "Member",
+  "@memberNameFallback": { "description": "Shown when a team member has no preferred name" },
+  "noTeamMembers": "No members yet.",
+  "@noTeamMembers": { "description": "Empty state of the team members list" },
+  "cantChangeMemberRole": "You can't change roles on this team.",
+  "@cantChangeMemberRole": { "description": "Shown when someone other than the owner tries to change a role" },
+  "teamNotFound": "Team not found.",
+  "@teamNotFound": { "description": "Shown when a team or member cannot be found" }
 }

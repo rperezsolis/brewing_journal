@@ -917,6 +917,62 @@ class Endpoints extends _is.EndpointDispatch {
                     params['token'],
                   ),
         ),
+        'listMembers': _is.MethodConnector(
+          name: 'listMembers',
+          params: {
+            'teamId': _is.ParameterDescription(
+              name: 'teamId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['team'] as _i4y95ffu.TeamEndpoint).listMembers(
+                    session,
+                    params['teamId'],
+                  ),
+        ),
+        'changeMemberRole': _is.MethodConnector(
+          name: 'changeMemberRole',
+          params: {
+            'teamId': _is.ParameterDescription(
+              name: 'teamId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+            'memberId': _is.ParameterDescription(
+              name: 'memberId',
+              type: _is.getType<_is.UuidValue>(),
+              nullable: false,
+            ),
+            'role': _is.ParameterDescription(
+              name: 'role',
+              type: _is.getType<_i0s6zzin.TeamRole>(),
+              nullable: false,
+            ),
+            'locale': _is.ParameterDescription(
+              name: 'locale',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['team'] as _i4y95ffu.TeamEndpoint)
+                  .changeMemberRole(
+                    session,
+                    params['teamId'],
+                    params['memberId'],
+                    params['role'],
+                    params['locale'],
+                  ),
+        ),
       },
     );
     modules['serverpod_auth_idp'] = _iais.Endpoints()

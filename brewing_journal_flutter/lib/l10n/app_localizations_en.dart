@@ -777,4 +777,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authPasswordSpecial => 'Contains at least one special character';
+
+  @override
+  String get teamMembers => 'Team members';
+
+  @override
+  String get changeRole => 'Change role';
+
+  @override
+  String changeRoleToViewer(String name) {
+    return 'Do you want to change $name\'s role from Editor to Viewer? Viewers cannot add recipes to the team, remove them, or mark them as favorites.';
+  }
+
+  @override
+  String changeRoleToEditor(String name) {
+    return 'Do you want to change $name\'s role from Viewer to Editor? Editors can add recipes to the team, remove them, and mark them as favorites.';
+  }
+
+  @override
+  String get yes => 'Yes';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get memberNameFallback => 'Member';
+
+  @override
+  String get noTeamMembers => 'No members yet.';
+
+  @override
+  String get cantChangeMemberRole => 'You can\'t change roles on this team.';
+
+  @override
+  String get teamNotFound => 'Team not found.';
 }

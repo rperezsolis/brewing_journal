@@ -21,6 +21,8 @@ The one exception to phase isolation is the Feature 1 `requireLogin` test: it ne
 
 **Feature 8** adds no table. A team member's ingredient search and grinder suggestions read recipes already on their teams. Selecting a shared ingredient copies it onto that member through `ingredient.adopt`.
 
+**Feature 9** adds no table. `team_membership.role` already exists. The owner updates that column, and the server emails the member.
+
 ### Command reference
 
 The dev loop runs under `serverpod start`, which watches files, regenerates code, and hot reloads the server and the app. Use the `serverpod` MCP tools while it is running. Use the CLI only when the server cannot start at all.
@@ -867,6 +869,52 @@ Do Feature 8.2 before 8.3, then 8.4. There is no schema phase.
 ---
 
 
+
+## Feature 9 — Change a team member's role
+
+**Stories:** US-4.11 through US-4.14. Depends on Feature 4 (teams, owner, viewer vs editor) and Feature 1 (preferred name on `UserProfile.userName`, email on the profile). No new table and no migration.
+
+Do Feature 9.1 before 9.2, then 9.3, then 9.4.
+
+### 9.1 Backend Schemas & Database
+
+- [x] `lib/src/teams/team_member.spy.yaml`: `membershipId`, `userId`, `preferredName`, `email`, `role`. No `table`.
+- [x] Generate (automatic, or `serverpod generate`). No migration: `team_membership.role` is already stored.
+
+### 9.2 Backend API Endpoints
+
+- [x] `TeamEndpoint.listMembers(teamId)`: a non-member gets `notFound`. Members get every membership ordered by `createdAt`, with preferred name and email from `UserProfile` (email falls back to `EmailAccount`).
+- [x] `TeamEndpoint.changeMemberRole(teamId, memberId, role, locale)`: a non-member gets `notFound`; a member who is not `team.ownerId` gets `forbidden`; an unknown member gets `notFound`. The same role writes nothing and sends no email. A different role updates the row, then sends the localized email.
+- [x] `lib/src/teams/role_change_email.dart`: copies for `en`, `es`, `es_419`, `pt`, and `pt_BR`. Unknown locales use English. The capability sentences match the dialog. Test runs record the message on `RoleChangeEmailOutbox`. Development logs it and alerts the subject. Staging and production send via SMTP when `smtpHost`, `smtpUsername`, `smtpPassword`, and `smtpFromAddress` are set. A send failure does not roll back the role.
+- [x] Server tests in `test/integration/teams/team_member_role_test.dart`:
+  - [x] A viewer can list members and sees preferred name, email, and role. A stranger gets `notFound`
+  - [x] The owner switches an editor to viewer. The row updates and the English email contains the preferred name, the team, and "Viewers cannot add recipes to the team, remove them, or mark them as favorites."
+  - [x] The owner switches a viewer to editor. The Spanish (`es`) email contains the editor capability sentence
+  - [x] An unknown locale falls back to English
+  - [x] Setting the role the member already has does not send another email
+  - [x] An editor who is not the owner gets `forbidden`, and the role stays. A stranger gets `notFound`
+  - [x] The owner can change their own membership role
+- [x] A pure test in `test/unit/role_change_email_test.dart` checks the five locale tags and the empty-email skip.
+- [x] Run `dart test` for those two files.
+
+### 9.3 Flutter UI & State Management
+
+- [x] Arb strings in `app_en.arb`, `app_es.arb`, `app_es_419.arb`, `app_pt.arb`, and `app_pt_BR.arb` for the screen title, the edit tooltip, both dialog questions, Yes, No, the empty-name fallback, and the role-change errors. Generate localizations.
+- [x] `TeamRepository.listMembers` and `changeMemberRole`. The fake seeds the owner on create, accepts extra members, and records each role-change email.
+- [x] `TeamMembersCubit` with `load()` and `changeRole(...)`.
+- [x] Team detail app bar: members icon (`Key('team-members')`) for every member, pushing `/teams/:id/members` on the root navigator.
+- [x] `TeamMembersScreen`: tiles with preferred name, email, and role. Edit icon only when `team.ownerId` is the signed-in user.
+- [x] `ChangeRoleDialog`: the editor and viewer questions, Yes and No. No does not call the server. Yes calls `changeMemberRole` with the other role and the current locale tag. A failure snackbar uses the role-change copy for `forbidden` and `notFound`. Changing the signed-in user's role reloads `TeamsCubit`.
+- [x] Tests: cubit test for a successful change and a failure; widget tests that the owner sees the edit icon, No leaves the role, Yes switches it, a non-owner has no edit icon, and the Spanish dialog uses the Spanish question.
+- [x] Run `flutter test` for the new widget and cubit tests.
+
+### 9.4 Integration Layer
+
+- [x] `ServerpodTeamRepository.listMembers` and `changeMemberRole` call the generated client.
+- [x] No `.spy.yaml` table changed, so no migration was created.
+- [x] Run the post-phase checklist. `dart analyze` is clean in the server and Flutter packages. The Serverpod MCP tools were not connected, so generation used `serverpod generate` and the running app was not hot restarted.
+
+---
 
 ## Wrap-up
 

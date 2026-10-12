@@ -5,6 +5,8 @@ import '../common/authenticated_endpoint.dart';
 import '../common/session_auth.dart';
 import '../generated/protocol.dart';
 import 'invite_token.dart';
+import 'role_change_email.dart';
+import 'team_member_directory.dart';
 import 'team_membership_lookup.dart';
 import 'web_base_url.dart';
 
@@ -174,6 +176,110 @@ class TeamEndpoint extends AuthenticatedEndpoint {
         message: 'This invite has expired.',
       );
     });
+  }
+
+  /// Members of [teamId], oldest membership first.
+  ///
+  /// A caller who is not a member gets `notFound`.
+  Future<List<TeamMember>> listMembers(
+    Session session,
+    UuidValue teamId,
+  ) async {
+    await _requireMember(session, teamId);
+    final memberships = await TeamMembership.db.find(
+      session,
+      where: (t) => t.teamId.equals(teamId),
+      orderByList: (t) => [t.createdAt, t.id],
+    );
+    final identities = await memberIdentities(
+      session,
+      memberships.map((membership) => membership.memberId).toSet(),
+    );
+    return [
+      for (final membership in memberships)
+        _memberView(
+          membership,
+          identities[membership.memberId] ??
+              const MemberIdentity(preferredName: '', email: ''),
+        ),
+    ];
+  }
+
+  /// Sets [memberId]'s role on [teamId] and emails them when it changes.
+  ///
+  /// Only `team.ownerId` may call this. A caller who is not a member gets
+  /// `notFound`. A member who is not the owner gets `forbidden`. The same
+  /// role is a no-op and sends no email.
+  Future<TeamMember> changeMemberRole(
+    Session session,
+    UuidValue teamId,
+    UuidValue memberId,
+    TeamRole role,
+    String locale,
+  ) async {
+    await _requireMember(session, teamId);
+    final team = await Team.db.findById(session, teamId);
+    if (team == null || team.ownerId != session.callerId) {
+      throw recipeForbidden("You can't change roles on this team");
+    }
+
+    final membership = await membershipOf(session, teamId, memberId);
+    if (membership == null) {
+      throw BrewingException(
+        code: BrewingErrorCode.notFound,
+        message: 'Member not found',
+      );
+    }
+
+    final identities = await memberIdentities(session, {memberId});
+    final identity =
+        identities[memberId] ??
+        const MemberIdentity(preferredName: '', email: '');
+    if (membership.role == role) {
+      return _memberView(membership, identity);
+    }
+
+    final updated = await TeamMembership.db.updateRow(
+      session,
+      membership.copyWith(role: role),
+    );
+    final notice = composeRoleChangeEmail(
+      recipient: identity.email,
+      locale: locale,
+      preferredName: identity.preferredName,
+      teamName: team.name,
+      from: membership.role,
+      to: role,
+    );
+    if (notice == null) {
+      session.log(
+        'Role change for ${memberId.uuid} on ${team.name} has no email address.',
+        level: LogLevel.warning,
+      );
+    } else {
+      await deliverRoleChangeEmail(session, notice);
+    }
+    return _memberView(updated, identity);
+  }
+
+  Future<void> _requireMember(Session session, UuidValue teamId) async {
+    final membership = await membershipOf(session, teamId, session.callerId);
+    if (membership == null) {
+      throw BrewingException(
+        code: BrewingErrorCode.notFound,
+        message: 'Team not found',
+      );
+    }
+  }
+
+  TeamMember _memberView(TeamMembership membership, MemberIdentity identity) {
+    return TeamMember(
+      membershipId: membership.id!,
+      userId: membership.memberId,
+      preferredName: identity.preferredName,
+      email: identity.email,
+      role: membership.role,
+    );
   }
 
   Duration _clampTtl(Duration ttl) {

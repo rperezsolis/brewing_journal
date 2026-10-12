@@ -1480,6 +1480,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Contains at least one special character'**
   String get authPasswordSpecial;
+
+  /// Title of the team members screen and tooltip for the app bar button that opens it
+  ///
+  /// In en, this message translates to:
+  /// **'Team members'**
+  String get teamMembers;
+
+  /// Tooltip for the edit icon on a member tile, and the title of the role dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Change role'**
+  String get changeRole;
+
+  /// Confirmation when the owner changes an editor to a viewer
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to change {name}\'s role from Editor to Viewer? Viewers cannot add recipes to the team, remove them, or mark them as favorites.'**
+  String changeRoleToViewer(String name);
+
+  /// Confirmation when the owner changes a viewer to an editor
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to change {name}\'s role from Viewer to Editor? Editors can add recipes to the team, remove them, and mark them as favorites.'**
+  String changeRoleToEditor(String name);
+
+  /// Confirms the role change
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yes;
+
+  /// Closes the role dialog without changing the role
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get no;
+
+  /// Shown when a team member has no preferred name
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get memberNameFallback;
+
+  /// Empty state of the team members list
+  ///
+  /// In en, this message translates to:
+  /// **'No members yet.'**
+  String get noTeamMembers;
+
+  /// Shown when someone other than the owner tries to change a role
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t change roles on this team.'**
+  String get cantChangeMemberRole;
+
+  /// Shown when a team or member cannot be found
+  ///
+  /// In en, this message translates to:
+  /// **'Team not found.'**
+  String get teamNotFound;
 }
 
 class _AppLocalizationsDelegate

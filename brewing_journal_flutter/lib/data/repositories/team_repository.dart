@@ -12,4 +12,13 @@ abstract class TeamRepository {
   );
 
   Future<TeamSummary> acceptInvite(String token);
+
+  Future<List<TeamMember>> listMembers(UuidValue teamId);
+
+  Future<TeamMember> changeMemberRole(
+    UuidValue teamId,
+    UuidValue memberId,
+    TeamRole role,
+    String locale,
+  );
 }

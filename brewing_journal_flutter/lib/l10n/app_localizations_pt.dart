@@ -785,6 +785,40 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get authPasswordSpecial => 'Contém pelo menos um caractere especial';
+
+  @override
+  String get teamMembers => 'Membros da equipe';
+
+  @override
+  String get changeRole => 'Mudar papel';
+
+  @override
+  String changeRoleToViewer(String name) {
+    return 'Quer mudar o papel de $name de Editor para Leitor? Leitores não podem adicionar receitas à equipe, removê-las nem marcá-las como favoritas.';
+  }
+
+  @override
+  String changeRoleToEditor(String name) {
+    return 'Quer mudar o papel de $name de Leitor para Editor? Editores podem adicionar receitas à equipe, removê-las e marcá-las como favoritas.';
+  }
+
+  @override
+  String get yes => 'Sim';
+
+  @override
+  String get no => 'Não';
+
+  @override
+  String get memberNameFallback => 'Membro';
+
+  @override
+  String get noTeamMembers => 'Ainda não há membros.';
+
+  @override
+  String get cantChangeMemberRole => 'Você não pode mudar papéis nesta equipe.';
+
+  @override
+  String get teamNotFound => 'Equipe não encontrada.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1568,4 +1602,38 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get authPasswordSpecial => 'Contém pelo menos um caractere especial';
+
+  @override
+  String get teamMembers => 'Membros da equipe';
+
+  @override
+  String get changeRole => 'Mudar papel';
+
+  @override
+  String changeRoleToViewer(String name) {
+    return 'Quer mudar o papel de $name de Editor para Leitor? Leitores não podem adicionar receitas à equipe, removê-las nem marcá-las como favoritas.';
+  }
+
+  @override
+  String changeRoleToEditor(String name) {
+    return 'Quer mudar o papel de $name de Leitor para Editor? Editores podem adicionar receitas à equipe, removê-las e marcá-las como favoritas.';
+  }
+
+  @override
+  String get yes => 'Sim';
+
+  @override
+  String get no => 'Não';
+
+  @override
+  String get memberNameFallback => 'Membro';
+
+  @override
+  String get noTeamMembers => 'Ainda não há membros.';
+
+  @override
+  String get cantChangeMemberRole => 'Você não pode mudar papéis nesta equipe.';
+
+  @override
+  String get teamNotFound => 'Equipe não encontrada.';
 }

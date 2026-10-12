@@ -33,6 +33,8 @@ import 'package:brewing_journal_client/src/protocol/brewing/upload_ticket.dart'
     as _i1wqbnj3;
 import 'package:brewing_journal_client/src/protocol/teams/invite_link.dart'
     as _i5bdzsjf;
+import 'package:brewing_journal_client/src/protocol/teams/team_member.dart'
+    as _i9lbxgbk;
 import 'package:brewing_journal_client/src/protocol/teams/team_role.dart'
     as _in4rfda8;
 import 'package:brewing_journal_client/src/protocol/teams/team_summary.dart'
@@ -632,6 +634,37 @@ class EndpointTeam extends EndpointAuthenticated {
         'acceptInvite',
         {'token': token},
       );
+
+  /// Members of [teamId], oldest membership first.
+  ///
+  /// A caller who is not a member gets `notFound`.
+  _ida.Future<List<_i9lbxgbk.TeamMember>> listMembers(_isc.UuidValue teamId) =>
+      caller.callServerEndpoint<List<_i9lbxgbk.TeamMember>>(
+        'team',
+        'listMembers',
+        {'teamId': teamId},
+      );
+
+  /// Sets [memberId]'s role on [teamId] and emails them when it changes.
+  ///
+  /// Only `team.ownerId` may call this. A caller who is not a member gets
+  /// `notFound`. A member who is not the owner gets `forbidden`. The same
+  /// role is a no-op and sends no email.
+  _ida.Future<_i9lbxgbk.TeamMember> changeMemberRole(
+    _isc.UuidValue teamId,
+    _isc.UuidValue memberId,
+    _in4rfda8.TeamRole role,
+    String locale,
+  ) => caller.callServerEndpoint<_i9lbxgbk.TeamMember>(
+    'team',
+    'changeMemberRole',
+    {
+      'teamId': teamId,
+      'memberId': memberId,
+      'role': role,
+      'locale': locale,
+    },
+  );
 }
 
 class Modules {

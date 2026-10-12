@@ -35,6 +35,8 @@ import 'package:brewing_journal_server/src/generated/brewing/upload_ticket.dart'
     as _ikoobncs;
 import 'package:brewing_journal_server/src/generated/teams/invite_link.dart'
     as _i9fz8lbe;
+import 'package:brewing_journal_server/src/generated/teams/team_member.dart'
+    as _ic2xj3jn;
 import 'package:brewing_journal_server/src/generated/teams/team_role.dart'
     as _i0s6zzin;
 import 'package:brewing_journal_server/src/generated/teams/team_summary.dart'
@@ -1460,6 +1462,76 @@ class _TeamEndpoint {
                   _localCallContext.arguments,
                 )
                 as _ida.Future<_id1eflpk.TeamSummary>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<List<_ic2xj3jn.TeamMember>> listMembers(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue teamId,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'team',
+            method: 'listMembers',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'team',
+          methodName: 'listMembers',
+          parameters: _ist.testObjectToJson({'teamId': teamId}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<List<_ic2xj3jn.TeamMember>>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_ic2xj3jn.TeamMember> changeMemberRole(
+    _ist.TestSessionBuilder sessionBuilder,
+    _is.UuidValue teamId,
+    _is.UuidValue memberId,
+    _i0s6zzin.TeamRole role,
+    String locale,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'team',
+            method: 'changeMemberRole',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'team',
+          methodName: 'changeMemberRole',
+          parameters: _ist.testObjectToJson({
+            'teamId': teamId,
+            'memberId': memberId,
+            'role': role,
+            'locale': locale,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_ic2xj3jn.TeamMember>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

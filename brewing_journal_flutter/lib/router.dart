@@ -18,6 +18,7 @@ import 'ui/features/recipe_creation/view/recipe_wizard_screen.dart';
 import 'ui/features/recipe_list/view/recipe_list_screen.dart';
 import 'ui/features/share/view/share_screen.dart';
 import 'ui/features/teams/view/team_detail_screen.dart';
+import 'ui/features/teams/view/team_members_screen.dart';
 import 'ui/features/teams/view/teams_screen.dart';
 
 abstract final class Routes {
@@ -35,6 +36,7 @@ abstract final class Routes {
   static String editRecipe(UuidValue id) => '/recipes/${id.uuid}/edit';
   static String shareRecipe(UuidValue id) => '/recipes/${id.uuid}/share';
   static String team(UuidValue id) => '/teams/${id.uuid}';
+  static String teamMembers(UuidValue id) => '/teams/${id.uuid}/members';
   static String invite(String token) => '/invite/$token';
   static String newTeamRecipe(UuidValue teamId) =>
       '/recipes/new?teamId=${teamId.uuid}';
@@ -152,6 +154,21 @@ GoRouter createRouter(
                       if (id == null) return const _NotFoundScreen();
                       return TeamDetailScreen(key: ValueKey(id), teamId: id);
                     },
+                    routes: [
+                      GoRoute(
+                        path: 'members',
+                        name: ScreenNames.teamMembers,
+                        parentNavigatorKey: rootNavigatorKey,
+                        builder: (context, state) {
+                          final id = _parseId(state.pathParameters['id']);
+                          if (id == null) return const _NotFoundScreen();
+                          return TeamMembersScreen(
+                            key: ValueKey(id),
+                            teamId: id,
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
