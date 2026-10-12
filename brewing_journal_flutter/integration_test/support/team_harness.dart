@@ -1,10 +1,15 @@
+import 'package:brewing_journal_client/brewing_journal_client.dart';
+import 'package:brewing_journal_flutter/data/repositories/team_repository.dart';
 import 'package:brewing_journal_flutter/l10n/app_localizations.dart';
 import 'package:brewing_journal_flutter/main.dart' as app;
+import 'package:brewing_journal_flutter/ui/core/locale_resolution.dart';
 import 'package:brewing_journal_flutter/ui/features/brew_mode/view/brew_mode_screen.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_creation/view/recipe_wizard_screen.dart';
 import 'package:brewing_journal_flutter/ui/features/recipe_list/view/recipe_list_screen.dart';
 import 'package:brewing_journal_flutter/ui/features/teams/view/team_detail_screen.dart';
+import 'package:brewing_journal_flutter/ui/features/teams/view/team_members_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'auth_harness.dart';
@@ -165,6 +170,18 @@ class TeamHarness {
         matching: find.widgetWithText(Chip, role),
       ),
       findsOneWidget,
+    );
+  }
+
+  /// The team detail chip after a role change reloads [TeamsCubit].
+  Future<void> waitForRoleChip(WidgetTester tester, String role) async {
+    await recipes.waitFor(
+      tester,
+      find.descendant(
+        of: find.byType(TeamDetailScreen).hitTestable(),
+        matching: find.widgetWithText(Chip, role),
+      ),
+      'the $role chip',
     );
   }
 
@@ -571,6 +588,121 @@ class TeamHarness {
     expect(find.text(title).hitTestable(), findsNothing);
   }
 
+  /// Language tag sent with a role change: `en`, `es_419`, or `pt_BR`.
+  String roleChangeLocaleTag() {
+    final locale = resolveBrewSyncLocales(
+      WidgetsBinding.instance.platformDispatcher.locales,
+      AppLocalizations.supportedLocales,
+    );
+    return locale.toLanguageTag().replaceAll('-', '_');
+  }
+
+  Future<void> openMembers(WidgetTester tester) async {
+    final button = find.byKey(const Key('team-members')).hitTestable();
+    await recipes.waitFor(tester, button, 'team members');
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await tester.pump();
+    await recipes.waitFor(
+      tester,
+      find.byType(TeamMembersScreen).hitTestable(),
+      'the members screen',
+    );
+  }
+
+  Future<void> backFromMembers(WidgetTester tester) async {
+    await tester.tap(find.byType(BackButton).hitTestable());
+    await tester.pump();
+    await recipes.waitFor(
+      tester,
+      find.byKey(const Key('team-members')).hitTestable(),
+      'the team',
+    );
+  }
+
+  Future<void> expectMember(
+    WidgetTester tester, {
+    required String name,
+    required String email,
+    required String role,
+    required bool canEdit,
+  }) async {
+    final tile = _memberTile(name);
+    await recipes.waitUntil(tester, () {
+      if (tile.evaluate().isEmpty) return false;
+      final subtitle = _memberSubtitle(tester, tile);
+      return subtitle != null &&
+          subtitle.split('\n').first == email &&
+          subtitle.split('\n').last == role;
+    }, '$name as $role');
+    expect(
+      find.descendant(of: tile, matching: find.byIcon(Icons.edit_outlined)),
+      canEdit ? findsOneWidget : findsNothing,
+    );
+  }
+
+  /// Opens the confirmation for [name] and leaves the role unchanged.
+  Future<void> declineRoleChange(
+    WidgetTester tester, {
+    required String name,
+    required String question,
+  }) async {
+    await _openRoleDialog(tester, name: name, question: question);
+    await tester.tap(find.byKey(const Key('change-role-no')));
+    await tester.pump();
+    await recipes.waitUntil(
+      tester,
+      () => find.byKey(const Key('change-role-no')).evaluate().isEmpty,
+      'the role dialog to close',
+    );
+  }
+
+  /// Confirms the switch described by [question].
+  Future<void> confirmRoleChange(
+    WidgetTester tester, {
+    required String name,
+    required String question,
+  }) async {
+    await _openRoleDialog(tester, name: name, question: question);
+    await tester.tap(find.byKey(const Key('change-role-yes')));
+    await tester.pump();
+    await recipes.waitUntil(
+      tester,
+      () => find.byKey(const Key('change-role-yes')).evaluate().isEmpty,
+      'the role dialog to close',
+    );
+  }
+
+  /// A signed-in member who is not the owner cannot write a new role.
+  Future<void> expectRoleChangeForbidden(
+    WidgetTester tester, {
+    required String targetName,
+    required TeamRole role,
+  }) async {
+    final repository = tester
+        .element(find.byType(TeamMembersScreen))
+        .read<TeamRepository>();
+    final teamId = _currentTeamId(tester);
+    final memberId = _memberUserId(tester, targetName);
+    BrewingException? error;
+    try {
+      await repository.changeMemberRole(
+        teamId,
+        memberId,
+        role,
+        roleChangeLocaleTag(),
+      );
+    } on BrewingException catch (caught) {
+      error = caught;
+    }
+    expect(error?.code, BrewingErrorCode.forbidden);
+    final members = await repository.listMembers(teamId);
+    expect(
+      members.singleWhere((member) => member.preferredName == targetName).role,
+      isNot(role),
+    );
+  }
+
   Future<void> signOutViaJournal(WidgetTester tester) async {
     if (find.byType(BrewModeScreen).hitTestable().evaluate().isNotEmpty ||
         find.byType(RecipeWizardScreen).hitTestable().evaluate().isNotEmpty) {
@@ -630,6 +762,67 @@ class TeamHarness {
       await recipes.next(tester, find.byKey(const Key('media-add')));
     }
     await recipes.finish(tester);
+  }
+
+  Finder _memberTile(String name) {
+    return find.ancestor(
+      of: find.text(name),
+      matching: find.byType(ListTile),
+    );
+  }
+
+  String? _memberSubtitle(WidgetTester tester, Finder tile) {
+    if (tile.evaluate().isEmpty) return null;
+    for (final text in tester.widgetList<Text>(
+      find.descendant(of: tile, matching: find.byType(Text)),
+    )) {
+      final data = text.data;
+      if (data != null && data.contains('@')) return data;
+    }
+    return null;
+  }
+
+  Future<void> _openRoleDialog(
+    WidgetTester tester, {
+    required String name,
+    required String question,
+  }) async {
+    final edit = find.descendant(
+      of: _memberTile(name),
+      matching: find.byIcon(Icons.edit_outlined),
+    );
+    await recipes.waitFor(tester, edit, 'edit $name');
+    await tester.ensureVisible(edit);
+    await tester.tap(edit);
+    await tester.pump();
+    await recipes.waitFor(
+      tester,
+      find.byKey(const Key('change-role-yes')),
+      'the role dialog',
+    );
+    expect(find.text(question), findsOneWidget);
+    expect(find.text(l10n.yes), findsOneWidget);
+    expect(find.text(l10n.no), findsOneWidget);
+  }
+
+  UuidValue _memberUserId(WidgetTester tester, String name) {
+    final tile = tester.widget<ListTile>(_memberTile(name));
+    final key = tile.key;
+    if (key is! ValueKey<String> || !key.value.startsWith('team-member-')) {
+      throw StateError('No member id on the $name tile.');
+    }
+    return UuidValue.withValidation(
+      key.value.replaceFirst('team-member-', ''),
+    );
+  }
+
+  UuidValue _currentTeamId(WidgetTester tester) {
+    final segments = uri(tester).pathSegments;
+    final index = segments.indexOf('teams');
+    if (index < 0 || index + 1 >= segments.length) {
+      throw StateError('No team id in ${uri(tester)}.');
+    }
+    return UuidValue.withValidation(segments[index + 1]);
   }
 
   Future<void> _selectTab(WidgetTester tester, String label) async {

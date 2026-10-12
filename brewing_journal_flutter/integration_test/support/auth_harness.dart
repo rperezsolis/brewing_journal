@@ -238,6 +238,60 @@ class AuthHarness {
     }
   }
 
+  /// How many role-change notices development has logged for [email].
+  ///
+  /// Cancelling the dialog never calls the server, so the count stays put.
+  /// A confirmed change writes one `serverpod_log` row with the full message.
+  Future<int> roleChangeNoticeCount(String email) async {
+    final db = await _database();
+    final rows = await db.execute(
+      Sql.named(
+        'SELECT COUNT(*) FROM serverpod_log '
+        'WHERE message LIKE @pattern:text',
+      ),
+      parameters: {'pattern': _roleChangeNoticePattern(email)},
+    );
+    final value = rows.first.first;
+    if (value is int) return value;
+    return int.parse('$value');
+  }
+
+  /// The newest role-change notice whose text contains [contains].
+  ///
+  /// Development logs the subject, the team, the preferred name, and the
+  /// capability sentence. The row is written when the endpoint returns.
+  Future<String> roleChangeNotice(
+    String email, {
+    required String contains,
+  }) async {
+    final db = await _database();
+    final deadline = DateTime.now().add(const Duration(seconds: 15));
+    final pattern = _roleChangeNoticePattern(email);
+    while (DateTime.now().isBefore(deadline)) {
+      final rows = await db.execute(
+        Sql.named(
+          'SELECT message FROM serverpod_log '
+          'WHERE message LIKE @pattern:text '
+          'ORDER BY id DESC LIMIT 1',
+        ),
+        parameters: {'pattern': pattern},
+      );
+      if (rows.isNotEmpty) {
+        final message = rows.first.first! as String;
+        if (message.contains(contains)) return message;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
+    throw StateError(
+      'No role-change email containing "$contains" was logged for $email. '
+      'The development server must be running (`serverpod start`).',
+    );
+  }
+
+  String _roleChangeNoticePattern(String email) {
+    return 'Role change email to $email [%';
+  }
+
   /// Moves an invite into the past so accept reports it as expired.
   Future<void> expireInvite(String token) async {
     final db = await _database();

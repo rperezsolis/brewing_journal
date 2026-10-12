@@ -912,6 +912,8 @@ Do Feature 9.1 before 9.2, then 9.3, then 9.4.
 
 - [x] `ServerpodTeamRepository.listMembers` and `changeMemberRole` call the generated client.
 - [x] No `.spy.yaml` table changed, so no migration was created.
+- [x] `integration_test/team_member_role_test.dart` covers US-4.11 through US-4.14 against `serverpod start`: the owner sees each member's preferred name, email, and role; No leaves the role and sends no email; Yes switches an editor to viewer and the development log contains the team, the preferred name, the locale tag, and the viewer capability sentence; that member sees the new role with no edit icon, and a role change from their account is rejected; the owner promotes them back to editor (editor sentence in the log), then switches their own role to viewer so the team chip and new-recipe button follow; the member then has the editor controls and still no edit icon.
+- [x] Run `flutter test integration_test/team_member_role_test.dart -d macos` while `serverpod start` is up.
 - [x] Run the post-phase checklist. `dart analyze` is clean in the server and Flutter packages. The Serverpod MCP tools were not connected, so generation used `serverpod generate` and the running app was not hot restarted.
 
 ---

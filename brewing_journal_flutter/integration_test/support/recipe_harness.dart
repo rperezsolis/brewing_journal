@@ -48,9 +48,17 @@ class RecipeHarness {
   File? _oversizedPhoto;
 
   /// A new account, so the journal list starts empty.
-  Future<void> signUpFresh(WidgetTester tester) async {
+  Future<void> signUpFresh(
+    WidgetTester tester, {
+    String preferredName = AuthHarness.defaultPreferredName,
+  }) async {
     await auth.ensureSignedOut(tester);
-    await auth.signUp(tester, auth.freshEmail(), integrationPassword);
+    await auth.signUp(
+      tester,
+      auth.freshEmail(),
+      integrationPassword,
+      preferredName: preferredName,
+    );
     await _useDesktopSurface(tester);
   }
 
