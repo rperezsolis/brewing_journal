@@ -1091,12 +1091,24 @@ class RecipeHarness {
     }
   }
 
-  Future<void> expectPhotoLoads(WidgetTester tester, Type screen) async {
+  /// A photo is on screen and its bytes decode.
+  ///
+  /// Brew Mode always loads the stored file from its public URL. The wizard
+  /// does that for a photo already on the recipe. A photo picked while
+  /// editing is held locally until Finish, so pass [allowLocalPreview] there.
+  Future<void> expectPhotoLoads(
+    WidgetTester tester,
+    Type screen, {
+    bool allowLocalPreview = false,
+  }) async {
     final finder = find.descendant(
       of: find.byType(screen),
-      matching: find.byWidgetPredicate(
-        (widget) => widget is Image && widget.image is NetworkImage,
-      ),
+      matching: find.byWidgetPredicate((widget) {
+        if (widget is! Image) return false;
+        final provider = widget.image;
+        return provider is NetworkImage ||
+            (allowLocalPreview && provider is MemoryImage);
+      }),
     );
     final scrollable = screen == BrewModeScreen
         ? _brewScrollable()
@@ -1106,13 +1118,15 @@ class RecipeHarness {
       await tester.pump(const Duration(milliseconds: 100));
       if (scrollable.evaluate().isEmpty) continue;
       if (await _scan(tester, scrollable, finder)) {
-        await _expectNetworkImageLoads(tester, finder);
+        await _expectImageLoads(tester, finder);
         return;
       }
     }
     fail(
-      'No photo loaded from its public URL. '
-      'Visible text: ${_visibleText(tester)}',
+      allowLocalPreview
+          ? 'No photo preview. Visible text: ${_visibleText(tester)}'
+          : 'No photo loaded from its public URL. '
+                'Visible text: ${_visibleText(tester)}',
     );
   }
 
@@ -1364,13 +1378,20 @@ class RecipeHarness {
     );
   }
 
-  Future<void> _expectNetworkImageLoads(
+  Future<void> _expectImageLoads(
     WidgetTester tester,
     Finder finder,
   ) async {
     final image = tester.widget<Image>(finder.first);
-    final provider = image.image as NetworkImage;
-    expect(provider.url, startsWith('http'), reason: provider.url);
+    final provider = image.image;
+    switch (provider) {
+      case NetworkImage():
+        expect(provider.url, startsWith('http'), reason: provider.url);
+      case MemoryImage():
+        expect(provider.bytes, isNotEmpty);
+      default:
+        fail('Unexpected image ${provider.runtimeType}.');
+    }
     final completer = Completer<void>();
     final stream = provider.resolve(
       createLocalImageConfiguration(tester.element(finder.first)),

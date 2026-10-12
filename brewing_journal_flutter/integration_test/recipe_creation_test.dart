@@ -120,7 +120,13 @@ void main() {
         find.byKey(const Key('media-add')),
       );
       await recipes.addOversizedPhoto(tester);
-      await recipes.expectPhotoLoads(tester, RecipeWizardScreen);
+      // The new photo stays on the device until Finish, so it is not on the
+      // source recipe and the wizard shows a local preview.
+      await recipes.expectPhotoLoads(
+        tester,
+        RecipeWizardScreen,
+        allowLocalPreview: true,
+      );
       await recipes.finish(tester);
       await recipes.expectPhotoLoads(tester, BrewModeScreen);
 
