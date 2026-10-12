@@ -39,29 +39,29 @@ void main() {
     test(
       'when a member lists the team then names and emails come back',
       () async {
-      final team = await createTeam(endpoints, owner);
-      await inviteMember(
-        endpoints,
-        owner,
-        member,
-        team.team.id!,
-        role: TeamRole.viewer,
-      );
+        final team = await createTeam(endpoints, owner);
+        await inviteMember(
+          endpoints,
+          owner,
+          member,
+          team.team.id!,
+          role: TeamRole.viewer,
+        );
 
-      final listed = await endpoints.team.listMembers(
-        member.sessionBuilder,
-        team.team.id!,
-      );
+        final listed = await endpoints.team.listMembers(
+          member.sessionBuilder,
+          team.team.id!,
+        );
 
-      expect(listed.map((item) => item.preferredName), ['Owner', 'Ada']);
-      expect(listed.map((item) => item.email), [
-        'owner@example.com',
-        'ada@example.com',
-      ]);
-      expect(listed.map((item) => item.role), [
-        TeamRole.editor,
-        TeamRole.viewer,
-      ]);
+        expect(listed.map((item) => item.preferredName), ['Owner', 'Ada']);
+        expect(listed.map((item) => item.email), [
+          'owner@example.com',
+          'ada@example.com',
+        ]);
+        expect(listed.map((item) => item.role), [
+          TeamRole.editor,
+          TeamRole.viewer,
+        ]);
       },
     );
 
