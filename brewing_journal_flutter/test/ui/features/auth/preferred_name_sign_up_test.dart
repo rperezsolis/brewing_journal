@@ -35,10 +35,16 @@ void main() {
     );
   }
 
+  Future<void> openRegistration(WidgetTester tester) async {
+    await tester.tap(find.widgetWithText(TextButton, 'Create Account'));
+    await tester.pump();
+  }
+
   testWidgets('sign-up requires a preferred name before continue', (
     tester,
   ) async {
     await pump(tester);
+    await openRegistration(tester);
 
     expect(find.text('Preferred name'), findsOneWidget);
     expect(find.text('Create Account'), findsOneWidget);
@@ -60,15 +66,17 @@ void main() {
   testWidgets('sign-in does not ask for a preferred name', (tester) async {
     await pump(tester);
 
+    expect(find.text('Preferred name'), findsNothing);
+    expect(find.text('Sign in with Email'), findsOneWidget);
+
+    await openRegistration(tester);
+
+    expect(find.text('Preferred name'), findsOneWidget);
+
     await tester.tap(find.widgetWithText(TextButton, 'Sign in'));
     await tester.pump();
 
     expect(find.text('Preferred name'), findsNothing);
     expect(find.text('Sign in with Email'), findsOneWidget);
-
-    await tester.tap(find.widgetWithText(TextButton, 'Create Account'));
-    await tester.pump();
-
-    expect(find.text('Preferred name'), findsOneWidget);
   });
 }

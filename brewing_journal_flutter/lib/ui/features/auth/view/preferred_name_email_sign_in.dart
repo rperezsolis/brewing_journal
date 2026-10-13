@@ -42,7 +42,7 @@ class _PreferredNameEmailSignInState extends State<PreferredNameEmailSignIn> {
     _preferredName = TextEditingController()..addListener(_rebuild);
     _controller = EmailAuthController(
       client: widget.journalClient,
-      startScreen: EmailFlowScreen.startRegistration,
+      startScreen: EmailFlowScreen.login,
       onAuthenticated: _onAuthenticated,
       onError: (error) => widget.onError?.call(error),
     )..addListener(_rebuild);

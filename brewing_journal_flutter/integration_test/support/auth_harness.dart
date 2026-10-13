@@ -51,7 +51,7 @@ class AuthHarness {
     return 'it$stamp$_accountSequence@example.com';
   }
 
-  /// Shows the signed-out sign-up screen, signing out first when a session
+  /// Shows the signed-out sign-in screen, signing out first when a session
   /// was restored from this Mac's keychain.
   Future<void> ensureSignedOut(WidgetTester tester) async {
     await openApp(tester);
@@ -95,6 +95,7 @@ class AuthHarness {
     String preferredName = defaultPreferredName,
   }) async {
     final name = preferredName.trim();
+    await showRegistration(tester);
     await _enterPreferredName(tester, name);
     await _enterField(tester, l10n.authEmail, email);
     _blockPastedVerificationCode(tester);
@@ -126,6 +127,7 @@ class AuthHarness {
     WidgetTester tester,
     String email,
   ) async {
+    await showRegistration(tester);
     await _enterPreferredName(tester, defaultPreferredName);
     await _enterField(tester, l10n.authEmail, email);
     _blockPastedVerificationCode(tester);
@@ -175,6 +177,7 @@ class AuthHarness {
     expect(find.byType(RecipeListScreen), findsNothing);
   }
 
+  /// The email flow opens here. Registration links back with Sign in.
   Future<void> showLogin(WidgetTester tester) async {
     if (find.text(l10n.authSignInWithEmail).evaluate().isNotEmpty) return;
     await tester.tap(find.widgetWithText(TextButton, l10n.authSignIn));
@@ -187,7 +190,21 @@ class AuthHarness {
     await _waitUntil(
       tester,
       () => find.byKey(const ValueKey('preferred-name')).evaluate().isEmpty,
-      'the sign-up form to leave',
+      'the login form',
+    );
+  }
+
+  /// Opens the preferred-name registration form from the login screen.
+  Future<void> showRegistration(WidgetTester tester) async {
+    if (find.byKey(const ValueKey('preferred-name')).evaluate().isNotEmpty) {
+      return;
+    }
+    await tester.tap(find.widgetWithText(TextButton, l10n.authCreateAccount));
+    await tester.pump();
+    await _waitFor(
+      tester,
+      find.byKey(const ValueKey('preferred-name')),
+      'the registration form',
     );
   }
 
