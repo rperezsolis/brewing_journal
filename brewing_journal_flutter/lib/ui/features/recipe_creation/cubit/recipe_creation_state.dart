@@ -108,20 +108,22 @@ class RecipeCreationState extends Equatable {
   /// Display order; duplicates kept.
   final List<String> instructions;
 
-  /// Confirmed rows only. Photos picked while editing [sourceRecipeId] stay
-  /// in [stagedPhotos] until the new version exists.
+  /// Confirmed rows only. Photos picked before Finish stay in [stagedPhotos].
   final List<RecipePhoto> photos;
 
-  /// Photos picked for the version being saved, not yet stored.
+  /// Photos held on the device until Finish uploads them with the recipe.
   final List<StagedPhoto> stagedPhotos;
   final bool pendingUpload;
   final bool canEdit;
 
   int get photoCount => photos.length + stagedPhotos.length;
 
-  /// True while [recipeId] is still the opened recipe, so a photo must not
-  /// be written to it.
-  bool get stagesPhotos => sourceRecipeId != null && recipeId == sourceRecipeId;
+  /// True until Finish has stored this session's recipe.
+  ///
+  /// A new recipe has no id yet, so picked photos stay in [stagedPhotos].
+  /// An edit stays true while [recipeId] is still the opened recipe, so a
+  /// photo is not written onto that source.
+  bool get stagesPhotos => recipeId == sourceRecipeId;
 
   bool get isEditing => recipeId != null;
   bool get isSaving => saveStatus == SaveStatus.saving;

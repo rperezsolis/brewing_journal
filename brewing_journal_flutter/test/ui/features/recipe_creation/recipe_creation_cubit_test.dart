@@ -312,21 +312,41 @@ void main() {
       expect(recipes.savedDrafts.single.id, isNull);
     });
 
-    test('a second save stores a new recipe and keeps the source', () async {
+    test('a second Finish does not store another recipe', () async {
       await fillRequired(cubit);
       cubit.addInstruction('stir');
-      await cubit.save();
+      expect(await cubit.save(), isTrue);
       final id = cubit.state.recipeId!;
       cubit.removeInstruction(0);
-      await cubit.save();
+      expect(await cubit.save(), isTrue);
 
-      expect(recipes.savedDrafts.last.id, id);
-      expect(recipes.savedDrafts.last.instructions, isEmpty);
-      final savedId = cubit.state.recipeId!;
-      expect(savedId, isNot(id));
+      expect(recipes.savedDrafts, hasLength(1));
+      expect(cubit.state.recipeId, id);
       expect(recipes.details[id]!.instructions.map((i) => i.text), ['stir']);
-      expect(recipes.details[savedId]!.instructions, isEmpty);
     });
+
+    test(
+      'saving an opened recipe stores a new version and keeps the source',
+      () async {
+        await fillRequired(cubit);
+        cubit.addInstruction('stir');
+        await cubit.save();
+        final id = cubit.state.recipeId!;
+
+        final editor = build();
+        addTearDown(editor.close);
+        await editor.load(id);
+        editor.removeInstruction(0);
+        await editor.save();
+
+        expect(recipes.savedDrafts.last.id, id);
+        expect(recipes.savedDrafts.last.instructions, isEmpty);
+        final savedId = editor.state.recipeId!;
+        expect(savedId, isNot(id));
+        expect(recipes.details[id]!.instructions.map((i) => i.text), ['stir']);
+        expect(recipes.details[savedId]!.instructions, isEmpty);
+      },
+    );
 
     test('refreshAccess stores canEdit from getAccess', () async {
       await fillRequired(cubit);
@@ -351,15 +371,19 @@ void main() {
       expect(cubit.state.canEdit, isFalse);
     });
 
-    test('save sends teamId on insert and not on update', () async {
+    test('save sends teamId on insert and not on a new version', () async {
       final teamId = const Uuid().v7obj();
       cubit.startNew(teamId: teamId);
       await fillRequired(cubit);
       expect(await cubit.save(), isTrue);
       expect(recipes.savedDrafts.single.teamId, teamId);
 
-      cubit.addInstruction('stir');
-      expect(await cubit.save(), isTrue);
+      final editor = build();
+      addTearDown(editor.close);
+      await editor.load(cubit.state.recipeId!);
+      editor.addInstruction('stir');
+      expect(await editor.save(), isTrue);
+      expect(recipes.savedDrafts.last.id, cubit.state.recipeId);
       expect(recipes.savedDrafts.last.teamId, isNull);
     });
 
@@ -394,26 +418,77 @@ void main() {
   group('photos', () {
     final bytes = ByteData.sublistView(Uint8List.fromList([0xFF, 0xD8, 0xFF]));
 
-    test('addPhoto with no recipeId saves first', () async {
+    test('a new recipe keeps its photo until Finish stores one row', () async {
       await fillRequired(cubit);
 
-      expect(await cubit.addPhoto(bytes), isTrue);
+      expect(await cubit.addPhoto(bytes, contentType: 'image/png'), isTrue);
+
+      expect(recipes.savedDrafts, isEmpty);
+      expect(media.uploadedTo, isEmpty);
+      expect(cubit.state.recipeId, isNull);
+      expect(cubit.state.photos, isEmpty);
+      expect(cubit.state.stagedPhotos, hasLength(1));
+      expect(cubit.state.stagedPhotos.single.contentType, 'image/png');
+
+      expect(await cubit.save(), isTrue);
 
       expect(recipes.savedDrafts, hasLength(1));
+      expect(recipes.savedDrafts.single.id, isNull);
       final id = cubit.state.recipeId!;
       expect(media.uploadedTo, [id]);
-      expect(cubit.state.photos, hasLength(1));
-      expect(cubit.state.pendingUpload, isFalse);
+      expect(media.uploadedContentTypes, ['image/png']);
+      expect(cubit.state.stagedPhotos, isEmpty);
+      expect(cubit.state.photos.single.recipeId, id);
+
+      expect(await cubit.save(), isTrue);
+      expect(recipes.savedDrafts, hasLength(1));
+      expect(media.uploadedTo, [id]);
     });
 
-    test('addPhoto does not upload when the first save fails', () async {
-      expect(await cubit.addPhoto(bytes), isFalse);
+    test('addPhoto does not save or upload', () async {
+      expect(await cubit.addPhoto(bytes), isTrue);
+      expect(recipes.savedDrafts, isEmpty);
       expect(media.uploadedTo, isEmpty);
+      expect(cubit.state.stagedPhotos, hasLength(1));
     });
 
-    test('uploadRejected leaves photos unchanged', () async {
+    test('a rejected upload retries onto the same recipe', () async {
       await fillRequired(cubit);
       await cubit.addPhoto(bytes);
+      media.nextError = BrewingException(
+        code: BrewingErrorCode.uploadRejected,
+        message: 'rejected',
+      );
+
+      expect(await cubit.save(), isFalse);
+
+      final id = cubit.state.recipeId!;
+      expect(recipes.savedDrafts, hasLength(1));
+      expect(cubit.state.saveStatus, SaveStatus.failure);
+      expect(cubit.state.photos, isEmpty);
+      expect(cubit.state.stagedPhotos, hasLength(1));
+      expect(
+        cubit.state.error,
+        isA<BrewingException>().having(
+          (e) => e.code,
+          'code',
+          BrewingErrorCode.uploadRejected,
+        ),
+      );
+
+      expect(await cubit.save(), isTrue);
+
+      expect(recipes.savedDrafts, hasLength(1));
+      expect(cubit.state.recipeId, id);
+      expect(media.uploadedTo, [id, id]);
+      expect(cubit.state.stagedPhotos, isEmpty);
+      expect(cubit.state.photos.single.recipeId, id);
+    });
+
+    test('uploadRejected leaves stored photos unchanged', () async {
+      await fillRequired(cubit);
+      await cubit.addPhoto(bytes);
+      expect(await cubit.save(), isTrue);
       final before = cubit.state.photos;
       media.nextError = BrewingException(
         code: BrewingErrorCode.uploadRejected,
@@ -424,6 +499,7 @@ void main() {
 
       expect(cubit.state.photos, before);
       expect(cubit.state.pendingUpload, isFalse);
+      expect(recipes.savedDrafts, hasLength(1));
       expect(
         cubit.state.error,
         isA<BrewingException>().having(
@@ -499,11 +575,13 @@ void main() {
       expect(media.uploadedTo, isEmpty);
     });
 
-    test('removePhoto drops the row', () async {
+    test('removePhoto drops a stored photo', () async {
       await fillRequired(cubit);
       await cubit.addPhoto(bytes);
+      expect(await cubit.save(), isTrue);
       await cubit.removePhoto(cubit.state.photos.single.id!);
       expect(cubit.state.photos, isEmpty);
+      expect(cubit.state.stagedPhotos, isEmpty);
     });
   });
 

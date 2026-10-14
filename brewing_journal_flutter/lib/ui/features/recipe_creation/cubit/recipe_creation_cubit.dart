@@ -503,9 +503,13 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
 
   // Saving and photos
 
-  /// Saves the whole wizard. On failure every field is kept, except when the
-  /// version was stored and attaching a new photo failed: the wizard then
-  /// points at that version so the source recipe stays unchanged.
+  /// Saves the whole wizard once.
+  ///
+  /// A new recipe is inserted on the first Finish, and photos picked before
+  /// that are uploaded onto that row. Another Finish in the same session only
+  /// uploads photos still on the device, so a failed upload can be retried
+  /// without storing a second recipe. An opened recipe is the source of a new
+  /// version; that source row is left unchanged.
   Future<bool> save() async {
     if (state.isSaving || state.adoptingIngredientId != null) return false;
     for (final step in RecipeWizardStep.values) {
@@ -524,6 +528,19 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
 
     final s = state;
     final staged = [...s.stagedPhotos];
+    // This session already stored its recipe. Attach leftovers only.
+    final alreadyStored = s.recipeId != null && s.recipeId != s.sourceRecipeId;
+
+    emit(state.copyWith(saveStatus: SaveStatus.saving));
+    if (alreadyStored) {
+      return _uploadStagedPhotos(
+        recipeId: s.recipeId!,
+        stored: s.photos,
+        staged: staged,
+        canEdit: s.canEdit,
+      );
+    }
+
     final note = s.extractionMethodNote.trim();
     final draft = RecipeDraft(
       // An existing id is the source of a new version. The server inserts a
@@ -548,53 +565,67 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
       instructions: s.instructions,
     );
 
-    emit(state.copyWith(saveStatus: SaveStatus.saving));
     try {
       final detail = await _recipes.save(draft);
       if (isClosed) return true;
-      final newId = detail.recipe.id!;
-      final uploaded = <RecipePhoto>[];
-      for (var i = 0; i < staged.length; i++) {
-        try {
-          uploaded.add(
-            await _media.uploadPhoto(
-              newId,
-              ByteData.sublistView(staged[i].bytes),
-              contentType: staged[i].contentType,
-            ),
-          );
-        } catch (error) {
-          if (isClosed) return false;
-          // The version exists. Keep the photos that did not upload so a
-          // retry can attach them, and leave the source recipe untouched.
-          emit(
-            state.copyWith(
-              saveStatus: SaveStatus.failure,
-              recipeId: () => newId,
-              photos: _sortedPhotos([...detail.photos, ...uploaded]),
-              stagedPhotos: staged.sublist(i),
-              error: error,
-              canEdit: detail.access.canEdit,
-            ),
-          );
-          return false;
-        }
-      }
-      emit(
-        state.copyWith(
-          saveStatus: SaveStatus.success,
-          recipeId: () => newId,
-          photos: _sortedPhotos([...detail.photos, ...uploaded]),
-          stagedPhotos: const [],
-          canEdit: detail.access.canEdit,
-        ),
+      return await _uploadStagedPhotos(
+        recipeId: detail.recipe.id!,
+        stored: detail.photos,
+        staged: staged,
+        canEdit: detail.access.canEdit,
       );
-      return true;
     } catch (error) {
       if (isClosed) return false;
       emit(state.copyWith(saveStatus: SaveStatus.failure, error: error));
       return false;
     }
+  }
+
+  /// Uploads [staged] onto [recipeId]. A failed upload keeps the rest staged
+  /// and points the wizard at [recipeId], so Finish can attach them without
+  /// inserting another row.
+  Future<bool> _uploadStagedPhotos({
+    required UuidValue recipeId,
+    required List<RecipePhoto> stored,
+    required List<StagedPhoto> staged,
+    required bool canEdit,
+  }) async {
+    final uploaded = <RecipePhoto>[];
+    for (var i = 0; i < staged.length; i++) {
+      try {
+        uploaded.add(
+          await _media.uploadPhoto(
+            recipeId,
+            ByteData.sublistView(staged[i].bytes),
+            contentType: staged[i].contentType,
+          ),
+        );
+      } catch (error) {
+        if (isClosed) return false;
+        emit(
+          state.copyWith(
+            saveStatus: SaveStatus.failure,
+            recipeId: () => recipeId,
+            photos: _sortedPhotos([...stored, ...uploaded]),
+            stagedPhotos: staged.sublist(i),
+            error: error,
+            canEdit: canEdit,
+          ),
+        );
+        return false;
+      }
+    }
+    if (isClosed) return true;
+    emit(
+      state.copyWith(
+        saveStatus: SaveStatus.success,
+        recipeId: () => recipeId,
+        photos: _sortedPhotos([...stored, ...uploaded]),
+        stagedPhotos: const [],
+        canEdit: canEdit,
+      ),
+    );
+    return true;
   }
 
   /// Re-reads access after a `forbidden` save so a demoted editor leaves the
@@ -612,9 +643,11 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
     }
   }
 
-  /// Uploads a photo. A brand-new recipe is saved first, since a photo needs
-  /// a recipe id. While editing, the photo is held until the new version is
-  /// saved, so it is never stored on the source recipe.
+  /// Holds a photo until Finish.
+  ///
+  /// A new recipe is not saved here, and an edit does not store the photo on
+  /// the source recipe. After this session's recipe exists, a further photo
+  /// is uploaded to that row.
   ///
   /// [contentType] is the type of [bytes] after any client-side conversion.
   Future<bool> addPhoto(
@@ -645,8 +678,6 @@ class RecipeCreationCubit extends Cubit<RecipeCreationState> {
       );
       return true;
     }
-    if (state.recipeId == null && !await save()) return false;
-    if (isClosed) return false;
 
     emit(state.copyWith(pendingUpload: true));
     try {

@@ -191,8 +191,8 @@ void _refreshRecipeLists(BuildContext context) {
   }
 }
 
-/// Leaves the wizard. Refreshes the home list when a recipe exists, since
-/// adding a photo saves a new recipe before Finish.
+/// Leaves the wizard. Refreshes the home list when Finish has stored a
+/// recipe, including when a photo upload failed afterward.
 void _close(BuildContext context, {bool refreshList = true}) {
   if (refreshList &&
       context.read<RecipeCreationCubit>().state.recipeId != null) {

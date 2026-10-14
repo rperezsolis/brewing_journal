@@ -67,7 +67,7 @@ void main() {
     );
   }
 
-  testWidgets('JPEG is uploaded without a processing dialog', (tester) async {
+  testWidgets('JPEG stays on the device until Finish', (tester) async {
     final jpeg = img.encodeJpg(img.Image(width: 4, height: 4));
     ImagePickerPlatform.instance = _FixedPicker(jpeg);
     await pump(
@@ -80,8 +80,17 @@ void main() {
     await tester.pump();
 
     expect(find.text('Processing images'), findsNothing);
+    expect(media.uploadedBytes, isEmpty);
+    expect(cubit.state.recipeId, isNull);
+    expect(cubit.state.stagedPhotos.single.contentType, 'image/jpeg');
+    expect(cubit.state.stagedPhotos.single.bytes, jpeg);
+
+    expect(await cubit.save(), isTrue);
+    await tester.pump();
+
     expect(media.uploadedContentTypes, ['image/jpeg']);
     expect(media.uploadedBytes.single, jpeg);
+    expect(media.uploadedTo, [cubit.state.recipeId]);
   });
 
   testWidgets('HEIC shows Processing images and uploads only WebP', (
@@ -113,9 +122,16 @@ void main() {
     gate.complete(webp);
     await _until(tester, find.text('Processing images'), present: false);
 
+    expect(media.uploadedBytes, isEmpty);
+    expect(cubit.state.stagedPhotos.single.contentType, 'image/webp');
+    expect(cubit.state.stagedPhotos.single.bytes, webp);
+    expect(cubit.state.stagedPhotos.single.bytes, isNot(heic));
+
+    expect(await cubit.save(), isTrue);
+    await tester.pump();
+
     expect(media.uploadedContentTypes, ['image/webp']);
     expect(media.uploadedBytes.single, webp);
-    expect(media.uploadedBytes.single, isNot(heic));
   });
 }
 
